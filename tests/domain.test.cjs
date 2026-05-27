@@ -1,0 +1,337 @@
+const assert = require("node:assert/strict");
+const path = require("node:path");
+const test = require("node:test");
+const Module = require("node:module");
+
+const root = path.resolve(__dirname, "..");
+const originalResolveFilename = Module._resolveFilename;
+Module._resolveFilename = function resolveAlias(request, parent, isMain, options) {
+  if (request.startsWith("@/")) {
+    return originalResolveFilename.call(
+      this,
+      path.join(root, request.slice(2)),
+      parent,
+      isMain,
+      options,
+    );
+  }
+  return originalResolveFilename.call(this, request, parent, isMain, options);
+};
+
+const jiti = require("jiti")(__filename);
+
+const {
+  affordabilityScore,
+  defaultMonthlyRentBudgetGbp,
+} = jiti("../lib/affordability.ts");
+const {
+  approximateIsochrone,
+} = jiti("../lib/isochrone.ts");
+const {
+  isCommuteMinuteCap,
+  isLondonLatLng,
+  MAX_FALLBACK_REACHABLE,
+  parseFallbackReachable,
+} = jiti("../lib/validation.ts");
+const {
+  checkRateLimit,
+} = jiti("../lib/rate-limit.ts");
+const {
+  lifestyleScore,
+  scoreAll,
+  scoreNeighbourhood,
+} = jiti("../lib/scoring.ts");
+const {
+  selectedRentGbp,
+} = jiti("../lib/rent.ts");
+const {
+  strengthInsights,
+  tradeoffInsights,
+} = jiti("../lib/insights.ts");
+const {
+  boroughCoverage,
+  commuteRouteSummary,
+  displayCommuteMinutes,
+} = jiti("../lib/commute-details.ts");
+const {
+  boroughSummaries,
+} = jiti("../lib/boroughs.ts");
+const {
+  BOROUGH_BOUNDARY_SOURCE_URL,
+} = jiti("../lib/data/borough-boundaries.ts");
+const {
+  NEIGHBOURHOODS,
+} = jiti("../lib/data/neighbourhoods.ts");
+const {
+  polygonForNeighbourhood,
+} = jiti("../lib/data/polygons.ts");
+const {
+  RENT_MARKET_SOURCES,
+} = jiti("../lib/data/rent-market.ts");
+
+const query = {
+  destination: { id: "test", label: "Test", centroid: { lat: 51.5, lng: -0.1 } },
+  maxCommuteMinutes: 45,
+  monthlyRentBudgetGbp: 1500,
+  annualSalaryGbp: null,
+  rentBasis: "oneBedFlat",
+  rentBudgetShareOfTakeHome: 0.35,
+  personality: null,
+  lifestyleWeights: {},
+};
+
+const neighbourhood = {
+  id: "test-area",
+  name: "Test Area",
+  borough: "Test",
+  centroid: { lat: 51.52, lng: -0.12 },
+  transportZones: [2],
+  rent: {
+    oneBedMedianGbp: 1500,
+    twoBedMedianGbp: 2000,
+    source: "market_review",
+    asOf: "2026-01-01",
+  },
+  mainStations: [],
+  lifestyle: {
+    livelyVsQuiet: 8,
+    greenSpace: 6,
+    nightlife: 7,
+    cafeDensity: 9,
+    gymDensity: 7,
+    walkability: 8,
+    foodScene: 8,
+    youngProfessionalDensity: 7,
+    safety: 6,
+    connectivity: 9,
+  },
+  summary: "",
+  strengths: [],
+  tradeoffs: [],
+  dataQuality: "sourceBacked",
+};
+
+test("affordability scoring rewards in-budget rent and tapers over budget", () => {
+  assert.equal(affordabilityScore(1200, 1500), 1);
+  assert.equal(affordabilityScore(1500, 1500), 1);
+  assert.equal(affordabilityScore(2250, 1500), 0.5);
+  assert.equal(affordabilityScore(3000, 1500), 0);
+  assert.ok(defaultMonthlyRentBudgetGbp(50_000) > 1000);
+  assert.ok(defaultMonthlyRentBudgetGbp(50_000, 0.4) > defaultMonthlyRentBudgetGbp(50_000, 0.35));
+});
+
+test("lifestyle scoring averages scores without a personality or manual weights", () => {
+  const score = lifestyleScore(neighbourhood.lifestyle, query);
+  assert.ok(score > 0.7 && score < 0.8);
+});
+
+test("advanced weights override personality and strongly demote weak matches", () => {
+  const advancedQuery = {
+    ...query,
+    personality: "balanced",
+    lifestyleWeights: { greenSpace: 1 },
+  };
+  const strong = {
+    ...neighbourhood,
+    lifestyle: { ...neighbourhood.lifestyle, greenSpace: 10 },
+  };
+  const weak = {
+    ...neighbourhood,
+    lifestyle: { ...neighbourhood.lifestyle, greenSpace: 4 },
+  };
+
+  const strongScore = scoreNeighbourhood(strong, 30, advancedQuery);
+  const weakScore = scoreNeighbourhood(weak, 30, advancedQuery);
+
+  assert.ok(strongScore.lifestyleScore > 0.95);
+  assert.ok(weakScore.lifestyleScore < 0.15);
+  assert.ok(strongScore.matchScore - weakScore.matchScore > 0.3);
+});
+
+test("commute cap excludes neighbourhoods beyond the user threshold", () => {
+  const included = scoreNeighbourhood(neighbourhood, 30, query);
+  const excluded = scoreNeighbourhood(neighbourhood, 60, query);
+  assert.equal(included.isExcluded, false);
+  assert.equal(excluded.isExcluded, true);
+  assert.equal(excluded.matchScore, 0);
+});
+
+test("commute display never falls back to unknown when a destination exists", () => {
+  assert.equal(
+    displayCommuteMinutes(neighbourhood, null, query) > 0,
+    true,
+  );
+  const route = commuteRouteSummary(neighbourhood, query);
+  assert.ok(route.primary.includes("Test"));
+  assert.ok(route.legs.length >= 3);
+  assert.ok(route.legs.every((leg) => leg.instruction.length > 0));
+});
+
+test("known destination route summaries include named services", () => {
+  const brixton = NEIGHBOURHOODS.find((n) => n.id === "brixton");
+  assert.ok(brixton);
+  const route = commuteRouteSummary(
+    brixton,
+    {
+      ...query,
+      destination: {
+        id: "victoria",
+        label: "Victoria",
+        centroid: { lat: 51.4952, lng: -0.1441 },
+      },
+    },
+  );
+  assert.ok(route.destinationLines.includes("Victoria"));
+  assert.ok(route.legs.some((leg) => leg.service?.includes("Victoria")));
+  assert.ok(route.routeOptions.length >= 1);
+  assert.ok(route.routeOptions[0].label.includes("Best"));
+  assert.ok(Array.isArray(route.warnings));
+});
+
+test("bus-first areas surface transport watch-outs", () => {
+  const camberwell = NEIGHBOURHOODS.find((n) => n.id === "camberwell");
+  assert.ok(camberwell);
+  const route = commuteRouteSummary(
+    camberwell,
+    {
+      ...query,
+      destination: {
+        id: "london-bridge",
+        label: "London Bridge",
+        centroid: { lat: 51.505, lng: -0.0865 },
+      },
+    },
+  );
+  assert.ok(route.routeOptions.some((option) => option.label === "Backup route"));
+  assert.ok(route.warnings.some((warning) => warning.includes("Bus-first")));
+});
+
+test("neighbourhood model covers every London borough", () => {
+  const coverage = boroughCoverage(NEIGHBOURHOODS);
+  assert.deepEqual(coverage.missing, []);
+  assert.equal(coverage.covered.length, 32);
+});
+
+test("borough search summaries cover every borough with a best card", () => {
+  const scored = scoreAll(NEIGHBOURHOODS, {}, query);
+  const boroughs = boroughSummaries(scored);
+  assert.equal(boroughs.length, 32);
+  assert.ok(boroughs.every((borough) => borough.bestMatch.neighbourhood.id));
+  assert.ok(boroughs.every((borough) => borough.scored.length >= 1));
+  assert.ok(boroughs.every((borough) => borough.minSelectedRentGbp <= borough.maxSelectedRentGbp));
+  assert.ok(boroughs.every((borough) => borough.topStrengths.length > 0));
+});
+
+test("borough boundary source targets official London LAD features", () => {
+  assert.ok(BOROUGH_BOUNDARY_SOURCE_URL.includes("FeatureServer/0/query"));
+  assert.ok(BOROUGH_BOUNDARY_SOURCE_URL.includes("LAD24CD"));
+  assert.ok(BOROUGH_BOUNDARY_SOURCE_URL.includes("E09"));
+});
+
+test("launch neighbourhood footprints cover every modelled area", () => {
+  for (const area of NEIGHBOURHOODS) {
+    const polygon = polygonForNeighbourhood(area.id);
+    assert.equal(polygon.type, "Polygon");
+    const ring = polygon.coordinates[0];
+    assert.ok(ring.length >= 8);
+    assert.deepEqual(ring[0], ring[ring.length - 1]);
+  }
+});
+
+test("selected rent basis can score rooms below one-bed averages", () => {
+  const roomQuery = { ...query, rentBasis: "houseShareLowerEnd" };
+  const oneBedQuery = { ...query, rentBasis: "oneBedFlat" };
+  const room = scoreNeighbourhood(neighbourhood, 30, roomQuery);
+  const oneBed = scoreNeighbourhood(neighbourhood, 30, oneBedQuery);
+  assert.ok(selectedRentGbp(neighbourhood, "houseShareLowerEnd") < selectedRentGbp(neighbourhood, "oneBedFlat"));
+  assert.ok(room.affordabilityScore >= oneBed.affordabilityScore);
+});
+
+test("rent model has a maintainable source list", () => {
+  assert.ok(RENT_MARKET_SOURCES.length >= 3);
+  assert.ok(RENT_MARKET_SOURCES.some((source) => source.includes("ONS")));
+});
+
+test("detail insights add query-aware strengths and tradeoffs", () => {
+  const scored = scoreNeighbourhood(
+    {
+      ...neighbourhood,
+      strengths: ["Existing strength"],
+      tradeoffs: ["Existing tradeoff"],
+      dataQuality: "sourceBacked",
+    },
+    42,
+    {
+      ...query,
+      maxCommuteMinutes: 45,
+      monthlyRentBudgetGbp: 1200,
+      rentBasis: "oneBedFlat",
+      lifestyleWeights: { greenSpace: 1 },
+    },
+  );
+
+  const strengths = strengthInsights(scored, query);
+  const tradeoffs = tradeoffInsights(scored, {
+    ...query,
+    maxCommuteMinutes: 45,
+    monthlyRentBudgetGbp: 1200,
+    lifestyleWeights: { greenSpace: 1 },
+  });
+
+  assert.ok(strengths.includes("Existing strength"));
+  assert.ok(tradeoffs.includes("Existing tradeoff"));
+  assert.ok(tradeoffs.some((item) => item.includes("over your current budget")));
+  assert.ok(tradeoffs.some((item) => item.includes("Green space")));
+});
+
+test("API validation accepts only sane London coordinates and commute caps", () => {
+  assert.equal(isLondonLatLng({ lat: 51.5, lng: -0.1 }), true);
+  assert.equal(isLondonLatLng({ lat: 55, lng: -0.1 }), false);
+  assert.equal(isLondonLatLng({ lat: "51.5", lng: -0.1 }), false);
+  assert.equal(isCommuteMinuteCap(45), true);
+  assert.equal(isCommuteMinuteCap(4), false);
+  assert.equal(isCommuteMinuteCap(45.5), false);
+});
+
+test("fallback reachable parser rejects malformed isochrone shaping input", () => {
+  const parsed = parseFallbackReachable([
+    { centroid: { lat: 51.5, lng: -0.1 }, commuteMinutes: 20 },
+  ]);
+  assert.deepEqual(parsed, [
+    { centroid: { lat: 51.5, lng: -0.1 }, commuteMinutes: 20 },
+  ]);
+  assert.equal(parseFallbackReachable([{ centroid: { lat: 10, lng: 10 }, commuteMinutes: 20 }]), null);
+  assert.equal(parseFallbackReachable([{ centroid: { lat: 51.5, lng: -0.1 }, commuteMinutes: -1 }]), null);
+  const oversized = Array.from({ length: MAX_FALLBACK_REACHABLE + 1 }, () => ({
+    centroid: { lat: 51.5, lng: -0.1 },
+    commuteMinutes: 20,
+  }));
+  assert.equal(parseFallbackReachable(oversized), null);
+});
+
+test("rate limiter blocks repeated requests per client and scope", () => {
+  const scope = `test:${Date.now()}:${Math.random()}`;
+  const headers = { get: (name) => (name === "x-forwarded-for" ? "203.0.113.10" : null) };
+  const options = { scope, limit: 2, windowMs: 60_000 };
+
+  assert.deepEqual(checkRateLimit(headers, options), { ok: true });
+  assert.deepEqual(checkRateLimit(headers, options), { ok: true });
+  const third = checkRateLimit(headers, options);
+  assert.equal(third.ok, false);
+  assert.ok(third.retryAfterSeconds > 0);
+
+  const otherClientHeaders = { get: (name) => (name === "x-forwarded-for" ? "203.0.113.11" : null) };
+  assert.deepEqual(checkRateLimit(otherClientHeaders, options), { ok: true });
+});
+
+test("approximate isochrone returns a closed polygon around the destination", () => {
+  const feature = approximateIsochrone(
+    { lat: 51.5, lng: -0.1 },
+    [{ centroid: { lat: 51.55, lng: -0.12 }, commuteMinutes: 25 }],
+    45,
+  );
+  const ring = feature.geometry.coordinates[0];
+  assert.equal(feature.geometry.type, "Polygon");
+  assert.ok(ring.length > 10);
+  assert.deepEqual(ring[0], ring[ring.length - 1]);
+});

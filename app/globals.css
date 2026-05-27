@@ -1,0 +1,46 @@
+/* MapLibre's own stylesheet - embedded here so we don't rely on a CDN. */
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #__next {
+  height: 100%;
+}
+
+/* A clean, opinionated range slider used in the ControlPanel. */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: rgb(51 65 85);
+  border-radius: 9999px;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: rgb(56 189 248);
+  border-radius: 9999px;
+  border: 2px solid rgb(15 23 42);
+  cursor: pointer;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: rgb(56 189 248);
+  border-radius: 9999px;
+  border: 2px solid rgb(15 23 42);
+  cursor: pointer;
+}
+
+/* Scrollbar styling for the dark theme. */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb {
+  background: rgb(51 65 85);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-track { background: transparent; }
