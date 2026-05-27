@@ -101,13 +101,18 @@ export function approximateIsochrone(
   // Precompute each sample's buffer radius (km) and convert sample
   // coords to local-projection km for fast field evaluation.
   const kmPerDegLngLocal = kmPerDegLngAtLat(destination.lat);
+  const rasterCellDiagonalKm = Math.hypot(
+    RASTER_STEP_LAT * KM_PER_DEG_LAT,
+    RASTER_STEP_LNG * kmPerDegLngLocal,
+  );
   const toSampleKm = (s: ReachableNeighbourhoodInfo) => {
     const radiusKm = bufferKmFor(s.commuteMinutes, maxCommuteMinutes);
+    const searchRadiusKm = radiusKm + rasterCellDiagonalKm * 1.5;
     return {
       x: (s.centroid.lng - destination.lng) * kmPerDegLngLocal,
       y: (s.centroid.lat - destination.lat) * KM_PER_DEG_LAT,
       r: radiusKm,
-      rSq: radiusKm * radiusKm,
+      searchSq: searchRadiusKm * searchRadiusKm,
     };
   };
 
@@ -135,15 +140,15 @@ export function approximateIsochrone(
     for (let c = 0; c < cols; c++) {
       const lng = RASTER_BBOX.minLng + c * RASTER_STEP_LNG;
       const x = (lng - destination.lng) * kmPerDegLngLocal;
-      let best = -Infinity;
+      let best = -rasterCellDiagonalKm * 2;
       for (let i = 0; i < sampleKm.length; i++) {
         const s = sampleKm[i];
         const dx = x - s.x;
         const dy = y - s.y;
         const dsq = dx * dx + dy * dy;
-        // Skip samples whose buffer can't reach us. Saves the sqrt for
-        // ~95 % of (cell, sample) pairs at a 330 m raster.
-        if (dsq > s.rSq) continue;
+        // Skip samples that are too far away to affect this grid vertex
+        // or any contour interpolation in the neighbouring cell.
+        if (dsq > s.searchSq) continue;
         const v = s.r - Math.sqrt(dsq);
         if (v > best) best = v;
       }

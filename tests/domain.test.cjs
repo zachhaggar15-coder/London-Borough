@@ -26,7 +26,11 @@ const {
 } = jiti("../lib/affordability.ts");
 const {
   approximateIsochrone,
+  LONDON_TRANSIT_KMH,
 } = jiti("../lib/isochrone.ts");
+const {
+  DESTINATIONS_BY_ID,
+} = jiti("../lib/data/destinations.ts");
 const {
   isCommuteMinuteCap,
   isLondonLatLng,
@@ -63,6 +67,9 @@ const {
   NEIGHBOURHOODS,
 } = jiti("../lib/data/neighbourhoods.ts");
 const {
+  londonSampleGrid,
+} = jiti("../lib/sample-grid.ts");
+const {
   polygonForNeighbourhood,
 } = jiti("../lib/data/polygons.ts");
 const {
@@ -79,6 +86,18 @@ const query = {
   personality: null,
   lifestyleWeights: {},
 };
+
+function distanceKm(a, b) {
+  const radiusKm = 6371;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+  const lat1 = (a.lat * Math.PI) / 180;
+  const lat2 = (b.lat * Math.PI) / 180;
+  const x =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * radiusKm * Math.asin(Math.sqrt(x));
+}
 
 const neighbourhood = {
   id: "test-area",
@@ -334,4 +353,42 @@ test("approximate isochrone returns a closed polygon around the destination", ()
   assert.equal(feature.geometry.type, "Polygon");
   assert.ok(ring.length > 10);
   assert.deepEqual(ring[0], ring[ring.length - 1]);
+});
+
+test("sampled London isochrone never emits invalid polygon coordinates", () => {
+  const destination = DESTINATIONS_BY_ID.marylebone.centroid;
+  const minutesPerKm = 60 / LONDON_TRANSIT_KMH;
+  const reachable = [
+    ...londonSampleGrid().map((centroid) => ({
+      centroid,
+      commuteMinutes: Math.max(
+        10,
+        Math.round(distanceKm(centroid, destination) * minutesPerKm),
+      ),
+    })),
+    ...NEIGHBOURHOODS.map((neighbourhood) => ({
+      centroid: neighbourhood.centroid,
+      commuteMinutes: Math.max(
+        10,
+        Math.round(distanceKm(neighbourhood.centroid, destination) * minutesPerKm),
+      ),
+    })),
+  ];
+
+  const feature = approximateIsochrone(destination, reachable, 90);
+  const ring = feature.geometry.coordinates[0];
+
+  assert.ok(ring.length > 100);
+  assert.deepEqual(ring[0], ring[ring.length - 1]);
+  assert.ok(
+    ring.every(
+      ([lng, lat]) =>
+        Number.isFinite(lng) &&
+        Number.isFinite(lat) &&
+        lng >= -0.6 &&
+        lng <= 0.4 &&
+        lat >= 51.25 &&
+        lat <= 51.75,
+    ),
+  );
 });
