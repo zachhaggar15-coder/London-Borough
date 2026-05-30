@@ -51,7 +51,7 @@ export interface RoutingProvider {
  * pre-seeded destination, at peak hours. Numbers are realistic
  * estimates; they are NOT live and should not be presented as precise.
  */
-const STATIC_COMMUTE_TIMES: Record<string, Record<string, number>> = {
+export const STATIC_COMMUTE_TIMES: Record<string, Record<string, number>> = {
   // North
   "camden":          { "marylebone": 15, "kings-cross": 12, "liverpool-st": 22, "canary-wharf": 35, "bank": 22, "victoria": 22, "waterloo": 25, "oxford-circus": 12, "paddington": 22, "london-bridge": 25 },
   "islington":       { "marylebone": 22, "kings-cross": 10, "liverpool-st": 18, "canary-wharf": 30, "bank": 18, "victoria": 25, "waterloo": 22, "oxford-circus": 15, "paddington": 25, "london-bridge": 22 },

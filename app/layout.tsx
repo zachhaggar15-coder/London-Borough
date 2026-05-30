@@ -1,10 +1,67 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { SITE_URL } from "@/lib/seo-data";
 
 export const metadata: Metadata = {
-  title: "Where in London — neighbourhood discovery",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Where in London — find your perfect neighbourhood",
+    template: "%s | Where in London",
+  },
   description:
-    "Find London neighbourhoods that fit your commute, salary, and lifestyle. Decide where to live before you start hunting for flats.",
+    "Find London neighbourhoods that match your commute, salary and lifestyle. Compare areas, check rent budgets, and discover where to live in London.",
+  keywords: [
+    "where to live in London",
+    "best London neighbourhoods",
+    "London area guide",
+    "London rent guide",
+    "best areas London young professionals",
+  ],
+  authors: [{ name: "Where in London" }],
+  creator: "Where in London",
+  publisher: "Where in London",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_GB",
+    url: SITE_URL,
+    siteName: "Where in London",
+    title: "Where in London — find your perfect neighbourhood",
+    description:
+      "Find London neighbourhoods that match your commute, salary and lifestyle. Compare areas, check rent budgets, and discover where to live in London.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Where in London — neighbourhood discovery",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Where in London — find your perfect neighbourhood",
+    description:
+      "Find London neighbourhoods that match your commute, salary and lifestyle.",
+    images: ["/og-image.png"],
+    creator: "@whereinlondon",
+  },
+  alternates: {
+    canonical: SITE_URL,
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
@@ -14,7 +71,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="h-screen w-screen overflow-hidden bg-slate-950 text-slate-100 font-sans antialiased">
+      <body className="bg-slate-950 text-slate-100 font-sans antialiased">
         {children}
       </body>
     </html>
