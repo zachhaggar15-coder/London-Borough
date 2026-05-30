@@ -95,7 +95,7 @@ export default function Image() {
             fontSize: "20px",
           }}
         >
-          whereinlondon.app
+          london-borough.vercel.app
         </div>
       </div>
     ),

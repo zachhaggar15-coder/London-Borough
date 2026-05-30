@@ -12,7 +12,7 @@ import { PERSONALITY_SCORERS } from "@/lib/personalities";
 import type { Neighbourhood, LifestyleScores, PersonalityKey } from "@/lib/types";
 
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://whereinlondon.app";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://london-borough.vercel.app";
 
 // ──────────────────────────────────────────────────────────────────
 // Shared helpers

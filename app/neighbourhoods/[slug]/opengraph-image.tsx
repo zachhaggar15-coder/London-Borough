@@ -152,7 +152,7 @@ export default async function Image({ params }: Props) {
             fontSize: "20px",
           }}
         >
-          whereinlondon.app
+          london-borough.vercel.app
         </div>
       </div>
     ),
