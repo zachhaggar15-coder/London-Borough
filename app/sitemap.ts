@@ -3,11 +3,11 @@ import {
   SITE_URL,
   getAllBoroughSlugs,
   getAllCommuteSlugs,
+  getAllNeighbourhoodSlugs,
   getCompareStaticParams,
   SALARY_LEVELS,
   LIFESTYLE_PAGES,
 } from "@/lib/seo-data";
-import { NEIGHBOURHOODS } from "@/lib/data/neighbourhoods";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -53,6 +53,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
+  const neighbourhoodRoutes: MetadataRoute.Sitemap = getAllNeighbourhoodSlugs().map(
+    (slug) => ({
+      url: `${SITE_URL}/neighbourhoods/${slug}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.9,
+    }),
+  );
+
   const compareRoutes: MetadataRoute.Sitemap = getCompareStaticParams().map(
     (slug) => ({
       url: `${SITE_URL}/compare/${slug}`,
@@ -64,6 +73,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     ...static_routes,
+    ...neighbourhoodRoutes,
     ...boroughRoutes,
     ...commuteRoutes,
     ...salaryRoutes,

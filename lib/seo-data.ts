@@ -9,7 +9,7 @@ import { DESTINATIONS } from "@/lib/data/destinations";
 import { LONDON_BOROUGHS } from "@/lib/commute-details";
 import { STATIC_COMMUTE_TIMES } from "@/lib/commute";
 import { PERSONALITY_SCORERS } from "@/lib/personalities";
-import type { Neighbourhood, LifestyleScores } from "@/lib/types";
+import type { Neighbourhood, LifestyleScores, PersonalityKey } from "@/lib/types";
 
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://whereinlondon.app";
@@ -597,4 +597,111 @@ export function relatedComparisons(neighbourhoodId: string, limit = 4): string[]
     })
     .slice(0, limit)
     .map((n) => `${neighbourhoodId}-vs-${n.id}`);
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Neighbourhood detail pages  →  /neighbourhoods/[slug]
+// ──────────────────────────────────────────────────────────────────
+
+export function getAllNeighbourhoodSlugs(): string[] {
+  return NEIGHBOURHOODS.map((n) => n.id);
+}
+
+export type NeighbourhoodCommute = {
+  destinationId: string;
+  destinationLabel: string;
+  minutes: number;
+  isEstimate: boolean;
+};
+
+export type NeighbourhoodPageData = {
+  neighbourhood: Neighbourhood;
+  commuteTimes: NeighbourhoodCommute[];
+  bestDestination: NeighbourhoodCommute;
+  topPersonalities: string[];
+  similarNeighbourhoods: Neighbourhood[];
+  relatedComparisonSlugs: string[];
+};
+
+const PERSONALITY_LABELS: Record<PersonalityKey, string> = {
+  lively: "lively, social people who love bars and a buzzing neighbourhood",
+  chill: "people who want peace, green space, and a calm base after work",
+  sporty: "sporty and fitness-focused people",
+  social: "social people who value cafés, food, and community",
+  professional: "young professionals and career-focused people",
+  balanced: "people looking for a well-rounded area with no major trade-offs",
+};
+
+export function getNeighbourhoodPageData(slug: string): NeighbourhoodPageData | null {
+  const neighbourhood = NEIGHBOURHOODS.find((n) => n.id === slug);
+  if (!neighbourhood) return null;
+
+  const TRANSIT_KMH = 25;
+  const minPerKm = 60 / TRANSIT_KMH;
+
+  const commuteTimes: NeighbourhoodCommute[] = DESTINATIONS.map((d) => {
+    const staticTime = STATIC_COMMUTE_TIMES[neighbourhood.id]?.[d.id];
+    const isEstimate = staticTime == null;
+    const minutes =
+      staticTime ??
+      Math.max(
+        10,
+        Math.round(haversineKm(neighbourhood.centroid, d.centroid) * minPerKm),
+      );
+    return {
+      destinationId: d.id,
+      destinationLabel: d.label,
+      minutes,
+      isEstimate,
+    };
+  }).sort((a, b) => a.minutes - b.minutes);
+
+  const topPersonalities = (Object.keys(PERSONALITY_SCORERS) as PersonalityKey[])
+    .map((key) => ({
+      key,
+      label: PERSONALITY_LABELS[key],
+      score: PERSONALITY_SCORERS[key](neighbourhood.lifestyle),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .filter((p) => p.score >= 0.58)
+    .slice(0, 3)
+    .map((p) => p.label);
+
+  // Same-borough neighbours first, then similar-rent from anywhere
+  const primaryBorough = neighbourhood.borough.split("/")[0].trim();
+  const sameBoroughIds = new Set(
+    NEIGHBOURHOODS
+      .filter(
+        (n) =>
+          n.id !== neighbourhood.id &&
+          n.borough.split("/").map((p) => p.trim()).includes(primaryBorough),
+      )
+      .map((n) => n.id),
+  );
+
+  const similar = NEIGHBOURHOODS.filter(
+    (n) =>
+      n.id !== neighbourhood.id &&
+      (sameBoroughIds.has(n.id) ||
+        Math.abs(n.rent.oneBedMedianGbp - neighbourhood.rent.oneBedMedianGbp) <= 200),
+  )
+    .sort((a, b) => {
+      const aSame = sameBoroughIds.has(a.id) ? 0 : 1;
+      const bSame = sameBoroughIds.has(b.id) ? 0 : 1;
+      if (aSame !== bSame) return aSame - bSame;
+      return (
+        Math.abs(a.rent.oneBedMedianGbp - neighbourhood.rent.oneBedMedianGbp) -
+        Math.abs(b.rent.oneBedMedianGbp - neighbourhood.rent.oneBedMedianGbp)
+      );
+    })
+    .slice(0, 4);
+
+  return {
+    neighbourhood,
+    commuteTimes,
+    bestDestination: commuteTimes[0],
+    topPersonalities,
+    similarNeighbourhoods: similar,
+    relatedComparisonSlugs: similar.map((n) => `${neighbourhood.id}-vs-${n.id}`),
+  };
 }

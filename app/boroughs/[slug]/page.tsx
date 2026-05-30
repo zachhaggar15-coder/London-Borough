@@ -282,9 +282,10 @@ export default async function BoroughPage({ params }: Props) {
                     a.rent.oneBedMedianGbp - b.rent.oneBedMedianGbp,
                 )
                 .map((n) => (
-                  <div
+                  <Link
                     key={n.id}
-                    className="rounded-lg bg-slate-900 border border-slate-800 p-5"
+                    href={`/neighbourhoods/${n.id}`}
+                    className="rounded-lg bg-slate-900 border border-slate-800 p-5 hover:border-slate-600 transition-colors"
                   >
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="font-semibold text-white">{n.name}</h3>
@@ -308,7 +309,7 @@ export default async function BoroughPage({ params }: Props) {
                           </span>
                         ))}
                     </div>
-                  </div>
+                  </Link>
                 ))}
             </div>
           </section>

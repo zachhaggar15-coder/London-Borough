@@ -39,21 +39,12 @@ export const metadata: Metadata = {
     title: "Where in London — find your perfect neighbourhood",
     description:
       "Find London neighbourhoods that match your commute, salary and lifestyle. Compare areas, check rent budgets, and discover where to live in London.",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Where in London — neighbourhood discovery",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Where in London — find your perfect neighbourhood",
     description:
       "Find London neighbourhoods that match your commute, salary and lifestyle.",
-    images: ["/og-image.png"],
     creator: "@whereinlondon",
   },
   alternates: {

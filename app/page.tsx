@@ -11,6 +11,7 @@ import Link from "next/link";
 import HomeClient from "./HomeClient";
 import {
   getAllBoroughSlugs,
+  getAllNeighbourhoodSlugs,
   LIFESTYLE_PAGES,
   SALARY_LEVELS,
   SITE_URL,
@@ -32,6 +33,7 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   const boroughSlugs = getAllBoroughSlugs().slice(0, 12);
+  const popularNeighbourhoods = getAllNeighbourhoodSlugs().slice(0, 12);
 
   const websiteSchema = {
     "@context": "https://schema.org",
@@ -206,6 +208,34 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Popular neighbourhoods */}
+        <section className="border-t border-slate-800 mx-auto max-w-5xl px-6 py-16">
+          <h2 className="text-2xl font-bold tracking-tight mb-2">
+            Popular neighbourhood guides
+          </h2>
+          <p className="text-slate-400 mb-8">
+            Rent, transport and lifestyle profiles for every London
+            neighbourhood.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            {popularNeighbourhoods.map((slug) => (
+              <Link
+                key={slug}
+                href={`/neighbourhoods/${slug}`}
+                className="rounded-lg bg-slate-900 border border-slate-800 px-4 py-2 text-sm hover:border-slate-600 transition-colors capitalize"
+              >
+                {slug.replace(/-/g, " ")}
+              </Link>
+            ))}
+            <Link
+              href="/neighbourhoods"
+              className="rounded-lg border border-slate-700 text-slate-400 px-4 py-2 text-sm hover:text-white transition-colors"
+            >
+              View all 95 neighbourhoods →
+            </Link>
+          </div>
+        </section>
+
         {/* Borough directory */}
         <section className="border-t border-slate-800 mx-auto max-w-5xl px-6 py-16">
           <h2 className="text-2xl font-bold tracking-tight mb-2">
@@ -271,6 +301,9 @@ export default function HomePage() {
           <div className="mx-auto max-w-5xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-sm text-slate-400">
             <p>© {new Date().getFullYear()} Where in London</p>
             <nav className="flex flex-wrap gap-4">
+              <Link href="/neighbourhoods" className="hover:text-white transition-colors">
+                Neighbourhoods
+              </Link>
               <Link href="/boroughs" className="hover:text-white transition-colors">
                 Boroughs
               </Link>
