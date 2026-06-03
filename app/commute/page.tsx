@@ -8,6 +8,13 @@ export const metadata: Metadata = {
   description:
     "Find the best London neighbourhoods for commuting to any major office location. Ranked by commute time, with rent and transport options.",
   alternates: { canonical: `${SITE_URL}/commute` },
+  openGraph: {
+    title: "Best London areas by commute destination",
+    description:
+      "Find the best London neighbourhoods for commuting to any major office location.",
+    url: `${SITE_URL}/commute`,
+    type: "website",
+  },
 };
 
 export default function CommuteIndexPage() {

@@ -8,6 +8,13 @@ export const metadata: Metadata = {
   description:
     "Area guides, rent prices and transport profiles for 95 London neighbourhoods. Find the right area for your commute, budget and lifestyle.",
   alternates: { canonical: `${SITE_URL}/neighbourhoods` },
+  openGraph: {
+    title: "London neighbourhoods guide — rents, transport & area profiles",
+    description:
+      "Area guides, rent prices and transport profiles for London neighbourhoods.",
+    url: `${SITE_URL}/neighbourhoods`,
+    type: "website",
+  },
 };
 
 const DIRECTION_GROUPS: { label: string; ids: string[] }[] = [

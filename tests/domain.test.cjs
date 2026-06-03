@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
 const Module = require("node:module");
@@ -75,6 +76,17 @@ const {
 const {
   RENT_MARKET_SOURCES,
 } = jiti("../lib/data/rent-market.ts");
+const {
+  SITE_URL,
+  absoluteUrl,
+  getAllBoroughSlugs,
+  getAllCommuteSlugs,
+  getAllNeighbourhoodSlugs,
+  getCompareStaticParams,
+  getIndexableRoutes,
+  LIFESTYLE_PAGES,
+  SALARY_LEVELS,
+} = jiti("../lib/seo-data.ts");
 
 const query = {
   destination: { id: "test", label: "Test", centroid: { lat: 51.5, lng: -0.1 } },
@@ -353,6 +365,40 @@ test("approximate isochrone returns a closed polygon around the destination", ()
   assert.equal(feature.geometry.type, "Polygon");
   assert.ok(ring.length > 10);
   assert.deepEqual(ring[0], ring[ring.length - 1]);
+});
+
+test("SEO inventory exposes every generated public page for sitemap discovery", () => {
+  const routes = getIndexableRoutes();
+  const paths = routes.map((route) => route.path);
+  const expectedCount =
+    6 +
+    getAllNeighbourhoodSlugs().length +
+    getAllBoroughSlugs().length +
+    getAllCommuteSlugs().length +
+    SALARY_LEVELS.length +
+    LIFESTYLE_PAGES.length +
+    getCompareStaticParams().length;
+
+  assert.equal(routes.length, expectedCount);
+  assert.equal(new Set(paths).size, paths.length);
+  assert.ok(paths.includes("/"));
+  assert.ok(paths.includes("/neighbourhoods"));
+  assert.ok(paths.includes("/boroughs"));
+  assert.ok(paths.includes("/commute"));
+  assert.ok(paths.includes("/lifestyle"));
+  assert.ok(paths.includes("/salary"));
+  assert.ok(paths.every((path) => path === "/" || !path.endsWith("/")));
+  assert.ok(paths.every((path) => absoluteUrl(path).startsWith(SITE_URL)));
+  assert.ok(routes.every((route) => route.priority > 0 && route.priority <= 1));
+});
+
+test("robots.txt allows public pages and advertises the sitemap", () => {
+  const robots = fs.readFileSync(path.join(root, "public", "robots.txt"), "utf8");
+
+  assert.match(robots, /User-agent:\s*\*/);
+  assert.match(robots, /Allow:\s*\//);
+  assert.match(robots, /Disallow:\s*\/api\//);
+  assert.match(robots, new RegExp(`Sitemap:\\s*${SITE_URL.replace(/\./g, "\\.")}/sitemap\\.xml`));
 });
 
 test("sampled London isochrone never emits invalid polygon coordinates", () => {

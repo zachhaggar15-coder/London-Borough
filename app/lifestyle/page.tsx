@@ -7,6 +7,13 @@ export const metadata: Metadata = {
   description:
     "Whether you're a runner, foodie, night-owl or professional, find the London neighbourhoods that match your lifestyle.",
   alternates: { canonical: `${SITE_URL}/lifestyle` },
+  openGraph: {
+    title: "London neighbourhoods by lifestyle",
+    description:
+      "Find London neighbourhoods that match your lifestyle, from runners and foodies to night-owls and young professionals.",
+    url: `${SITE_URL}/lifestyle`,
+    type: "website",
+  },
 };
 
 export default function LifestyleIndexPage() {

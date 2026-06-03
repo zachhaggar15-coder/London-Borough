@@ -14,6 +14,58 @@ import type { Neighbourhood, LifestyleScores, PersonalityKey } from "@/lib/types
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://london-borough.vercel.app";
 
+export type IndexableRoute = {
+  path: string;
+  priority: number;
+  changefreq: "daily" | "weekly" | "monthly" | "yearly";
+};
+
+export function absoluteUrl(path: string): string {
+  if (path === "/") return SITE_URL;
+  return `${SITE_URL}${path}`;
+}
+
+export function getIndexableRoutes(): IndexableRoute[] {
+  return [
+    { path: "/", priority: 1.0, changefreq: "weekly" },
+    { path: "/neighbourhoods", priority: 0.9, changefreq: "weekly" },
+    { path: "/boroughs", priority: 0.8, changefreq: "weekly" },
+    { path: "/commute", priority: 0.8, changefreq: "weekly" },
+    { path: "/lifestyle", priority: 0.8, changefreq: "weekly" },
+    { path: "/salary", priority: 0.7, changefreq: "weekly" },
+    ...getAllNeighbourhoodSlugs().map((slug) => ({
+      path: `/neighbourhoods/${slug}`,
+      priority: 0.9,
+      changefreq: "monthly" as const,
+    })),
+    ...getAllBoroughSlugs().map((slug) => ({
+      path: `/boroughs/${slug}`,
+      priority: 0.8,
+      changefreq: "monthly" as const,
+    })),
+    ...getAllCommuteSlugs().map((slug) => ({
+      path: `/commute/${slug}`,
+      priority: 0.8,
+      changefreq: "monthly" as const,
+    })),
+    ...SALARY_LEVELS.map((amount) => ({
+      path: `/salary/${amount}`,
+      priority: 0.7,
+      changefreq: "monthly" as const,
+    })),
+    ...LIFESTYLE_PAGES.map((page) => ({
+      path: `/lifestyle/${page.slug}`,
+      priority: 0.7,
+      changefreq: "monthly" as const,
+    })),
+    ...getCompareStaticParams().map((slug) => ({
+      path: `/compare/${slug}`,
+      priority: 0.6,
+      changefreq: "monthly" as const,
+    })),
+  ];
+}
+
 // ──────────────────────────────────────────────────────────────────
 // Shared helpers
 // ──────────────────────────────────────────────────────────────────

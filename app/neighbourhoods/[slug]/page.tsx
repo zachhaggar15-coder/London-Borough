@@ -11,6 +11,8 @@ import { LIFESTYLE_LABELS } from "@/lib/types";
 
 type Props = { params: Promise<{ slug: string }> };
 
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
   return getAllNeighbourhoodSlugs().map((slug) => ({ slug }));
 }

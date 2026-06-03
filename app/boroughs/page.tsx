@@ -11,6 +11,13 @@ export const metadata: Metadata = {
   description:
     "Rent prices, transport zones and neighbourhood guides for all 32 London boroughs. Find the right borough for your commute, budget and lifestyle.",
   alternates: { canonical: `${SITE_URL}/boroughs` },
+  openGraph: {
+    title: "London borough guide — rents, transport & neighbourhoods",
+    description:
+      "Rent prices, transport zones and neighbourhood guides for all 32 London boroughs.",
+    url: `${SITE_URL}/boroughs`,
+    type: "website",
+  },
 };
 
 export default function BoroughsIndexPage() {

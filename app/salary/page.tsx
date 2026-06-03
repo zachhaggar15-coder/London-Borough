@@ -7,6 +7,13 @@ export const metadata: Metadata = {
   description:
     "Find out where you can afford to live in London based on your salary. Take-home pay, rent budgets and neighbourhood recommendations for every income level.",
   alternates: { canonical: `${SITE_URL}/salary` },
+  openGraph: {
+    title: "Where to live in London by salary",
+    description:
+      "Take-home pay, rent budgets and neighbourhood recommendations for London salary levels.",
+    url: `${SITE_URL}/salary`,
+    type: "website",
+  },
 };
 
 export default function SalaryIndexPage() {

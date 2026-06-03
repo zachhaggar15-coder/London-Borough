@@ -15,7 +15,7 @@ export async function generateStaticParams() {
   return getCompareStaticParams().map((slug) => ({ slug }));
 }
 
-export const dynamicParams = true;
+export const dynamicParams = false;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

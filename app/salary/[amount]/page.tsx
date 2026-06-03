@@ -9,6 +9,8 @@ import {
 
 type Props = { params: Promise<{ amount: string }> };
 
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
   return SALARY_LEVELS.map((amount) => ({ amount: String(amount) }));
 }
