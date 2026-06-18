@@ -31,6 +31,7 @@ export function getIndexableRoutes(): IndexableRoute[] {
     { path: "/neighbourhoods", priority: 0.9, changefreq: "weekly" },
     { path: "/boroughs", priority: 0.8, changefreq: "weekly" },
     { path: "/commute", priority: 0.8, changefreq: "weekly" },
+    { path: "/compare", priority: 0.75, changefreq: "weekly" },
     { path: "/lifestyle", priority: 0.8, changefreq: "weekly" },
     { path: "/salary", priority: 0.7, changefreq: "weekly" },
     ...getAllNeighbourhoodSlugs().map((slug) => ({
@@ -539,6 +540,12 @@ export type ComparePageData = {
   overallRecommendation: string;
 };
 
+export type CompareIndexSection = {
+  title: string;
+  description: string;
+  slugs: string[];
+};
+
 function lifestyleTotal(s: LifestyleScores): number {
   return Object.values(s).reduce((sum, v) => sum + v, 0);
 }
@@ -600,7 +607,22 @@ export function getComparePageData(slug: string): ComparePageData | null {
   };
 }
 
+const NEIGHBOURHOOD_ORDER = new Map(
+  NEIGHBOURHOODS.map((n, index) => [n.id, index]),
+);
+
+export function comparisonSlugFor(aId: string, bId: string): string {
+  const aIndex = NEIGHBOURHOOD_ORDER.get(aId);
+  const bIndex = NEIGHBOURHOOD_ORDER.get(bId);
+  if (aIndex == null || bIndex == null) return `${aId}-vs-${bId}`;
+  return aIndex <= bIndex ? `${aId}-vs-${bId}` : `${bId}-vs-${aId}`;
+}
+
+let compareStaticParamsCache: string[] | null = null;
+
 export function getCompareStaticParams(): string[] {
+  if (compareStaticParamsCache) return compareStaticParamsCache;
+
   const slugs = new Set<string>();
 
   // Same-borough pairs
@@ -616,7 +638,7 @@ export function getCompareStaticParams(): string[] {
   for (const ids of byBorough.values()) {
     for (let i = 0; i < ids.length; i++) {
       for (let j = i + 1; j < ids.length; j++) {
-        slugs.add(`${ids[i]}-vs-${ids[j]}`);
+        slugs.add(comparisonSlugFor(ids[i], ids[j]));
       }
     }
   }
@@ -627,12 +649,101 @@ export function getCompareStaticParams(): string[] {
       const a = NEIGHBOURHOODS[i];
       const b = NEIGHBOURHOODS[j];
       if (Math.abs(a.rent.oneBedMedianGbp - b.rent.oneBedMedianGbp) <= 300) {
-        slugs.add(`${a.id}-vs-${b.id}`);
+        slugs.add(comparisonSlugFor(a.id, b.id));
       }
     }
   }
 
-  return [...slugs];
+  compareStaticParamsCache = [...slugs].sort();
+  return compareStaticParamsCache;
+}
+
+const COMPARE_INDEX_SECTIONS: {
+  title: string;
+  description: string;
+  pairs: [string, string][];
+}[] = [
+  {
+    title: "Classic inner-London decisions",
+    description:
+      "Popular close-call choices where rent, social life and commute access pull in different directions.",
+    pairs: [
+      ["clapham", "brixton"],
+      ["camden", "islington"],
+      ["hackney-central", "dalston"],
+      ["peckham", "east-dulwich"],
+      ["battersea", "fulham"],
+      ["shoreditch", "bethnal-green"],
+      ["borough", "bermondsey"],
+      ["hammersmith", "shepherds-bush"],
+    ],
+  },
+  {
+    title: "Value and commute trade-offs",
+    description:
+      "Area comparisons for people trying to stretch rent while keeping a realistic commute.",
+    pairs: [
+      ["walthamstow", "leyton"],
+      ["ealing", "acton"],
+      ["balham", "streatham"],
+      ["finchley", "hendon"],
+      ["barking", "ilford"],
+      ["croydon", "sutton"],
+      ["catford", "lewisham"],
+      ["bermondsey", "greenwich"],
+    ],
+  },
+  {
+    title: "Leafier places to live",
+    description:
+      "Head-to-head guides for greener, quieter or more village-like London areas.",
+    pairs: [
+      ["wimbledon", "putney"],
+      ["hampstead", "belsize-park"],
+      ["blackheath", "greenwich"],
+      ["richmond", "twickenham"],
+      ["chiswick", "barnes"],
+      ["crystal-palace", "forest-hill"],
+      ["highgate", "crouch-end"],
+      ["maida-vale", "bayswater"],
+    ],
+  },
+];
+
+export function getCompareIndexSections(): CompareIndexSection[] {
+  const available = new Set(getCompareStaticParams());
+
+  return COMPARE_INDEX_SECTIONS.map(({ title, description, pairs }) => ({
+    title,
+    description,
+    slugs: pairs
+      .map(([aId, bId]) => comparisonSlugFor(aId, bId))
+      .filter((slug) => available.has(slug)),
+  })).filter((section) => section.slugs.length > 0);
+}
+
+export function getFeaturedCompareSlugs(limit = 24): string[] {
+  const slugs: string[] = [];
+  const available = getCompareStaticParams();
+  const seen = new Set<string>();
+
+  for (const section of getCompareIndexSections()) {
+    for (const slug of section.slugs) {
+      if (seen.has(slug)) continue;
+      slugs.push(slug);
+      seen.add(slug);
+      if (slugs.length >= limit) return slugs;
+    }
+  }
+
+  for (const slug of available) {
+    if (seen.has(slug)) continue;
+    slugs.push(slug);
+    seen.add(slug);
+    if (slugs.length >= limit) return slugs;
+  }
+
+  return slugs;
 }
 
 // ──────────────────────────────────────────────────────────────────
@@ -640,6 +751,8 @@ export function getCompareStaticParams(): string[] {
 // ──────────────────────────────────────────────────────────────────
 
 export function relatedComparisons(neighbourhoodId: string, limit = 4): string[] {
+  const available = new Set(getCompareStaticParams());
+
   return NEIGHBOURHOODS.filter((n) => n.id !== neighbourhoodId)
     .sort((a, b) => {
       const target = NEIGHBOURHOODS.find((n) => n.id === neighbourhoodId)!;
@@ -647,8 +760,9 @@ export function relatedComparisons(neighbourhoodId: string, limit = 4): string[]
       const rentDiffB = Math.abs(b.rent.oneBedMedianGbp - target.rent.oneBedMedianGbp);
       return rentDiffA - rentDiffB;
     })
+    .map((n) => comparisonSlugFor(neighbourhoodId, n.id))
+    .filter((slug) => available.has(slug))
     .slice(0, limit)
-    .map((n) => `${neighbourhoodId}-vs-${n.id}`);
 }
 
 // ──────────────────────────────────────────────────────────────────
@@ -754,6 +868,8 @@ export function getNeighbourhoodPageData(slug: string): NeighbourhoodPageData | 
     bestDestination: commuteTimes[0],
     topPersonalities,
     similarNeighbourhoods: similar,
-    relatedComparisonSlugs: similar.map((n) => `${neighbourhood.id}-vs-${n.id}`),
+    relatedComparisonSlugs: similar.map((n) =>
+      comparisonSlugFor(neighbourhood.id, n.id),
+    ),
   };
 }

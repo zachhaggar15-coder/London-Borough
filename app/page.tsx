@@ -12,6 +12,8 @@ import HomeClient from "./HomeClient";
 import {
   getAllBoroughSlugs,
   getAllNeighbourhoodSlugs,
+  getComparePageData,
+  getFeaturedCompareSlugs,
   LIFESTYLE_PAGES,
   SALARY_LEVELS,
   SITE_URL,
@@ -34,6 +36,9 @@ export const metadata: Metadata = {
 export default function HomePage() {
   const boroughSlugs = getAllBoroughSlugs().slice(0, 12);
   const popularNeighbourhoods = getAllNeighbourhoodSlugs().slice(0, 12);
+  const popularComparisons = getFeaturedCompareSlugs(6)
+    .map((slug) => getComparePageData(slug))
+    .filter(Boolean);
 
   const websiteSchema = {
     "@context": "https://schema.org",
@@ -164,6 +169,42 @@ export default function HomePage() {
               </Link>
             ))}
           </div>
+        </section>
+
+        {/* Popular comparisons */}
+        <section className="border-t border-slate-800 mx-auto max-w-5xl px-6 py-16">
+          <h2 className="text-2xl font-bold tracking-tight mb-2">
+            Popular area comparisons
+          </h2>
+          <p className="text-slate-400 mb-8">
+            Compare two London neighbourhoods side by side before you shortlist
+            flats or viewings.
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {popularComparisons.map((comparison) => {
+              if (!comparison) return null;
+              return (
+                <Link
+                  key={comparison.slug}
+                  href={`/compare/${comparison.slug}`}
+                  className="rounded-lg bg-slate-900 border border-slate-800 px-4 py-3 hover:border-slate-600 transition-colors"
+                >
+                  <p className="font-medium text-sm">
+                    {comparison.a.name} vs {comparison.b.name}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Rent, transport and lifestyle comparison
+                  </p>
+                </Link>
+              );
+            })}
+          </div>
+          <Link
+            href="/compare"
+            className="mt-6 inline-block rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:text-white transition-colors"
+          >
+            View all comparisons →
+          </Link>
         </section>
 
         {/* Lifestyle guides */}
@@ -306,6 +347,9 @@ export default function HomePage() {
               </Link>
               <Link href="/boroughs" className="hover:text-white transition-colors">
                 Boroughs
+              </Link>
+              <Link href="/compare" className="hover:text-white transition-colors">
+                Compare areas
               </Link>
               <Link href="/lifestyle/young-professionals" className="hover:text-white transition-colors">
                 Young professionals

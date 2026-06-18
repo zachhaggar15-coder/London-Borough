@@ -82,7 +82,9 @@ const {
   getAllBoroughSlugs,
   getAllCommuteSlugs,
   getAllNeighbourhoodSlugs,
+  getCompareIndexSections,
   getCompareStaticParams,
+  getFeaturedCompareSlugs,
   getIndexableRoutes,
   LIFESTYLE_PAGES,
   SALARY_LEVELS,
@@ -371,7 +373,7 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
   const routes = getIndexableRoutes();
   const paths = routes.map((route) => route.path);
   const expectedCount =
-    6 +
+    7 +
     getAllNeighbourhoodSlugs().length +
     getAllBoroughSlugs().length +
     getAllCommuteSlugs().length +
@@ -385,11 +387,27 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
   assert.ok(paths.includes("/neighbourhoods"));
   assert.ok(paths.includes("/boroughs"));
   assert.ok(paths.includes("/commute"));
+  assert.ok(paths.includes("/compare"));
   assert.ok(paths.includes("/lifestyle"));
   assert.ok(paths.includes("/salary"));
   assert.ok(paths.every((path) => path === "/" || !path.endsWith("/")));
   assert.ok(paths.every((path) => absoluteUrl(path).startsWith(SITE_URL)));
   assert.ok(routes.every((route) => route.priority > 0 && route.priority <= 1));
+});
+
+test("comparison hub exposes featured crawl paths that exist in static params", () => {
+  const allComparisons = new Set(getCompareStaticParams());
+  const featured = getFeaturedCompareSlugs();
+  const sections = getCompareIndexSections();
+
+  assert.ok(featured.length > 0);
+  assert.ok(sections.length > 0);
+  assert.ok(featured.every((slug) => allComparisons.has(slug)));
+  assert.ok(
+    sections.every((section) =>
+      section.slugs.every((slug) => allComparisons.has(slug)),
+    ),
+  );
 });
 
 test("robots.txt allows public pages and advertises the sitemap", () => {

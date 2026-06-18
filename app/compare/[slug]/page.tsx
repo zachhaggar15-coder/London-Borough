@@ -2,12 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  boroughSlug,
   getComparePageData,
   getCompareStaticParams,
   relatedComparisons,
   SITE_URL,
 } from "@/lib/seo-data";
 import { LIFESTYLE_LABELS } from "@/lib/types";
+import {
+  RENT_MARKET_REVIEW_AS_OF,
+  RENT_MARKET_SOURCES,
+} from "@/lib/data/rent-market";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -23,8 +28,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!data) return {};
 
   const { a, b } = data;
-  const title = `${a.name} vs ${b.name} — which is better to live in?`;
-  const description = `Comparing ${a.name} and ${b.name}: rent, transport, lifestyle, safety and overall recommendation. ${data.overallRecommendation}`;
+  const title = `${a.name} vs ${b.name}: rent, transport & lifestyle`;
+  const description = `${a.name} vs ${b.name}: compare 1-bed rents (£${a.rent.oneBedMedianGbp.toLocaleString()} vs £${b.rent.oneBedMedianGbp.toLocaleString()}), transport, safety, green space, nightlife and who each area suits.`;
 
   return {
     title,
@@ -64,6 +69,10 @@ function Winner({ isWinner }: { isWinner: boolean }) {
   );
 }
 
+function primaryBoroughName(borough: string): string {
+  return borough.split("/")[0].trim();
+}
+
 export default async function ComparePage({ params }: Props) {
   const { slug } = await params;
   const data = getComparePageData(slug);
@@ -82,7 +91,26 @@ export default async function ComparePage({ params }: Props) {
     overallRecommendation,
   } = data;
 
-  const related = relatedComparisons(a.id, 4);
+  const related = relatedComparisons(a.id, 8)
+    .filter((s) => s !== slug)
+    .slice(0, 4);
+  const relatedData = related
+    .map((s) => getComparePageData(s))
+    .filter(Boolean);
+  const aBorough = primaryBoroughName(a.borough);
+  const bBorough = primaryBoroughName(b.borough);
+  const rentSummary =
+    rentDiff === 0
+      ? `${a.name} and ${b.name} have similar average 1-bed rents.`
+      : rentDiff > 0
+      ? `${a.name} is cheaper by about £${Math.abs(rentDiff).toLocaleString()} per month.`
+      : `${b.name} is cheaper by about £${Math.abs(rentDiff).toLocaleString()} per month.`;
+  const lifestyleArea = lifestyleWinner === a.id ? a.name : b.name;
+  const transportWinner =
+    connectivityWinner === a.id ? a.name : b.name;
+  const greenSpaceWinner = greenWinner === a.id ? a.name : b.name;
+  const nightlifeArea = nightlifeWinner === a.id ? a.name : b.name;
+  const safetyArea = safetyWinner === a.id ? a.name : b.name;
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -158,6 +186,10 @@ export default async function ComparePage({ params }: Props) {
               Where in London
             </Link>
             <span>/</span>
+            <Link href="/compare" className="hover:text-white transition-colors">
+              Compare
+            </Link>
+            <span>/</span>
             <span className="text-slate-200">
               {a.name} vs {b.name}
             </span>
@@ -172,16 +204,32 @@ export default async function ComparePage({ params }: Props) {
             </h1>
             <p className="text-lg text-slate-300 max-w-2xl">
               A side-by-side comparison of rent, transport, lifestyle and
-              overall liveability.
+              overall liveability, with links through to the full area guides
+              for each neighbourhood.
             </p>
           </header>
 
           {/* Recommendation callout */}
           <section className="mb-10 rounded-lg border border-emerald-700/40 bg-emerald-950/30 p-5">
             <p className="text-sm text-emerald-400 font-medium mb-1">
-              Our recommendation
+              Quick verdict
             </p>
-            <p className="text-white">{overallRecommendation}</p>
+            <p className="text-white mb-4">{overallRecommendation}</p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                ["Rent", rentSummary],
+                ["Transport", `${transportWinner} has the stronger transport score.`],
+                ["Lifestyle", `${lifestyleArea} has the stronger overall lifestyle profile.`],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  className="rounded-lg bg-slate-950/50 border border-emerald-700/20 p-3"
+                >
+                  <p className="text-xs text-emerald-300 mb-1">{label}</p>
+                  <p className="text-sm text-slate-200">{value}</p>
+                </div>
+              ))}
+            </div>
           </section>
 
           {/* Rent comparison */}
@@ -199,12 +247,22 @@ export default async function ComparePage({ params }: Props) {
                 >
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="font-semibold">
-                      {n.name}
+                      <Link
+                        href={`/neighbourhoods/${n.id}`}
+                        className="hover:text-emerald-300 transition-colors"
+                      >
+                        {n.name}
+                      </Link>
                       <Winner isWinner={n.id === rentWinner} />
                     </h3>
-                    <span className="text-xs text-slate-400">
+                    <Link
+                      href={`/boroughs/${boroughSlug(
+                        primaryBoroughName(n.borough),
+                      )}`}
+                      className="text-xs text-slate-400 hover:text-white transition-colors"
+                    >
                       {n.borough}
-                    </span>
+                    </Link>
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
@@ -236,6 +294,41 @@ export default async function ComparePage({ params }: Props) {
                 on a 1-bed flat.
               </p>
             )}
+          </section>
+
+          {/* Area guide links */}
+          <section className="grid sm:grid-cols-2 gap-4 mb-10">
+            {[
+              { neighbourhood: a, borough: aBorough },
+              { neighbourhood: b, borough: bBorough },
+            ].map(({ neighbourhood, borough }) => (
+              <div
+                key={neighbourhood.id}
+                className="rounded-lg bg-slate-900 border border-slate-800 p-5"
+              >
+                <p className="text-xs text-slate-400 mb-2">Read next</p>
+                <h2 className="text-xl font-semibold mb-3">
+                  Full {neighbourhood.name} area guide
+                </h2>
+                <p className="text-sm text-slate-300 mb-4">
+                  {neighbourhood.summary}
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Link
+                    href={`/neighbourhoods/${neighbourhood.id}`}
+                    className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-sm font-medium transition-colors"
+                  >
+                    View {neighbourhood.name}
+                  </Link>
+                  <Link
+                    href={`/boroughs/${boroughSlug(borough)}`}
+                    className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:text-white transition-colors"
+                  >
+                    {borough} borough guide
+                  </Link>
+                </div>
+              </div>
+            ))}
           </section>
 
           {/* Lifestyle comparison */}
@@ -289,6 +382,45 @@ export default async function ComparePage({ params }: Props) {
                 );
               })}
             </div>
+          </section>
+
+          <section className="mb-10 rounded-lg bg-slate-900 border border-slate-800 p-5">
+            <h2 className="text-xl font-semibold mb-4">
+              Which area suits which priorities?
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <h3 className="font-medium text-white mb-2">
+                  Choose {a.name} if...
+                </h3>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  {a.strengths.slice(0, 3).map((strength) => (
+                    <li key={strength} className="flex gap-2">
+                      <span className="text-emerald-400">-</span>
+                      {strength}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-medium text-white mb-2">
+                  Choose {b.name} if...
+                </h3>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  {b.strengths.slice(0, 3).map((strength) => (
+                    <li key={strength} className="flex gap-2">
+                      <span className="text-emerald-400">-</span>
+                      {strength}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <p className="mt-5 text-sm text-slate-400">
+              For green space, {greenSpaceWinner} scores better. For nightlife,
+              {nightlifeArea} has the edge. On safety, {safetyArea} scores
+              higher in the current model.
+            </p>
           </section>
 
           {/* Strengths / tradeoffs */}
@@ -355,7 +487,7 @@ export default async function ComparePage({ params }: Props) {
                   {a.mainStations.slice(0, 2).map((s) => s.name).join(" and ")}
                   {". "}
                   {b.name} is served by{" "}
-                  {b.mainStations.slice(0, 2).map((s) => s.name).join(" and")}
+                  {b.mainStations.slice(0, 2).map((s) => s.name).join(" and ")}
                   .
                 </p>
               </div>
@@ -363,28 +495,49 @@ export default async function ComparePage({ params }: Props) {
           </section>
 
           {/* Related comparisons */}
-          {related.length > 0 && (
+          {relatedData.length > 0 && (
             <section className="mb-12">
               <h2 className="text-xl font-semibold mb-4">
                 Compare {a.name} with similar areas
               </h2>
               <div className="flex flex-wrap gap-3">
-                {related.map((s) => {
-                  const parts = s.split("-vs-");
-                  const otherSlug = parts[1];
+                {relatedData.map((item) => {
+                  if (!item) return null;
                   return (
                     <Link
-                      key={s}
-                      href={`/compare/${s}`}
+                      key={item.slug}
+                      href={`/compare/${item.slug}`}
                       className="rounded-lg bg-slate-900 border border-slate-800 px-4 py-2 text-sm hover:border-slate-600 transition-colors capitalize"
                     >
-                      {a.name} vs {otherSlug.replace(/-/g, " ")}
+                      {item.a.name} vs {item.b.name}
                     </Link>
                   );
                 })}
               </div>
             </section>
           )}
+
+          <section className="mb-12 rounded-lg bg-slate-900 border border-slate-800 p-6">
+            <h2 className="text-xl font-semibold mb-3">
+              Data sources and review date
+            </h2>
+            <p className="text-sm text-slate-300 mb-4">
+              This comparison uses the same area model as the discovery tool.
+              Rent data was last reviewed on{" "}
+              <time dateTime={RENT_MARKET_REVIEW_AS_OF}>
+                {RENT_MARKET_REVIEW_AS_OF}
+              </time>
+              .
+            </p>
+            <ul className="space-y-2 text-sm text-slate-400">
+              {RENT_MARKET_SOURCES.map((source) => (
+                <li key={source} className="flex gap-2">
+                  <span className="text-emerald-400">-</span>
+                  {source}
+                </li>
+              ))}
+            </ul>
+          </section>
 
           {/* CTA */}
           <section className="rounded-xl bg-slate-900 border border-slate-700 p-8 text-center">
@@ -395,12 +548,20 @@ export default async function ComparePage({ params }: Props) {
               Enter your commute, salary and lifestyle preferences to get a
               personalised neighbourhood ranking.
             </p>
-            <Link
-              href="/"
-              className="inline-block rounded-lg bg-emerald-600 hover:bg-emerald-500 px-6 py-3 font-medium transition-colors"
-            >
-              Open the discovery tool →
-            </Link>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Link
+                href="/"
+                className="inline-block rounded-lg bg-emerald-600 hover:bg-emerald-500 px-6 py-3 font-medium transition-colors"
+              >
+                Open the discovery tool →
+              </Link>
+              <Link
+                href="/compare"
+                className="inline-block rounded-lg border border-slate-700 px-6 py-3 font-medium text-slate-300 hover:text-white transition-colors"
+              >
+                More comparisons
+              </Link>
+            </div>
           </section>
         </main>
       </div>
