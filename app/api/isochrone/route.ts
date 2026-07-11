@@ -50,10 +50,19 @@ type Body = {
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const cache = new TtlCache<IsochroneFeature>(ONE_DAY, 400);
+const gridReachablesCache = new TtlCache<ReachableNeighbourhoodInfo[]>(ONE_DAY, 300);
+const gridReachablesInFlight = new Map<string, Promise<ReachableNeighbourhoodInfo[]>>();
 const REACHABLE_DEDUPE_DEG = 0.001;
 const RATE_LIMIT = {
   scope: "api:isochrone",
   limit: 30,
+  globalLimit: 180,
+  windowMs: 10 * 60 * 1000,
+};
+const GRID_MISS_RATE_LIMIT = {
+  scope: "api:isochrone:grid-miss",
+  limit: 6,
+  globalLimit: 30,
   windowMs: 10 * 60 * 1000,
 };
 
@@ -82,6 +91,45 @@ async function gridSampleReachables(
     }
   }
   return out;
+}
+
+async function cachedGridSampleReachables(
+  destination: LatLng,
+  headers: Headers,
+): Promise<ReachableNeighbourhoodInfo[]> {
+  const key = coordKey(destination.lat, destination.lng);
+  const cached = gridReachablesCache.get(key);
+  if (cached) {
+    return cached;
+  }
+
+  const inFlight = gridReachablesInFlight.get(key);
+  if (inFlight) {
+    return inFlight;
+  }
+
+  const rateLimit = checkRateLimit(headers, GRID_MISS_RATE_LIMIT);
+  if (!rateLimit.ok) {
+    throw new GridMissRateLimitError(rateLimit.retryAfterSeconds);
+  }
+
+  const promise = gridSampleReachables(destination)
+    .then((reachable) => {
+      gridReachablesCache.set(key, reachable);
+      return reachable;
+    })
+    .finally(() => {
+      gridReachablesInFlight.delete(key);
+    });
+  gridReachablesInFlight.set(key, promise);
+  return promise;
+}
+
+class GridMissRateLimitError extends Error {
+  constructor(readonly retryAfterSeconds: number) {
+    super("Too many uncached isochrone destinations.");
+    this.name = "GridMissRateLimitError";
+  }
 }
 
 function reachableSampleKey(sample: ReachableNeighbourhoodInfo): string {
@@ -183,7 +231,10 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const fromGrid = await gridSampleReachables(body.destinationLatLng);
+    const fromGrid = await cachedGridSampleReachables(
+      body.destinationLatLng,
+      req.headers,
+    );
     const reachable = mergeReachableSamples(fromClient, fromGrid);
 
     const provider = getIsochroneProvider();
@@ -195,6 +246,19 @@ export async function POST(req: NextRequest) {
     cache.set(key, feature);
     return NextResponse.json({ feature, cached: false });
   } catch (err) {
+    if (err instanceof GridMissRateLimitError) {
+      return NextResponse.json(
+        {
+          error: "rate_limited",
+          message: "Too many new destinations. Try again shortly.",
+        },
+        {
+          status: 429,
+          headers: { "Retry-After": String(err.retryAfterSeconds) },
+        },
+      );
+    }
+
     console.error("Isochrone provider failed", err);
     return NextResponse.json(
       {

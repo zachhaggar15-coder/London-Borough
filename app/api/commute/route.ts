@@ -26,6 +26,7 @@ const cache = new TtlCache<Record<string, number>>(ONE_DAY, 200);
 const RATE_LIMIT = {
   scope: "api:commute",
   limit: 40,
+  globalLimit: 240,
   windowMs: 10 * 60 * 1000,
 };
 

@@ -357,6 +357,24 @@ test("rate limiter blocks repeated requests per client and scope", () => {
   assert.deepEqual(checkRateLimit(otherClientHeaders, options), { ok: true });
 });
 
+test("rate limiter applies a global cap across rotated forwarding headers", () => {
+  const scope = `test:global:${Date.now()}:${Math.random()}`;
+  const options = { scope, limit: 50, globalLimit: 2, windowMs: 60_000 };
+  const headersFor = (ip) => ({
+    get: (name) => {
+      if (name === "x-forwarded-for") return ip;
+      if (name === "user-agent") return "node-test";
+      return null;
+    },
+  });
+
+  assert.deepEqual(checkRateLimit(headersFor("203.0.113.10"), options), { ok: true });
+  assert.deepEqual(checkRateLimit(headersFor("203.0.113.11"), options), { ok: true });
+  const rotated = checkRateLimit(headersFor("203.0.113.12"), options);
+  assert.equal(rotated.ok, false);
+  assert.ok(rotated.retryAfterSeconds > 0);
+});
+
 test("approximate isochrone returns a closed polygon around the destination", () => {
   const feature = approximateIsochrone(
     { lat: 51.5, lng: -0.1 },
