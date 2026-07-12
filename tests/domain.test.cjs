@@ -89,6 +89,9 @@ const {
   LIFESTYLE_PAGES,
   SALARY_LEVELS,
 } = jiti("../lib/seo-data.ts");
+const {
+  getRenterEssentialSlugs,
+} = jiti("../lib/renter-essentials.ts");
 
 const query = {
   destination: { id: "test", label: "Test", centroid: { lat: 51.5, lng: -0.1 } },
@@ -397,7 +400,9 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
     getAllCommuteSlugs().length +
     SALARY_LEVELS.length +
     LIFESTYLE_PAGES.length +
-    getCompareStaticParams().length;
+    getCompareStaticParams().length +
+    getRenterEssentialSlugs().length +
+    1;
 
   assert.equal(routes.length, expectedCount);
   assert.equal(new Set(paths).size, paths.length);
@@ -408,6 +413,8 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
   assert.ok(paths.includes("/compare"));
   assert.ok(paths.includes("/lifestyle"));
   assert.ok(paths.includes("/salary"));
+  assert.ok(paths.includes("/essentials"));
+  assert.ok(getRenterEssentialSlugs().every((slug) => paths.includes(`/essentials/${slug}`)));
   assert.ok(paths.every((path) => path === "/" || !path.endsWith("/")));
   assert.ok(paths.every((path) => absoluteUrl(path).startsWith(SITE_URL)));
   assert.ok(routes.every((route) => route.priority > 0 && route.priority <= 1));
