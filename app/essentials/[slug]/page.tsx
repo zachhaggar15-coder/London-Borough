@@ -115,6 +115,64 @@ export default async function EssentialPostPage({ params }: Props) {
             </p>
           </section>
 
+          {post.articleSections && (
+            <section className="mb-12">
+              <h2 className="text-xl font-semibold mb-6">Practical guide</h2>
+              <div className="space-y-6">
+                {post.articleSections.map((section) => (
+                  <article
+                    key={section.heading}
+                    className="rounded-lg bg-slate-900 border border-slate-800 p-6"
+                  >
+                    <h3 className="font-semibold text-white mb-3">
+                      {section.heading}
+                    </h3>
+                    <p className="text-slate-300 leading-relaxed">
+                      {section.body}
+                    </p>
+                    {section.bullets && (
+                      <ul className="mt-4 space-y-2">
+                        {section.bullets.map((item) => (
+                          <li key={item} className="flex gap-2 text-slate-300">
+                            <span className="text-emerald-400 mt-0.5 flex-shrink-0">
+                              -
+                            </span>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {post.externalLinks && (
+            <section className="mb-12 rounded-lg bg-emerald-950/40 border border-emerald-900 p-6">
+              <h2 className="text-xl font-semibold mb-4">
+                Meal prep planning
+              </h2>
+              <div className="space-y-4">
+                {post.externalLinks.map((link) => (
+                  <div key={link.href}>
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-emerald-300 hover:text-emerald-200 transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                    <p className="mt-2 text-sm text-slate-300">
+                      {link.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           <section className="mb-12">
             <h2 className="text-xl font-semibold mb-6">Recommended products</h2>
             <div className="grid gap-5 sm:grid-cols-2">

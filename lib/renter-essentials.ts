@@ -1,4 +1,9 @@
 export const AMAZON_ASSOCIATE_TAG = "amazonaff01d8-21";
+export const AMAZON_LINK_CODE = "ll2";
+export const AMAZON_LINK_ID = "33f39801ccfd3e1d63322455af2c9615";
+export const AMAZON_REF = "as_li_ss_tl";
+export const AMAZON_STORE_URL = `https://www.amazon.co.uk?&linkCode=${AMAZON_LINK_CODE}&tag=${AMAZON_ASSOCIATE_TAG}&linkId=${AMAZON_LINK_ID}&ref_=${AMAZON_REF}`;
+export const MEALPREP_ORG_URL = "https://mealprep.org.uk";
 
 export type RenterEssentialProduct = {
   asin: string;
@@ -6,6 +11,18 @@ export type RenterEssentialProduct = {
   shortName: string;
   fit: string;
   reason: string;
+};
+
+export type RenterEssentialArticleSection = {
+  heading: string;
+  body: string;
+  bullets?: string[];
+};
+
+export type RenterEssentialExternalLink = {
+  href: string;
+  label: string;
+  description: string;
 };
 
 export type RenterEssentialPost = {
@@ -19,10 +36,19 @@ export type RenterEssentialPost = {
   suggestedPlacements: string[];
   checklist: string[];
   products: RenterEssentialProduct[];
+  articleSections?: RenterEssentialArticleSection[];
+  externalLinks?: RenterEssentialExternalLink[];
 };
 
 export function amazonUkProductUrl(asin: string): string {
-  return `https://www.amazon.co.uk/dp/${asin}?tag=${AMAZON_ASSOCIATE_TAG}`;
+  const params = new URLSearchParams({
+    linkCode: AMAZON_LINK_CODE,
+    tag: AMAZON_ASSOCIATE_TAG,
+    linkId: AMAZON_LINK_ID,
+    ref_: AMAZON_REF,
+  });
+
+  return `https://www.amazon.co.uk/dp/${asin}?${params.toString()}`;
 }
 
 export const RENTER_ESSENTIAL_POSTS: RenterEssentialPost[] = [
@@ -151,6 +177,235 @@ export const RENTER_ESSENTIAL_POSTS: RenterEssentialPost[] = [
         fit: "Best for checking bed, sofa, desk and wardrobe fit during viewings.",
         reason:
           "A small, useful flat-viewing product that helps users turn area research into a confident rental decision.",
+      },
+    ],
+  },
+  {
+    slug: "meal-prep-before-moving-house",
+    title: "Meal prep before moving house in London",
+    shortTitle: "Moving-week meal prep",
+    metaTitle: "Meal prep before moving house: London moving-week food plan",
+    metaDescription:
+      "What to meal prep before moving to a new London flat, with container, lunch bag and freezer-friendly Amazon UK picks.",
+    intro:
+      "Moving week is when food planning usually collapses: the pans are packed, the fridge is half empty and the first few nights in a new area are expensive. A small meal-prep setup keeps the move cheaper and calmer without pretending you will batch-cook a full Sunday routine while surrounded by boxes.",
+    whyItConverts:
+      "This targets people with immediate moving intent. They are already buying boxes, storage and first-flat supplies, so meal-prep containers and lunch carry products are practical add-ons rather than random kitchen content.",
+    suggestedPlacements: [
+      "The renter essentials hub as a dedicated moving-week food section.",
+      "Neighbourhood pages after the moving and small-flat setup guides.",
+      "Salary pages where rent pressure makes takeaway-heavy moving weeks more painful.",
+    ],
+    checklist: [
+      "Cook only meals that survive reheating, fridge gaps and a chaotic first evening.",
+      "Keep one bag or box separate for lunches, cutlery and the first-night meal.",
+      "Use a UK meal plan before the move so the first supermarket shop is not improvised.",
+    ],
+    products: [
+      {
+        asin: "B07FM7W3RK",
+        name: "Joseph Joseph Nest Lock 5-piece leakproof food storage container set",
+        shortName: "Joseph Joseph Nest Lock set",
+        fit: "Best for a compact moving-week container set that nests when cupboard space is tight.",
+        reason:
+          "The nesting design makes sense for London flats where storage is limited and containers need to work for leftovers, packed lunches and fridge organisation.",
+      },
+      {
+        asin: "B07P1TD1LD",
+        name: "Sistema Brilliance 380ml leakproof food storage container",
+        shortName: "Sistema Brilliance container",
+        fit: "Best for sauces, overnight oats, chopped fruit and small portions during the first week.",
+        reason:
+          "A small leakproof container is useful when the kitchen is half-unpacked and food needs to travel between work, viewings and the new flat.",
+      },
+      {
+        asin: "B07JZJ22VB",
+        name: "Prep Naturals insulated meal prep bag with reusable containers",
+        shortName: "Insulated meal prep bag",
+        fit: "Best for keeping moving-day lunches and first-week office meals together.",
+        reason:
+          "An insulated bag is a practical bridge between the old fridge, the moving van and the first few workdays from a new location.",
+      },
+    ],
+    articleSections: [
+      {
+        heading: "What to prep before the move",
+        body:
+          "Aim for two reliable dinners, two lunches and a breakfast option rather than a perfect week. The goal is to avoid the expensive gap between packing your old kitchen and learning the shops near the new flat.",
+        bullets: [
+          "Freeze one chilli, curry or pasta sauce in flat portions.",
+          "Keep two lunches chilled separately so they do not disappear into a moving box.",
+          "Use oats, yoghurt pots or breakfast wraps for the first two mornings.",
+        ],
+      },
+      {
+        heading: "How to pack the food kit",
+        body:
+          "Put the containers, a fork, a tea towel, washing-up liquid and one sharp knife in a clearly labelled first-night bag. That small kit lets you eat before the kitchen is fully unpacked.",
+      },
+      {
+        heading: "Plan the first shop before you arrive",
+        body:
+          "Before moving day, choose a simple UK meal plan and write a short first-shop list around the supermarket you will actually use. MealPrep.org.uk is a useful next step because it can turn budget, calories and supermarket preference into a ready-made plan.",
+      },
+    ],
+    externalLinks: [
+      {
+        href: MEALPREP_ORG_URL,
+        label: "Plan the first week on MealPrep.org.uk",
+        description:
+          "Use the UK meal-planning tools to choose a supermarket, budget and container setup before moving day.",
+      },
+    ],
+  },
+  {
+    slug: "first-week-meal-prep-new-flat",
+    title: "First-week meal prep after moving into a new flat",
+    shortTitle: "First-week meal prep",
+    metaTitle: "First-week meal prep after moving into a new flat",
+    metaDescription:
+      "A practical first-week meal-prep guide for a new London flat, with simple planning tips and Amazon UK lunch-storage picks.",
+    intro:
+      "The first week in a new flat is not the time for complicated recipes. You need meals that work around a half-stocked kitchen, a new commute and the reality that you may still be finding the nearest supermarket after work.",
+    whyItConverts:
+      "Searchers looking for first-week meal prep have a clear problem and a short purchase window: they need containers, a lunch bag and a plan before routine sets in.",
+    suggestedPlacements: [
+      "Renter essentials pages for users who have already chosen an area.",
+      "Salary guides for readers trying to keep food costs under control after a deposit and move.",
+      "Commute pages where a new office journey changes packed-lunch timing.",
+    ],
+    checklist: [
+      "Start with one protein, one carb and one veg base that can become several meals.",
+      "Choose containers that stack clearly in a small fridge.",
+      "Plan work lunches before dinners if the new commute is the biggest routine change.",
+    ],
+    products: [
+      {
+        asin: "B084H76VWG",
+        name: "ThinkFit insulated meal prep lunch box with reusable containers",
+        shortName: "ThinkFit meal prep lunch box",
+        fit: "Best for carrying several first-week meals or snacks when the new commute is still unpredictable.",
+        reason:
+          "It combines an insulated lunch bag with containers, which suits people rebuilding routines after a move.",
+      },
+      {
+        asin: "B00DGPPY20",
+        name: "Thermos Stainless King 470ml insulated food flask",
+        shortName: "Thermos food flask",
+        fit: "Best for soups, stews and hot lunches when the office microwave situation is unknown.",
+        reason:
+          "A food flask gives new commuters a low-effort packed lunch option before they know the best local food spots.",
+      },
+      {
+        asin: "B07FM7W3RK",
+        name: "Joseph Joseph Nest Lock 5-piece leakproof food storage container set",
+        shortName: "Joseph Joseph Nest Lock set",
+        fit: "Best for portioning first-week dinners and leftovers in a small new kitchen.",
+        reason:
+          "A nested set helps avoid buying mismatched tubs while still covering lunch, dinner and leftover portions.",
+      },
+    ],
+    articleSections: [
+      {
+        heading: "The easiest first-week formula",
+        body:
+          "Cook one tray or pan of food that can be eaten three ways: with rice, in a wrap and over salad. That keeps the first shop short and reduces the amount of equipment you need before everything is unpacked.",
+        bullets: [
+          "Buy one reliable breakfast that needs no cooking.",
+          "Cook two dinners with enough leftovers for lunches.",
+          "Keep one emergency freezer meal for the night the move catches up with you.",
+        ],
+      },
+      {
+        heading: "Match prep to the new area",
+        body:
+          "If your new flat is near cheaper supermarkets, plan a bigger weekly shop. If it is mostly convenience stores, prep fewer meals but keep lunches covered so the daily spend does not creep up.",
+      },
+      {
+        heading: "Use a ready-made UK plan",
+        body:
+          "A ready-made UK supermarket plan is faster than building a new routine from scratch. MealPrep.org.uk is the right off-site link here because it focuses on UK supermarkets, budgets, calories and container counts.",
+      },
+    ],
+    externalLinks: [
+      {
+        href: MEALPREP_ORG_URL,
+        label: "Build a first-week meal plan",
+        description:
+          "Choose a supermarket and budget on MealPrep.org.uk before stocking the new kitchen.",
+      },
+    ],
+  },
+  {
+    slug: "work-lunch-meal-prep-new-commute",
+    title: "Work lunch meal prep for a new London commute",
+    shortTitle: "New-commute lunches",
+    metaTitle: "Work lunch meal prep for a new London commute",
+    metaDescription:
+      "Packed-lunch meal prep for a new London commute, with Amazon UK containers, insulated bags and hot-food flask picks.",
+    intro:
+      "A new area often means a new route to work, new lunch prices and less margin in the morning. Planning two or three work lunches before the first Monday makes the commute feel less improvised.",
+    whyItConverts:
+      "The page matches high-intent lunch-prep searches and the site's commute intent: users are already thinking about travel time, office days and daily costs.",
+    suggestedPlacements: [
+      "Commute destination pages after the ranked neighbourhood table.",
+      "Neighbourhood guides with strong office-worker or young-professional intent.",
+      "The renter essentials hub alongside the commuter kit.",
+    ],
+    checklist: [
+      "Choose leakproof containers for train and tube bags.",
+      "Use insulated carry if the commute is long or the office fridge is unreliable.",
+      "Prep lunches that are good cold unless you know the microwave setup.",
+    ],
+    products: [
+      {
+        asin: "B00DGPPY20",
+        name: "Thermos Stainless King 470ml insulated food flask",
+        shortName: "Thermos food flask",
+        fit: "Best for hot lunches on office days without relying on a microwave.",
+        reason:
+          "It fits the London commute use case: compact, sealed and useful for soups, chilli and leftovers.",
+      },
+      {
+        asin: "B07JP7TD5T",
+        name: "Sistema Brilliance leakproof food storage lunchbox",
+        shortName: "Sistema Brilliance lunchbox",
+        fit: "Best for packed lunches that need to survive a backpack or tote bag.",
+        reason:
+          "A leakproof lunchbox is the most direct meal-prep product for commuters carrying food on public transport.",
+      },
+      {
+        asin: "B084H76VWG",
+        name: "ThinkFit insulated meal prep lunch box with reusable containers",
+        shortName: "ThinkFit meal prep lunch box",
+        fit: "Best for full-day office meals, gym days or long cross-London commutes.",
+        reason:
+          "It gives heavier meal preppers one carry system for multiple portions, snacks and cold packs.",
+      },
+    ],
+    articleSections: [
+      {
+        heading: "Prep around the commute, not the recipe",
+        body:
+          "The best lunch for a new commute is the one that does not leak, smell strongly on the train or need special equipment at work. Start with two cold lunches and one hot option once you understand the office setup.",
+      },
+      {
+        heading: "Keep the cost visible",
+        body:
+          "A London office lunch can quietly become a rent-sized leak in the budget. Prep just three lunches a week and keep Fridays flexible so the habit feels useful rather than joyless.",
+      },
+      {
+        heading: "Plan lunches from UK supermarkets",
+        body:
+          "MealPrep.org.uk is a useful companion because it has UK supermarket-based plans and tools for container count, shopping budget and work-lunch meal prep.",
+      },
+    ],
+    externalLinks: [
+      {
+        href: MEALPREP_ORG_URL,
+        label: "Find UK work-lunch meal prep ideas",
+        description:
+          "Use MealPrep.org.uk for supermarket-based plans, container guidance and weekly lunch planning.",
       },
     ],
   },

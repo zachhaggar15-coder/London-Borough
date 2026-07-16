@@ -406,11 +406,12 @@ export default async function NeighbourhoodPage({ params }: Props) {
           <EssentialsPreview
             slugs={[
               "moving-and-viewing-kit",
+              "meal-prep-before-moving-house",
               "small-flat-storage",
               "damp-laundry-kit",
             ]}
             title={`Useful kit before moving to ${n.name}`}
-            description="Viewing, moving and rental setup guides that fit the practical next step after shortlisting an area."
+            description="Viewing, moving, meal prep and rental setup guides that fit the practical next step after shortlisting an area."
           />
 
           {/* FAQ */}

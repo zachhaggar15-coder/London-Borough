@@ -258,7 +258,7 @@ export default function HomePage() {
           </h2>
           <p className="text-slate-400 mb-8">
             Practical Amazon UK guides for flat viewings, moving in, small
-            spaces, indoor laundry and commuting.
+            spaces, meal prep, indoor laundry and commuting.
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {renterEssentials.map((post) => (

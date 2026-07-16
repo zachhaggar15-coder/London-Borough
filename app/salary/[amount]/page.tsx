@@ -328,9 +328,13 @@ export default async function SalaryPage({ params }: Props) {
           </section>
 
           <EssentialsPreview
-            slugs={["small-flat-storage", "damp-laundry-kit"]}
+            slugs={[
+              "small-flat-storage",
+              "first-week-meal-prep-new-flat",
+              "damp-laundry-kit",
+            ]}
             title="Useful kit once you have found a flat"
-            description="Storage and indoor-laundry picks that fit the space trade-offs behind London rent budgets."
+            description="Storage, meal prep and indoor-laundry picks that fit the space and budget trade-offs behind London rent."
           />
 
           {/* Other salary guides */}

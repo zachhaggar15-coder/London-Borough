@@ -252,9 +252,9 @@ export default async function CommutePage({ params }: Props) {
           ))}
 
           <EssentialsPreview
-            slugs={["commuter-kit"]}
+            slugs={["commuter-kit", "work-lunch-meal-prep-new-commute"]}
             title={`Useful kit for commuting to ${destinationLabel}`}
-            description="Compact Amazon UK picks for public-transport days, rainy station walks and long office commutes."
+            description="Compact Amazon UK picks for public-transport days, rainy station walks, work lunches and long office commutes."
           />
 
           {/* FAQ */}
