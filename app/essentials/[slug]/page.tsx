@@ -41,6 +41,10 @@ export default async function EssentialPostPage({ params }: Props) {
   const post = getRenterEssentialPost(slug);
   if (!post) notFound();
 
+  const productsByAsin = new Map(
+    post.products.map((product) => [product.asin, product]),
+  );
+
   const related = getRenterEssentialPosts()
     .filter((item) => item.slug !== slug)
     .slice(0, 3);
@@ -142,6 +146,56 @@ export default async function EssentialPostPage({ params }: Props) {
                         ))}
                       </ul>
                     )}
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {post.comparisonRows && (
+            <section className="mb-12">
+              <h2 className="text-xl font-semibold mb-6">
+                Product comparison
+              </h2>
+              <div className="grid gap-5">
+                {post.comparisonRows.map((row) => (
+                  <article
+                    key={row.need}
+                    className="rounded-lg bg-slate-900 border border-slate-800 p-6"
+                  >
+                    <p className="text-xs uppercase tracking-wide text-emerald-400 mb-2">
+                      Best when
+                    </p>
+                    <h3 className="text-lg font-semibold text-white mb-3">
+                      {row.need}
+                    </h3>
+                    <p className="text-slate-300 leading-relaxed mb-4">
+                      {row.pick}
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {row.productAsins.map((asin) => {
+                        const product = productsByAsin.get(asin);
+                        if (!product) return null;
+
+                        return (
+                          <a
+                            key={asin}
+                            href={amazonUkProductUrl(product.asin)}
+                            target="_blank"
+                            rel="sponsored nofollow noopener noreferrer"
+                            className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-200 hover:bg-slate-700 transition-colors"
+                          >
+                            {product.shortName}
+                          </a>
+                        );
+                      })}
+                    </div>
+                    <p className="text-sm text-slate-300 mb-2">
+                      {row.why}
+                    </p>
+                    <p className="text-sm text-slate-500">
+                      Trade-off: {row.tradeoff}
+                    </p>
                   </article>
                 ))}
               </div>

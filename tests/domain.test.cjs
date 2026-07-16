@@ -441,6 +441,15 @@ test("meal prep moving guides are routable and link to MealPrep.org.uk", () => {
   assert.deepEqual(posts.map((post) => post.slug), mealPrepSlugs);
   assert.ok(posts.every((post) => post.products.length >= 3));
   assert.ok(posts.every((post) => post.articleSections?.length >= 3));
+  assert.ok(posts.every((post) => post.comparisonRows?.length >= 3));
+  assert.ok(
+    posts.every((post) => {
+      const productAsins = new Set(post.products.map((product) => product.asin));
+      return post.comparisonRows?.every((row) =>
+        row.productAsins.every((asin) => productAsins.has(asin)),
+      );
+    }),
+  );
   assert.ok(
     posts.every((post) =>
       post.externalLinks?.some((link) => link.href === MEALPREP_ORG_URL),
