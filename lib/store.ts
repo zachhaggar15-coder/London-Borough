@@ -13,6 +13,7 @@
 
 import { create } from "zustand";
 import type {
+  CommuteEstimateSource,
   LifestyleScores,
   UserQuery,
   Destination,
@@ -22,10 +23,12 @@ import type {
 import { DESTINATIONS } from "@/lib/data/destinations";
 
 type CommuteMap = Record<string, number>;
+type CommuteSourceMap = Record<string, CommuteEstimateSource>;
 
 type State = {
   query: UserQuery;
   commute: CommuteMap;
+  commuteSources: CommuteSourceMap;
   isLoadingCommute: boolean;
   /** The reachable-area polygon. Null until fetched. */
   isochrone: GeoJSON.Feature<GeoJSON.Polygon> | null;
@@ -47,6 +50,7 @@ type Actions = {
   setLifestyleWeight: (key: keyof LifestyleScores, value: number) => void;
   clearLifestyleWeights: () => void;
   setCommute: (commute: CommuteMap) => void;
+  setCommuteSources: (sources: CommuteSourceMap) => void;
   setLoadingCommute: (loading: boolean) => void;
   setIsochrone: (feature: GeoJSON.Feature<GeoJSON.Polygon> | null) => void;
   setLoadingIsochrone: (loading: boolean) => void;
@@ -69,6 +73,7 @@ export const useStore = create<State & Actions>((set) => ({
     lifestyleWeights: {},
   },
   commute: {},
+  commuteSources: {},
   isLoadingCommute: false,
   isochrone: null,
   isLoadingIsochrone: false,
@@ -106,6 +111,7 @@ export const useStore = create<State & Actions>((set) => ({
   clearLifestyleWeights: () =>
     set((s) => ({ query: { ...s.query, lifestyleWeights: {} } })),
   setCommute: (commute) => set({ commute }),
+  setCommuteSources: (sources) => set({ commuteSources: sources }),
   setLoadingCommute: (loading) => set({ isLoadingCommute: loading }),
   setIsochrone: (feature) => set({ isochrone: feature }),
   setLoadingIsochrone: (loading) => set({ isLoadingIsochrone: loading }),

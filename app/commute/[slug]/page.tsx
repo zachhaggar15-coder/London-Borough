@@ -42,7 +42,13 @@ export default async function CommutePage({ params }: Props) {
   const data = getCommutePageData(slug);
   if (!data) notFound();
 
-  const { destinationLabel, bands, topPicks } = data;
+  const {
+    destinationLabel,
+    bands,
+    topPicks,
+    decisionPicks,
+    valueTradeOff,
+  } = data;
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -75,12 +81,12 @@ export default async function CommutePage({ params }: Props) {
           "@type": "Answer",
           text:
             topPicks.length > 0
-              ? `The best areas for commuting to ${destinationLabel} include ${topPicks
+              ? `The strongest estimated options for commuting to ${destinationLabel} include ${topPicks
                   .slice(0, 3)
                   .map((n) => n.name)
                   .join(
                     ", ",
-                  )}, with commute times of approximately ${topPicks[0].minutes} to ${topPicks[2]?.minutes ?? topPicks[0].minutes} minutes.`
+                  )}, with typical public-transport estimates of approximately ${topPicks[0].minutes} to ${topPicks[2]?.minutes ?? topPicks[0].minutes} minutes.`
               : `Several areas offer good commute access to ${destinationLabel}.`,
         },
       },
@@ -94,7 +100,7 @@ export default async function CommutePage({ params }: Props) {
               .filter((b) => b.maxMinutes <= 30)
               .flatMap((b) => b.neighbourhoods);
             return under30.length > 0
-              ? `Areas within 30 minutes of ${destinationLabel} include ${under30
+              ? `Areas estimated within 30 minutes of ${destinationLabel} include ${under30
                   .slice(0, 4)
                   .map((n) => n.name)
                   .join(", ")}.`
@@ -136,10 +142,59 @@ export default async function CommutePage({ params }: Props) {
             </h1>
             <p className="text-lg text-slate-300 max-w-2xl">
               {bands.flatMap((b) => b.neighbourhoods).length} London
-              neighbourhoods ranked by commute time to {destinationLabel},
-              with rent prices and transport options for each.
+              neighbourhoods ranked by estimated typical commute time to{" "}
+              {destinationLabel}, with rent prices and transport options for
+              each.{" "}
+              <Link
+                href="/methodology"
+                className="text-emerald-300 hover:text-emerald-200"
+              >
+                See how estimates are calculated.
+              </Link>
             </p>
           </header>
+
+          {decisionPicks.length > 0 && (
+            <section className="mb-12">
+              <h2 className="text-xl font-semibold mb-6">
+                Decision shortlist for {destinationLabel}
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {decisionPicks.map((pick) => (
+                  <Link
+                    key={`${pick.label}-${pick.neighbourhood.id}`}
+                    href={`/neighbourhoods/${pick.neighbourhood.id}`}
+                    className="rounded-lg bg-slate-900 border border-slate-800 p-5 hover:border-slate-600 transition-colors"
+                  >
+                    <p className="text-xs uppercase tracking-wide text-emerald-400 mb-2">
+                      {pick.label}
+                    </p>
+                    <h3 className="font-semibold text-white mb-2">
+                      {pick.neighbourhood.name}
+                    </h3>
+                    <p className="text-sm text-slate-300 mb-3">
+                      ~{pick.neighbourhood.minutes} min · £
+                      {pick.neighbourhood.oneBedRent.toLocaleString()}/mo
+                    </p>
+                    <p className="text-xs text-slate-500">{pick.reason}</p>
+                  </Link>
+                ))}
+              </div>
+              {valueTradeOff && (
+                <p className="mt-5 rounded-lg border border-slate-800 bg-slate-900 px-4 py-3 text-sm text-slate-300">
+                  You could save approximately{" "}
+                  <strong className="text-white">
+                    £{valueTradeOff.monthlySaving.toLocaleString()}/month
+                  </strong>{" "}
+                  by choosing {valueTradeOff.cheaperArea.name} instead of{" "}
+                  {valueTradeOff.fasterArea.name}
+                  {valueTradeOff.extraMinutes > 0
+                    ? ` for an estimated ${valueTradeOff.extraMinutes} extra minutes.`
+                    : " with no longer commute in this dataset."}
+                </p>
+              )}
+            </section>
+          )}
 
           {/* Top picks */}
           {topPicks.length > 0 && (
@@ -149,8 +204,9 @@ export default async function CommutePage({ params }: Props) {
               </h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {topPicks.map((n) => (
-                  <div
+                  <Link
                     key={n.id}
+                    href={`/neighbourhoods/${n.id}`}
                     className="rounded-lg bg-slate-900 border border-slate-800 p-5"
                   >
                     <div className="flex justify-between items-start mb-2">
@@ -178,7 +234,10 @@ export default async function CommutePage({ params }: Props) {
                         ))}
                       </div>
                     </div>
-                  </div>
+                    <p className="mt-3 text-[11px] text-slate-500">
+                      {n.sourceLabel}
+                    </p>
+                  </Link>
                 ))}
               </div>
             </section>
@@ -216,7 +275,14 @@ export default async function CommutePage({ params }: Props) {
                         key={n.id}
                         className="border-b border-slate-800/50 hover:bg-slate-900/50 transition-colors"
                       >
-                        <td className="py-3 font-medium">{n.name}</td>
+                        <td className="py-3 font-medium">
+                          <Link
+                            href={`/neighbourhoods/${n.id}`}
+                            className="hover:text-emerald-400 transition-colors"
+                          >
+                            {n.name}
+                          </Link>
+                        </td>
                         <td className="py-3 text-slate-400">{n.borough}</td>
                         <td className="py-3 text-right tabular-nums">
                           <span className="text-emerald-400">
@@ -227,6 +293,9 @@ export default async function CommutePage({ params }: Props) {
                               est.
                             </span>
                           )}
+                          <div className="text-[10px] text-slate-500">
+                            {n.sourceLabel}
+                          </div>
                         </td>
                         <td className="py-3 text-right tabular-nums">
                           £{n.oneBedRent.toLocaleString()}
@@ -275,8 +344,9 @@ export default async function CommutePage({ params }: Props) {
                         .slice(0, 3)
                         .map((n) => n.name)
                         .join(", ")}{" "}
-                      all offer fast commutes to {destinationLabel}. The
-                      quickest is {topPicks[0].name} at approximately{" "}
+                      show the strongest estimated commutes to{" "}
+                      {destinationLabel}. The quickest is {topPicks[0].name} at
+                      approximately{" "}
                       {topPicks[0].minutes} minutes.
                     </>
                   )}
@@ -288,10 +358,10 @@ export default async function CommutePage({ params }: Props) {
                   {destinationLabel}?
                 </h3>
                 <p className="text-slate-300">
-                  Areas closest to {destinationLabel} tend to carry a rent
-                  premium. The sweet spot for most people is the 25–35 minute
-                  band — you trade a few extra minutes on the tube for
-                  meaningfully cheaper rent and more living space.
+                  Areas closest to {destinationLabel} often carry a rent
+                  premium. Compare the rent saving against the extra estimated
+                  minutes, then check the exact route on TfL before booking
+                  viewings.
                 </p>
               </div>
             </div>

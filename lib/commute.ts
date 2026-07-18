@@ -7,17 +7,17 @@
  *
  * Two providers ship:
  *   - TflProvider (default) — hits the free public TfL Journey Planner
- *     API. Real public-transport times. Falls back per-origin to the
- *     static heuristic if TfL can't route a particular pair.
+ *     API for durations. Falls back per-origin to a sourced estimate if
+ *     TfL can't route a particular pair.
  *   - StaticEstimateProvider — source-backed static matrix + distance heuristic
  *     for unknown coords. No network, no keys. Useful for offline dev
  *     and as the per-origin fallback inside TflProvider.
  *
- * The interface is batch-shaped (`commuteMatrixFrom`) so callers don't
- * need to know whether a provider does one request or eighty.
+ * The interface is batch-shaped so callers don't need to know whether a
+ * provider does one request or eighty.
  */
 
-import type { LatLng } from "@/lib/types";
+import type { CommuteEstimate, LatLng } from "@/lib/types";
 import { DESTINATIONS_BY_ID } from "@/lib/data/destinations";
 import { NEIGHBOURHOODS_BY_ID } from "@/lib/data/neighbourhoods";
 import { LONDON_TRANSIT_KMH } from "@/lib/isochrone";
@@ -25,17 +25,34 @@ import { tflJourneyMinutes } from "@/lib/tfl";
 import { TtlCache, coordKey } from "@/lib/cache";
 
 export type RoutingOrigin = { id: string; centroid: LatLng };
+export type CommuteEstimateMap = Record<string, CommuteEstimate>;
+export type CommuteMinuteMap = Record<string, number>;
 
 export interface RoutingProvider {
   /**
    * From `origins` to a single `destination`, return travel time in
-   * minutes for each origin (keyed by origin.id). Unreachable origins
-   * get `null`.
+   * minutes plus source metadata for each origin (keyed by origin.id).
+   */
+  commuteEstimatesFrom(
+    origins: RoutingOrigin[],
+    destination: LatLng,
+  ): Promise<CommuteEstimateMap>;
+
+  /**
+   * Compatibility helper for callers that only need minute values.
    */
   commuteMatrixFrom(
     origins: RoutingOrigin[],
     destination: LatLng,
-  ): Promise<Record<string, number>>;
+  ): Promise<CommuteMinuteMap>;
+}
+
+export function commuteMinutesFromEstimates(
+  estimates: CommuteEstimateMap,
+): CommuteMinuteMap {
+  return Object.fromEntries(
+    Object.entries(estimates).map(([id, estimate]) => [id, estimate.minutes]),
+  );
 }
 
 /* ────────────────────────────────────────────────────────────────────
@@ -108,27 +125,42 @@ function haversineKm(a: LatLng, b: LatLng): number {
 }
 
 class StaticEstimateProvider implements RoutingProvider {
-  async commuteMatrixFrom(
+  async commuteEstimatesFrom(
     origins: RoutingOrigin[],
     destination: LatLng,
-  ): Promise<Record<string, number>> {
+  ): Promise<CommuteEstimateMap> {
     const dId = findDestinationIdByCoord(destination);
-    const out: Record<string, number> = {};
+    const out: CommuteEstimateMap = {};
     const minPerKm = 60 / LONDON_TRANSIT_KMH;
 
     for (const o of origins) {
       // Try the pre-computed matrix first (origin is a known neighbourhood
       // AND destination is a pre-seeded office).
       if (dId && STATIC_COMMUTE_TIMES[o.id]?.[dId] != null) {
-        out[o.id] = STATIC_COMMUTE_TIMES[o.id][dId];
+        out[o.id] = {
+          minutes: STATIC_COMMUTE_TIMES[o.id][dId],
+          source: "staticMatrix",
+        };
         continue;
       }
       // Fallback heuristic: straight-line distance at LONDON_TRANSIT_KMH,
       // floored at 10 min. Honest about being an estimate.
       const km = haversineKm(o.centroid, destination);
-      out[o.id] = Math.max(10, Math.round(km * minPerKm));
+      out[o.id] = {
+        minutes: Math.max(10, Math.round(km * minPerKm)),
+        source: "distanceHeuristic",
+      };
     }
     return out;
+  }
+
+  async commuteMatrixFrom(
+    origins: RoutingOrigin[],
+    destination: LatLng,
+  ): Promise<CommuteMinuteMap> {
+    return commuteMinutesFromEstimates(
+      await this.commuteEstimatesFrom(origins, destination),
+    );
   }
 }
 
@@ -162,14 +194,17 @@ class TflProvider implements RoutingProvider {
   /** Used as the per-origin fallback when TfL can't route a pair. */
   private readonly staticEstimate = new StaticEstimateProvider();
 
-  async commuteMatrixFrom(
+  async commuteEstimatesFrom(
     origins: RoutingOrigin[],
     destination: LatLng,
-  ): Promise<Record<string, number>> {
+  ): Promise<CommuteEstimateMap> {
     // Pre-compute static fallback once so we have an estimate for every
     // origin without doing the work inline if TfL fails.
-    const staticMatrix = await this.staticEstimate.commuteMatrixFrom(origins, destination);
-    const out: Record<string, number> = {};
+    const staticEstimates = await this.staticEstimate.commuteEstimatesFrom(
+      origins,
+      destination,
+    );
+    const out: CommuteEstimateMap = {};
 
     // Process origins in parallel batches.
     for (let i = 0; i < origins.length; i += TFL_BATCH_SIZE) {
@@ -179,32 +214,44 @@ class TflProvider implements RoutingProvider {
           const key = pairKey(o.centroid, destination);
           const cached = tflPairCache.get(key);
           if (cached !== undefined) {
-            return { id: o.id, minutes: cached };
+            return {
+              id: o.id,
+              estimate:
+                typeof cached === "number"
+                  ? { minutes: cached, source: "tflJourneyPlanner" as const }
+                  : null,
+            };
           }
           try {
             const minutes = await tflJourneyMinutes(o.centroid, destination);
             tflPairCache.set(key, minutes);
-            return { id: o.id, minutes };
+            return {
+              id: o.id,
+              estimate:
+                typeof minutes === "number"
+                  ? { minutes, source: "tflJourneyPlanner" as const }
+                  : null,
+            };
           } catch (err) {
             // Don't poison the cache on network errors — let the next
             // request try again. Just fall back for this one.
             if (process.env.NODE_ENV !== "production") {
               console.warn(`TfL failed for ${o.id}:`, (err as Error).message);
             }
-            return { id: o.id, minutes: null };
+            return { id: o.id, estimate: null };
           }
         }),
       );
 
       for (const r of results) {
-        if (typeof r.minutes === "number") {
-          out[r.id] = r.minutes;
+        if (r.estimate) {
+          out[r.id] = r.estimate;
           continue;
         }
 
-        const fallbackMinutes = staticMatrix[r.id];
-        if (typeof fallbackMinutes === "number") {
-          out[r.id] = fallbackMinutes;
+        const fallback = staticEstimates[r.id];
+        if (fallback) {
+          out[r.id] = fallback;
           continue;
         }
 
@@ -215,6 +262,15 @@ class TflProvider implements RoutingProvider {
     }
 
     return out;
+  }
+
+  async commuteMatrixFrom(
+    origins: RoutingOrigin[],
+    destination: LatLng,
+  ): Promise<CommuteMinuteMap> {
+    return commuteMinutesFromEstimates(
+      await this.commuteEstimatesFrom(origins, destination),
+    );
   }
 }
 
@@ -251,11 +307,19 @@ export function getRoutingProvider(): RoutingProvider {
  */
 export async function travelTimesFromDestination(
   destinationCentroid: LatLng,
-): Promise<Record<string, number>> {
+): Promise<CommuteMinuteMap> {
+  return commuteMinutesFromEstimates(
+    await travelTimeEstimatesFromDestination(destinationCentroid),
+  );
+}
+
+export async function travelTimeEstimatesFromDestination(
+  destinationCentroid: LatLng,
+): Promise<CommuteEstimateMap> {
   const provider = getRoutingProvider();
   const origins: RoutingOrigin[] = Object.values(NEIGHBOURHOODS_BY_ID).map((n) => ({
     id: n.id,
     centroid: n.centroid,
   }));
-  return provider.commuteMatrixFrom(origins, destinationCentroid);
+  return provider.commuteEstimatesFrom(origins, destinationCentroid);
 }

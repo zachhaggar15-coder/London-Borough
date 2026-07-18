@@ -10,7 +10,7 @@ A working Next.js + TypeScript + MapLibre app with:
 - A sampled public-transport isochrone overlay (the reachable-area shape, a la CommuteTimeMap)
 - 95 London neighbourhoods with source-backed rent estimates, transport metadata, and static launch profiles
 - A ranked sidebar that says *"why this is in your shortlist"* and *"who this suits"* for every area
-- A detail drawer with affordability, transport route breakdown, lifestyle scores, strengths, and tradeoffs
+- A detail drawer with affordability, transport route structure, lifestyle scores, strengths, tradeoffs, and commute estimate provenance
 
 TfL Journey Planner is the default commute provider. Rent values are static neighbourhood-level estimates reviewed for discovery use, with room values derived from listing-sample regional averages and the same base rent model.
 
@@ -68,7 +68,7 @@ For the full architecture rationale, see `STRATEGY.md` §3.
 
 This app is public-transport-first. Driving estimates are intentionally not supported.
 
-By default, /api/commute calls TfL Journey Planner through lib/tfl.ts and caches route-time pairs in memory. If TfL cannot route a pair, the server falls back to the static estimate provider so every neighbourhood still receives a commute value. The sampled isochrone is built from the same reachable neighbourhood/grid points, which keeps the visual shape aligned with the ranked results.
+By default, /api/commute calls TfL Journey Planner through lib/tfl.ts and caches route-time pairs in memory. If TfL cannot route a pair, the server falls back to the reviewed static matrix or a distance-based estimate so every neighbourhood still receives a commute value with a visible source. Route summaries distinguish access, public transport, interchange and final walk; they do not invent exact line-by-line instructions where the system does not have reliable route legs. The sampled isochrone is built from the same reachable neighbourhood/grid points, which keeps the visual shape aligned with the ranked results.
 
 For offline UI work, run `npm run dev:static`. It starts Next on port 3001 with the static routing provider, so the map and ranking can be tested without TfL network calls.
 

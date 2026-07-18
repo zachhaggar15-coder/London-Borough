@@ -1,8 +1,12 @@
-export const AMAZON_ASSOCIATE_TAG = "amazonaff01d8-21";
-export const AMAZON_LINK_CODE = "ll2";
-export const AMAZON_LINK_ID = "33f39801ccfd3e1d63322455af2c9615";
-export const AMAZON_REF = "as_li_ss_tl";
-export const AMAZON_STORE_URL = `https://www.amazon.co.uk?&linkCode=${AMAZON_LINK_CODE}&tag=${AMAZON_ASSOCIATE_TAG}&linkId=${AMAZON_LINK_ID}&ref_=${AMAZON_REF}`;
+export {
+  AMAZON_ASSOCIATE_TAG,
+  AMAZON_DISCLOSURE,
+  AMAZON_LINK_CODE,
+  AMAZON_LINK_ID,
+  AMAZON_REF,
+  AMAZON_STORE_URL,
+  amazonUkProductUrl,
+} from "@/lib/monetisation";
 export const MEALPREP_ORG_URL = "https://mealprep.org.uk";
 
 export type RenterEssentialProduct = {
@@ -48,17 +52,6 @@ export type RenterEssentialPost = {
   comparisonRows?: RenterEssentialComparisonRow[];
   externalLinks?: RenterEssentialExternalLink[];
 };
-
-export function amazonUkProductUrl(asin: string): string {
-  const params = new URLSearchParams({
-    linkCode: AMAZON_LINK_CODE,
-    tag: AMAZON_ASSOCIATE_TAG,
-    linkId: AMAZON_LINK_ID,
-    ref_: AMAZON_REF,
-  });
-
-  return `https://www.amazon.co.uk/dp/${asin}?${params.toString()}`;
-}
 
 export const RENTER_ESSENTIAL_POSTS: RenterEssentialPost[] = [
   {

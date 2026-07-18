@@ -6,12 +6,12 @@
  * budget.
  *
  * Tax brackets here are deliberately simplified — they capture the
- * shape of UK PAYE for 2024/25 but skip pension contributions, student
+ * shape of UK PAYE for 2026/27 but skip pension contributions, student
  * loans, and the personal-allowance taper above £100k. Good enough
  * for guidance, not for filing a tax return.
  */
 
-/** UK income tax + NI estimate for England (2024/25 simplified). */
+/** UK income tax + NI estimate for England (2026/27 simplified). */
 export function annualTakeHome(grossAnnualGbp: number): number {
   const gross = Math.max(0, grossAnnualGbp);
 
@@ -26,8 +26,8 @@ export function annualTakeHome(grossAnnualGbp: number): number {
   const inAdditional = Math.max(0, taxablePersonal - basicRateBand - higherRateBand);
   const incomeTax = inBasic * 0.20 + inHigher * 0.40 + inAdditional * 0.45;
 
-  // National Insurance (Class 1 employee, 2024/25):
-  //   12,570 – 50,270 @ 8%   (lowered in 2024)
+  // National Insurance (Class 1 employee, 2026/27):
+  //   12,570 – 50,270 @ 8%
   //   50,270+         @ 2%
   const niLower = Math.min(Math.max(0, gross - 12_570), 50_270 - 12_570);
   const niUpper = Math.max(0, gross - 50_270);

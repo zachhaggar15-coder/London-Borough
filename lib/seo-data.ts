@@ -6,11 +6,16 @@
 
 import { NEIGHBOURHOODS } from "@/lib/data/neighbourhoods";
 import { DESTINATIONS } from "@/lib/data/destinations";
-import { LONDON_BOROUGHS } from "@/lib/commute-details";
+import { commuteSourceLabel, LONDON_BOROUGHS } from "@/lib/commute-details";
 import { STATIC_COMMUTE_TIMES } from "@/lib/commute";
 import { PERSONALITY_SCORERS } from "@/lib/personalities";
 import { getRenterEssentialSlugs } from "@/lib/renter-essentials";
-import type { Neighbourhood, LifestyleScores, PersonalityKey } from "@/lib/types";
+import type {
+  CommuteEstimateSource,
+  Neighbourhood,
+  LifestyleScores,
+  PersonalityKey,
+} from "@/lib/types";
 
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://london-borough.vercel.app";
@@ -35,6 +40,7 @@ export function getIndexableRoutes(): IndexableRoute[] {
     { path: "/compare", priority: 0.75, changefreq: "weekly" },
     { path: "/lifestyle", priority: 0.8, changefreq: "weekly" },
     { path: "/salary", priority: 0.7, changefreq: "weekly" },
+    { path: "/methodology", priority: 0.75, changefreq: "monthly" },
     { path: "/essentials", priority: 0.65, changefreq: "monthly" },
     ...getAllNeighbourhoodSlugs().map((slug) => ({
       path: `/neighbourhoods/${slug}`,
@@ -232,6 +238,8 @@ export type CommuteNeighbourhood = {
   borough: string;
   minutes: number;
   isEstimate: boolean;
+  source: CommuteEstimateSource;
+  sourceLabel: string;
   oneBedRent: number;
   transportLines: string[];
   summary: string;
@@ -249,6 +257,21 @@ export type CommutePageData = {
   destinationCentroid: { lat: number; lng: number };
   bands: CommuteBand[];
   topPicks: CommuteNeighbourhood[];
+  decisionPicks: CommuteDecisionPick[];
+  valueTradeOff: CommuteValueTradeOff | null;
+};
+
+export type CommuteDecisionPick = {
+  label: string;
+  neighbourhood: CommuteNeighbourhood;
+  reason: string;
+};
+
+export type CommuteValueTradeOff = {
+  cheaperArea: CommuteNeighbourhood;
+  fasterArea: CommuteNeighbourhood;
+  monthlySaving: number;
+  extraMinutes: number;
 };
 
 export function getAllCommuteSlugs(): string[] {
@@ -265,6 +288,9 @@ export function getCommutePageData(slug: string): CommutePageData | null {
   const withTimes: CommuteNeighbourhood[] = NEIGHBOURHOODS.map((n) => {
     const staticTime = STATIC_COMMUTE_TIMES[n.id]?.[slug];
     const isEstimate = staticTime == null;
+    const source: CommuteEstimateSource = isEstimate
+      ? "distanceHeuristic"
+      : "staticMatrix";
     const minutes = staticTime
       ?? Math.max(10, Math.round(haversineKm(n.centroid, destination.centroid) * minPerKm));
 
@@ -274,6 +300,8 @@ export function getCommutePageData(slug: string): CommutePageData | null {
       borough: n.borough,
       minutes,
       isEstimate,
+      source,
+      sourceLabel: commuteSourceLabel(source),
       oneBedRent: n.rent.oneBedMedianGbp,
       transportLines: n.mainStations.flatMap((s) => s.lines).slice(0, 3),
       summary: n.summary,
@@ -298,6 +326,8 @@ export function getCommutePageData(slug: string): CommutePageData | null {
   }).filter((b) => b.neighbourhoods.length > 0);
 
   const topPicks = withTimes.slice(0, 6);
+  const decisionPicks = commuteDecisionPicks(withTimes);
+  const valueTradeOff = commuteValueTradeOff(withTimes);
 
   return {
     destinationId: destination.id,
@@ -305,6 +335,76 @@ export function getCommutePageData(slug: string): CommutePageData | null {
     destinationCentroid: destination.centroid,
     bands,
     topPicks,
+    decisionPicks,
+    valueTradeOff,
+  };
+}
+
+function commuteDecisionPicks(
+  neighbourhoods: CommuteNeighbourhood[],
+): CommuteDecisionPick[] {
+  const picks: CommuteDecisionPick[] = [];
+  const seen = new Set<string>();
+  const viable = neighbourhoods.filter((n) => n.minutes <= 60);
+
+  function add(
+    label: string,
+    neighbourhood: CommuteNeighbourhood | undefined,
+    reason: string,
+  ) {
+    if (!neighbourhood || seen.has(neighbourhood.id)) return;
+    picks.push({ label, neighbourhood, reason });
+    seen.add(neighbourhood.id);
+  }
+
+  add(
+    "Fastest commute",
+    neighbourhoods[0],
+    "Shortest estimated public-transport time in the current dataset.",
+  );
+  add(
+    "Best value",
+    [...viable].sort(
+      (a, b) => a.oneBedRent - b.oneBedRent || a.minutes - b.minutes,
+    )[0],
+    "Lowest 1-bed rent among areas with a broadly viable commute.",
+  );
+  add(
+    "Cheapest viable option",
+    [...neighbourhoods].sort(
+      (a, b) => a.oneBedRent - b.oneBedRent || a.minutes - b.minutes,
+    )[0],
+    "Lowest modelled 1-bed rent, with commute time shown so the trade-off is visible.",
+  );
+  add(
+    "Lower-uncertainty estimate",
+    neighbourhoods.find((n) => n.source === "staticMatrix"),
+    "Uses the reviewed static commute matrix rather than the distance fallback.",
+  );
+
+  return picks.slice(0, 4);
+}
+
+function commuteValueTradeOff(
+  neighbourhoods: CommuteNeighbourhood[],
+): CommuteValueTradeOff | null {
+  const fasterArea = neighbourhoods[0];
+  const cheaperArea = neighbourhoods
+    .filter((n) => n.minutes <= 60 && n.oneBedRent < fasterArea.oneBedRent)
+    .sort((a, b) => {
+      const savingA = fasterArea.oneBedRent - a.oneBedRent;
+      const savingB = fasterArea.oneBedRent - b.oneBedRent;
+      if (savingA !== savingB) return savingB - savingA;
+      return a.minutes - b.minutes;
+    })[0];
+
+  if (!cheaperArea) return null;
+
+  return {
+    cheaperArea,
+    fasterArea,
+    monthlySaving: fasterArea.oneBedRent - cheaperArea.oneBedRent,
+    extraMinutes: Math.max(0, cheaperArea.minutes - fasterArea.minutes),
   };
 }
 
@@ -785,6 +885,8 @@ export type NeighbourhoodCommute = {
   destinationLabel: string;
   minutes: number;
   isEstimate: boolean;
+  source: CommuteEstimateSource;
+  sourceLabel: string;
 };
 
 export type NeighbourhoodPageData = {
@@ -815,6 +917,9 @@ export function getNeighbourhoodPageData(slug: string): NeighbourhoodPageData | 
   const commuteTimes: NeighbourhoodCommute[] = DESTINATIONS.map((d) => {
     const staticTime = STATIC_COMMUTE_TIMES[neighbourhood.id]?.[d.id];
     const isEstimate = staticTime == null;
+    const source: CommuteEstimateSource = isEstimate
+      ? "distanceHeuristic"
+      : "staticMatrix";
     const minutes =
       staticTime ??
       Math.max(
@@ -826,6 +931,8 @@ export function getNeighbourhoodPageData(slug: string): NeighbourhoodPageData | 
       destinationLabel: d.label,
       minutes,
       isEstimate,
+      source,
+      sourceLabel: commuteSourceLabel(source),
     };
   }).sort((a, b) => a.minutes - b.minutes);
 

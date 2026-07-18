@@ -300,7 +300,7 @@ export default async function SalaryPage({ params }: Props) {
                 <p className="text-slate-300">
                   On a {formattedSalary} gross salary, you take home
                   approximately £{takeHomeMonthly.toLocaleString()} per month
-                  after income tax and National Insurance (2025/26 rates).
+                  after income tax and National Insurance (2026/27 rates).
                 </p>
               </div>
               <div>

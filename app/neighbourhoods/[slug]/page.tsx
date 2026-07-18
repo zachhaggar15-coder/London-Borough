@@ -9,6 +9,7 @@ import {
 } from "@/lib/seo-data";
 import { LIFESTYLE_LABELS } from "@/lib/types";
 import EssentialsPreview from "@/components/EssentialsPreview";
+import { provenanceLabel } from "@/lib/provenance";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -122,7 +123,7 @@ export default async function NeighbourhoodPage({ params }: Props) {
         name: `What is the average rent in ${n.name}?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: `The average 1-bedroom flat in ${n.name} costs around £${n.rent.oneBedMedianGbp.toLocaleString()} per month. A 2-bedroom flat costs around £${n.rent.twoBedMedianGbp.toLocaleString()} per month.`,
+          text: `The estimated 1-bedroom flat rent in ${n.name} is around £${n.rent.oneBedMedianGbp.toLocaleString()} per month. A 2-bedroom flat is estimated at around £${n.rent.twoBedMedianGbp.toLocaleString()} per month.`,
         },
       },
       {
@@ -131,7 +132,7 @@ export default async function NeighbourhoodPage({ params }: Props) {
         acceptedAnswer: {
           "@type": "Answer",
           text: bestDestination
-            ? `The fastest commute from ${n.name} is to ${bestDestination.destinationLabel} at approximately ${bestDestination.minutes} minutes. ${commuteTimes.find((c) => c.destinationId === "bank") ? `The commute to Bank/City is approximately ${commuteTimes.find((c) => c.destinationId === "bank")!.minutes} minutes.` : ""}`
+            ? `The fastest typical commute estimate from ${n.name} is to ${bestDestination.destinationLabel} at approximately ${bestDestination.minutes} minutes. ${commuteTimes.find((c) => c.destinationId === "bank") ? `The commute estimate to Bank/City is approximately ${commuteTimes.find((c) => c.destinationId === "bank")!.minutes} minutes.` : ""}`
             : `${n.name} is in ${zoneStr} and is served by ${n.mainStations[0]?.name ?? "local public transport"}.`,
         },
       },
@@ -198,22 +199,32 @@ export default async function NeighbourhoodPage({ params }: Props) {
               Living in {n.name}
             </h1>
             <p className="text-lg text-slate-300 max-w-2xl">{n.summary}</p>
+            <p className="mt-4 text-sm text-slate-500 max-w-2xl">
+              Rent and commute figures are decision-support estimates, not live
+              property listings or guaranteed routes.{" "}
+              <Link
+                href="/methodology"
+                className="text-emerald-300 hover:text-emerald-200"
+              >
+                Read the methodology.
+              </Link>
+            </p>
           </header>
 
           {/* Quick stats */}
           <section className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-12">
             {[
               {
-                label: "1-bed rent",
+                label: "Est. 1-bed rent",
                 value: `£${n.rent.oneBedMedianGbp.toLocaleString()}/mo`,
               },
               {
-                label: "2-bed rent",
+                label: "Est. 2-bed rent",
                 value: `£${n.rent.twoBedMedianGbp.toLocaleString()}/mo`,
               },
               { label: "Transport zone", value: zoneStr },
               {
-                label: "Fastest commute",
+                label: "Fastest estimate",
                 value: bestDestination
                   ? `~${bestDestination.minutes} min`
                   : "—",
@@ -272,8 +283,9 @@ export default async function NeighbourhoodPage({ params }: Props) {
               Commute times from {n.name}
             </h2>
             <p className="text-sm text-slate-400 mb-6">
-              Estimated commute times to major London destinations by public
-              transport.
+              Estimated typical commute times to major London destinations by
+              public transport. Exact routes and interchange patterns can vary
+              by time of day.
             </p>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -308,7 +320,7 @@ export default async function NeighbourhoodPage({ params }: Props) {
                         </span>
                       </td>
                       <td className="py-3 text-right text-slate-500 text-xs hidden sm:table-cell">
-                        {c.isEstimate ? "estimated" : "via static matrix"}
+                        {c.sourceLabel}
                       </td>
                     </tr>
                   ))}
@@ -447,7 +459,7 @@ export default async function NeighbourhoodPage({ params }: Props) {
                     How long is the commute from {n.name}?
                   </h3>
                   <p className="text-slate-300">
-                    The fastest commute from {n.name} is to{" "}
+                    The fastest typical commute estimate from {n.name} is to{" "}
                     {bestDestination.destinationLabel} at approximately{" "}
                     {bestDestination.minutes} minutes by public transport.{" "}
                     {(() => {
@@ -458,9 +470,9 @@ export default async function NeighbourhoodPage({ params }: Props) {
                         (c) => c.destinationId === "canary-wharf",
                       );
                       if (bank)
-                        return `The commute to Bank/City is around ${bank.minutes} minutes.`;
+                        return `The commute estimate to Bank/City is around ${bank.minutes} minutes.`;
                       if (canaryWharf)
-                        return `The commute to Canary Wharf is around ${canaryWharf.minutes} minutes.`;
+                        return `The commute estimate to Canary Wharf is around ${canaryWharf.minutes} minutes.`;
                       return "";
                     })()}
                   </p>
@@ -529,6 +541,17 @@ export default async function NeighbourhoodPage({ params }: Props) {
                 </p>
               </div>
             </Link>
+          </section>
+
+          <section className="mb-12 rounded-lg bg-slate-900 border border-slate-800 p-6">
+            <h2 className="text-xl font-semibold mb-3">
+              Data context
+            </h2>
+            <p className="text-sm text-slate-300">
+              Rent estimates use {provenanceLabel(n.rent)}. Commute estimates
+              combine reviewed static journey times for common destinations with
+              distance-based fallback estimates where no reviewed pair exists.
+            </p>
           </section>
 
           {/* CTA */}

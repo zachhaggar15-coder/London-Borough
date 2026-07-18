@@ -30,6 +30,7 @@ export default function DetailDrawer() {
   const toggleShortlist = useStore((s) => s.toggleShortlist);
   const query = useStore((s) => s.query);
   const commute = useStore((s) => s.commute);
+  const commuteSources = useStore((s) => s.commuteSources);
 
   const data = useMemo(() => {
     if (!selectedId) return null;
@@ -49,7 +50,7 @@ export default function DetailDrawer() {
   const rentProfile = rentProfileFor(n);
   const strengths = strengthInsights(data, query);
   const tradeoffs = tradeoffInsights(data, query);
-  const route = commuteRouteSummary(n, query);
+  const route = commuteRouteSummary(n, query, commuteSources[n.id]);
   const isCompared = shortlistedIds.includes(n.id);
 
   return (
@@ -160,6 +161,9 @@ export default function DetailDrawer() {
       <Section title="Transport">
         <div className="mb-3 rounded-md border border-slate-800 bg-slate-900/60 p-3">
           <div className="text-sm font-medium text-slate-100">{route.primary}</div>
+          <div className="mt-1 text-[11px] text-slate-500">
+            {route.durationSourceLabel}: {route.methodology}
+          </div>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             {route.routeOptions.map((option) => (
               <div

@@ -30,6 +30,7 @@ const {
   LONDON_TRANSIT_KMH,
 } = jiti("../lib/isochrone.ts");
 const {
+  DESTINATIONS,
   DESTINATIONS_BY_ID,
 } = jiti("../lib/data/destinations.ts");
 const {
@@ -55,9 +56,14 @@ const {
 } = jiti("../lib/insights.ts");
 const {
   boroughCoverage,
+  commuteSourceLabel,
   commuteRouteSummary,
   displayCommuteMinutes,
+  routeSummaryUsesOnlySupportedServices,
 } = jiti("../lib/commute-details.ts");
+const {
+  commuteMinutesFromEstimates,
+} = jiti("../lib/commute.ts");
 const {
   boroughSummaries,
 } = jiti("../lib/boroughs.ts");
@@ -89,6 +95,10 @@ const {
   LIFESTYLE_PAGES,
   SALARY_LEVELS,
 } = jiti("../lib/seo-data.ts");
+const {
+  MONETISATION_PROVIDERS,
+  activeProvidersForSlot,
+} = jiti("../lib/monetisation.ts");
 const {
   AMAZON_ASSOCIATE_TAG,
   AMAZON_LINK_CODE,
@@ -230,6 +240,44 @@ test("known destination route summaries include named services", () => {
   assert.ok(route.routeOptions.length >= 1);
   assert.ok(route.routeOptions[0].label.includes("Best"));
   assert.ok(Array.isArray(route.warnings));
+});
+
+test("commute source labels and estimate conversion expose provenance", () => {
+  assert.equal(commuteSourceLabel("tflJourneyPlanner"), "TfL duration");
+  assert.equal(commuteSourceLabel("staticMatrix"), "reviewed estimate");
+  assert.equal(commuteSourceLabel("distanceHeuristic"), "distance estimate");
+  assert.equal(commuteSourceLabel(undefined), "typical estimate");
+
+  assert.deepEqual(
+    commuteMinutesFromEstimates({
+      brixton: { minutes: 18, source: "staticMatrix" },
+      stratford: { minutes: 14, source: "tflJourneyPlanner" },
+    }),
+    { brixton: 18, stratford: 14 },
+  );
+});
+
+test("route summaries avoid unsupported line-by-line instructions", () => {
+  for (const area of NEIGHBOURHOODS) {
+    for (const destination of DESTINATIONS) {
+      const route = commuteRouteSummary(
+        area,
+        { ...query, destination },
+        "staticMatrix",
+      );
+      const legs = route.routeOptions.flatMap((option) => option.legs);
+
+      assert.ok(routeSummaryUsesOnlySupportedServices(route, area, destination));
+      assert.ok(legs.every((leg) => leg.instruction.length > 0));
+      assert.ok(legs.every((leg) => !/^Change at /.test(leg.instruction)));
+      assert.ok(
+        legs.every(
+          (leg) =>
+            !/^Take .+ from .+ to .+$/.test(leg.instruction) || Boolean(leg.line),
+        ),
+      );
+    }
+  }
 });
 
 test("bus-first areas surface transport watch-outs", () => {
@@ -402,7 +450,7 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
   const routes = getIndexableRoutes();
   const paths = routes.map((route) => route.path);
   const expectedCount =
-    7 +
+    8 +
     getAllNeighbourhoodSlugs().length +
     getAllBoroughSlugs().length +
     getAllCommuteSlugs().length +
@@ -421,11 +469,24 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
   assert.ok(paths.includes("/compare"));
   assert.ok(paths.includes("/lifestyle"));
   assert.ok(paths.includes("/salary"));
+  assert.ok(paths.includes("/methodology"));
   assert.ok(paths.includes("/essentials"));
   assert.ok(getRenterEssentialSlugs().every((slug) => paths.includes(`/essentials/${slug}`)));
   assert.ok(paths.every((path) => path === "/" || !path.endsWith("/")));
   assert.ok(paths.every((path) => absoluteUrl(path).startsWith(SITE_URL)));
   assert.ok(routes.every((route) => route.priority > 0 && route.priority <= 1));
+});
+
+test("monetisation providers are centralised and inactive slots stay hidden", () => {
+  const renterProviders = activeProvidersForSlot("renterEssentials");
+
+  assert.ok(renterProviders.some((provider) => provider.id === "amazon-uk"));
+  assert.ok(
+    MONETISATION_PROVIDERS.some(
+      (provider) => provider.slots.includes("broadband") && !provider.active,
+    ),
+  );
+  assert.deepEqual(activeProvidersForSlot("broadband"), []);
 });
 
 test("meal prep moving guides are routable and link to MealPrep.org.uk", () => {

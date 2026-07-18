@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getRenterEssentialPosts } from "@/lib/renter-essentials";
+import { activeProvidersForSlot } from "@/lib/monetisation";
 
 type EssentialsPreviewProps = {
   slugs?: string[];
@@ -15,6 +16,7 @@ export default function EssentialsPreview({
   className = "mb-12",
 }: EssentialsPreviewProps) {
   const posts = getRenterEssentialPosts(slugs);
+  const providers = activeProvidersForSlot("renterEssentials");
 
   if (posts.length === 0) return null;
 
@@ -23,6 +25,11 @@ export default function EssentialsPreview({
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-2">{title}</h2>
         <p className="text-sm text-slate-400 max-w-2xl">{description}</p>
+        {providers.length > 0 && (
+          <p className="mt-2 text-xs text-slate-500">
+            {providers.map((provider) => provider.disclosure).join(" ")}
+          </p>
+        )}
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {posts.map((post) => (

@@ -123,7 +123,7 @@ export default function HomePage() {
               {
                 step: "1",
                 title: "Enter your commute",
-                desc: "Type your workplace or select a major London destination. We calculate real commute times to 95+ neighbourhoods.",
+                desc: "Type your workplace or select a major London destination. We estimate typical public-transport times to 95+ neighbourhoods.",
               },
               {
                 step: "2",
@@ -395,6 +395,9 @@ export default function HomePage() {
               </Link>
               <Link href="/essentials" className="hover:text-white transition-colors">
                 Renter essentials
+              </Link>
+              <Link href="/methodology" className="hover:text-white transition-colors">
+                Methodology
               </Link>
               <Link href="/commute/canary-wharf" className="hover:text-white transition-colors">
                 Canary Wharf commute

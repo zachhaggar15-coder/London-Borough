@@ -27,6 +27,7 @@ export default function NeighbourhoodCard({
   compact,
 }: Props) {
   const query = useStore((s) => s.query);
+  const commuteSources = useStore((s) => s.commuteSources);
   const {
     neighbourhood: n,
     commuteMinutes,
@@ -39,7 +40,7 @@ export default function NeighbourhoodCard({
   const scoreOutOf10 = Math.round(matchScore * 10 * 10) / 10;
   const reason = shortlistReason(scored, query);
   const suits = suitsWho(n);
-  const route = commuteRouteSummary(n, query);
+  const route = commuteRouteSummary(n, query, commuteSources[n.id]);
 
   return (
     <button
@@ -110,7 +111,7 @@ export default function NeighbourhoodCard({
                 {reason}
               </div>
               <div className="mt-0.5 truncate text-[11px] leading-snug text-slate-400">
-                Route: {route.primary} · {route.legs[1]?.instruction ?? route.legs[0]?.instruction}
+                Route: {route.primary} · {route.durationSourceLabel}
               </div>
               {/* Key tradeoff — first item from the neighbourhood's tradeoffs.
                   Keeps the decision honest: the card always shows one reason

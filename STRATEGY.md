@@ -179,10 +179,14 @@ The routing provider is server-side only.
 1. `/api/commute` receives a destination.
 2. `TflProvider` calls TfL Journey Planner for public-transport times.
 3. Results are cached per origin/destination pair.
-4. If TfL cannot route a pair, `StaticEstimateProvider` returns a complete
-   estimate so every neighbourhood still has a commute value.
-5. `commute-details.ts` builds a human-readable route summary from the
-   neighbourhood station, line, interchange, and bus-access metadata.
+4. If TfL cannot route a pair, `StaticEstimateProvider` returns a reviewed
+   static or distance-based estimate so every neighbourhood still has a
+   commute value with source metadata.
+5. `commute-details.ts` builds a human-readable route structure from access,
+   public-transport, interchange and destination-walk components. It only
+   renders a named direct service where origin and destination station metadata
+   support that service; otherwise it avoids fabricated line/interchange
+   instructions.
 
 The isochrone uses the same commute samples as the ranking layer. The user
 sees one coherent map: reachable area, destination marker, and ranked
