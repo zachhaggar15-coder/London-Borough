@@ -91,7 +91,9 @@ const {
   getCompareIndexSections,
   getCompareStaticParams,
   getFeaturedCompareSlugs,
+  getIndexableCompareSlugs,
   getIndexableRoutes,
+  isIndexableCompareSlug,
   LIFESTYLE_PAGES,
   SALARY_LEVELS,
 } = jiti("../lib/seo-data.ts");
@@ -456,7 +458,7 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
     getAllCommuteSlugs().length +
     SALARY_LEVELS.length +
     LIFESTYLE_PAGES.length +
-    getCompareStaticParams().length +
+    getIndexableCompareSlugs().length +
     getRenterEssentialSlugs().length +
     1;
 
@@ -472,6 +474,12 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
   assert.ok(paths.includes("/methodology"));
   assert.ok(paths.includes("/essentials"));
   assert.ok(getRenterEssentialSlugs().every((slug) => paths.includes(`/essentials/${slug}`)));
+  assert.ok(getIndexableCompareSlugs().every((slug) => paths.includes(`/compare/${slug}`)));
+  assert.ok(
+    getCompareStaticParams()
+      .filter((slug) => !isIndexableCompareSlug(slug))
+      .every((slug) => !paths.includes(`/compare/${slug}`)),
+  );
   assert.ok(paths.every((path) => path === "/" || !path.endsWith("/")));
   assert.ok(paths.every((path) => absoluteUrl(path).startsWith(SITE_URL)));
   assert.ok(routes.every((route) => route.priority > 0 && route.priority <= 1));
@@ -543,12 +551,18 @@ test("renter essential Amazon URLs use the configured associate link params", ()
 
 test("comparison hub exposes featured crawl paths that exist in static params", () => {
   const allComparisons = new Set(getCompareStaticParams());
+  const indexable = getIndexableCompareSlugs();
   const featured = getFeaturedCompareSlugs();
   const sections = getCompareIndexSections();
+  const sectionSlugs = sections.flatMap((section) => section.slugs);
 
   assert.ok(featured.length > 0);
+  assert.ok(indexable.length > 0);
+  assert.ok(indexable.length < getCompareStaticParams().length);
   assert.ok(sections.length > 0);
+  assert.deepEqual(indexable, sectionSlugs);
   assert.ok(featured.every((slug) => allComparisons.has(slug)));
+  assert.ok(featured.every((slug) => isIndexableCompareSlug(slug)));
   assert.ok(
     sections.every((section) =>
       section.slugs.every((slug) => allComparisons.has(slug)),

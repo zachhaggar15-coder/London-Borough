@@ -67,7 +67,7 @@ export function getIndexableRoutes(): IndexableRoute[] {
       priority: 0.7,
       changefreq: "monthly" as const,
     })),
-    ...getCompareStaticParams().map((slug) => ({
+    ...getIndexableCompareSlugs().map((slug) => ({
       path: `/compare/${slug}`,
       priority: 0.6,
       changefreq: "monthly" as const,
@@ -726,6 +726,7 @@ export function comparisonSlugFor(aId: string, bId: string): string {
 }
 
 let compareStaticParamsCache: string[] | null = null;
+let indexableCompareSlugsCache: string[] | null = null;
 
 export function getCompareStaticParams(): string[] {
   if (compareStaticParamsCache) return compareStaticParamsCache;
@@ -818,47 +819,57 @@ const COMPARE_INDEX_SECTIONS: {
 ];
 
 export function getCompareIndexSections(): CompareIndexSection[] {
-  const available = new Set(getCompareStaticParams());
+  const indexable = new Set(getIndexableCompareSlugs());
 
   return COMPARE_INDEX_SECTIONS.map(({ title, description, pairs }) => ({
     title,
     description,
     slugs: pairs
       .map(([aId, bId]) => comparisonSlugFor(aId, bId))
-      .filter((slug) => available.has(slug)),
+      .filter((slug) => indexable.has(slug)),
   })).filter((section) => section.slugs.length > 0);
 }
 
-export function getFeaturedCompareSlugs(limit = 24): string[] {
+export function getIndexableCompareSlugs(): string[] {
+  if (indexableCompareSlugsCache) return indexableCompareSlugsCache;
+
+  const available = new Set(getCompareStaticParams());
   const slugs: string[] = [];
-  const available = getCompareStaticParams();
   const seen = new Set<string>();
 
-  for (const section of getCompareIndexSections()) {
-    for (const slug of section.slugs) {
-      if (seen.has(slug)) continue;
+  for (const section of COMPARE_INDEX_SECTIONS) {
+    for (const [aId, bId] of section.pairs) {
+      const slug = comparisonSlugFor(aId, bId);
+      if (!available.has(slug) || seen.has(slug)) continue;
       slugs.push(slug);
       seen.add(slug);
-      if (slugs.length >= limit) return slugs;
     }
   }
 
-  for (const slug of available) {
-    if (seen.has(slug)) continue;
-    slugs.push(slug);
-    seen.add(slug);
-    if (slugs.length >= limit) return slugs;
-  }
+  indexableCompareSlugsCache = slugs;
+  return indexableCompareSlugsCache;
+}
 
-  return slugs;
+export function isIndexableCompareSlug(slug: string): boolean {
+  return getIndexableCompareSlugs().includes(slug);
+}
+
+export function getFeaturedCompareSlugs(limit = 24): string[] {
+  return getIndexableCompareSlugs().slice(0, limit);
 }
 
 // ──────────────────────────────────────────────────────────────────
 // Internal link generation helpers
 // ──────────────────────────────────────────────────────────────────
 
-export function relatedComparisons(neighbourhoodId: string, limit = 4): string[] {
-  const available = new Set(getCompareStaticParams());
+export function relatedComparisons(
+  neighbourhoodId: string,
+  limit = 4,
+  options: { indexableOnly?: boolean } = {},
+): string[] {
+  const available = new Set(
+    options.indexableOnly ? getIndexableCompareSlugs() : getCompareStaticParams(),
+  );
 
   return NEIGHBOURHOODS.filter((n) => n.id !== neighbourhoodId)
     .sort((a, b) => {

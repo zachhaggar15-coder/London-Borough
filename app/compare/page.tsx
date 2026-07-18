@@ -3,8 +3,8 @@ import Link from "next/link";
 import {
   getCompareIndexSections,
   getComparePageData,
-  getCompareStaticParams,
   getFeaturedCompareSlugs,
+  getIndexableCompareSlugs,
   SITE_URL,
 } from "@/lib/seo-data";
 import {
@@ -59,7 +59,7 @@ export default function CompareIndexPage() {
   const featured = getFeaturedCompareSlugs(18)
     .map((slug) => getComparePageData(slug))
     .filter(Boolean);
-  const comparisonCount = getCompareStaticParams().length;
+  const comparisonCount = getIndexableCompareSlugs().length;
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -112,7 +112,7 @@ export default function CompareIndexPage() {
         <main className="mx-auto max-w-5xl px-6 py-12">
           <header className="mb-12">
             <p className="text-sm text-emerald-400 font-medium mb-3">
-              {comparisonCount.toLocaleString()} London area matchups
+              {comparisonCount.toLocaleString()} curated London area matchups
             </p>
             <h1 className="text-4xl font-bold tracking-tight mb-4">
               Compare London neighbourhoods

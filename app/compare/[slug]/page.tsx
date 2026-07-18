@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import {
   boroughSlug,
   getComparePageData,
-  getCompareStaticParams,
+  getIndexableCompareSlugs,
+  isIndexableCompareSlug,
   relatedComparisons,
   SITE_URL,
 } from "@/lib/seo-data";
@@ -17,10 +18,10 @@ import {
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
-  return getCompareStaticParams().map((slug) => ({ slug }));
+  return getIndexableCompareSlugs().map((slug) => ({ slug }));
 }
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -28,6 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!data) return {};
 
   const { a, b } = data;
+  const isIndexable = isIndexableCompareSlug(slug);
   const title = `${a.name} vs ${b.name}: rent, transport & lifestyle`;
   const description = `${a.name} vs ${b.name}: compare 1-bed rents (£${a.rent.oneBedMedianGbp.toLocaleString()} vs £${b.rent.oneBedMedianGbp.toLocaleString()}), transport, safety, green space, nightlife and who each area suits.`;
 
@@ -35,6 +37,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: `${SITE_URL}/compare/${slug}` },
+    robots: isIndexable
+      ? { index: true, follow: true }
+      : {
+          index: false,
+          follow: true,
+          googleBot: { index: false, follow: true },
+        },
     openGraph: {
       title,
       description,
@@ -91,7 +100,7 @@ export default async function ComparePage({ params }: Props) {
     overallRecommendation,
   } = data;
 
-  const related = relatedComparisons(a.id, 8)
+  const related = relatedComparisons(a.id, 8, { indexableOnly: true })
     .filter((s) => s !== slug)
     .slice(0, 4);
   const relatedData = related
