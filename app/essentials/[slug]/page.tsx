@@ -44,6 +44,7 @@ export default async function EssentialPostPage({ params }: Props) {
   const productsByAsin = new Map(
     post.products.map((product) => [product.asin, product]),
   );
+  const primaryPlanningLink = post.externalLinks?.[0];
 
   const related = getRenterEssentialPosts()
     .filter((item) => item.slug !== slug)
@@ -108,6 +109,27 @@ export default async function EssentialPostPage({ params }: Props) {
               product links use the Amazon UK associate tag{" "}
               {AMAZON_ASSOCIATE_TAG}. Prices and stock can change on Amazon.
             </p>
+            {primaryPlanningLink && (
+              <div className="mt-5 flex flex-col gap-3 rounded-lg border border-emerald-900/80 bg-emerald-950/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-emerald-300">
+                    Meal planning step
+                  </p>
+                  <p className="mt-1 text-sm text-slate-300">
+                    Compare the kit here, then build the actual week on
+                    MealPrep.org.uk.
+                  </p>
+                </div>
+                <a
+                  href={primaryPlanningLink.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex shrink-0 rounded-lg border border-emerald-700 px-3 py-2 text-sm font-medium text-emerald-200 hover:border-emerald-500 hover:text-white transition-colors"
+                >
+                  Open MealPrep.org.uk
+                </a>
+              </div>
+            )}
           </header>
 
           <section className="mb-12 rounded-lg bg-slate-900 border border-slate-800 p-6">
@@ -203,13 +225,26 @@ export default async function EssentialPostPage({ params }: Props) {
           )}
 
           {post.externalLinks && (
-            <section className="mb-12 rounded-lg bg-emerald-950/40 border border-emerald-900 p-6">
-              <h2 className="text-xl font-semibold mb-4">
-                Meal prep planning
-              </h2>
-              <div className="space-y-4">
+            <section className="mb-12 rounded-lg border border-emerald-900 bg-slate-900 p-6">
+              <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-emerald-400 mb-2">
+                    Next step after choosing kit
+                  </p>
+                  <h2 className="text-xl font-semibold">
+                    Turn the comparison into a weekly plan
+                  </h2>
+                </div>
+                <span className="rounded-full bg-emerald-950 px-3 py-1 text-xs text-emerald-200">
+                  MealPrep.org.uk
+                </span>
+              </div>
+              <div className="grid gap-4">
                 {post.externalLinks.map((link) => (
-                  <div key={link.href}>
+                  <div
+                    key={link.href}
+                    className="rounded-lg border border-slate-800 bg-slate-950/40 p-4"
+                  >
                     <a
                       href={link.href}
                       target="_blank"

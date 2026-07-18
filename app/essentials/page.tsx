@@ -76,7 +76,7 @@ export default function EssentialsIndexPage() {
               href={MEALPREP_ORG_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex shrink-0 rounded-lg border border-emerald-700 px-4 py-2 text-sm font-medium text-emerald-200 hover:border-emerald-500 hover:text-white transition-colors"
+              className="inline-flex shrink-0 rounded-lg border border-emerald-700 bg-emerald-950/30 px-4 py-2 text-sm font-medium text-emerald-200 hover:border-emerald-500 hover:text-white transition-colors"
             >
               Plan on MealPrep.org.uk
             </a>
@@ -93,6 +93,9 @@ export default function EssentialsIndexPage() {
                 </h3>
                 <p className="text-sm text-slate-400 line-clamp-3">
                   {post.metaDescription}
+                </p>
+                <p className="mt-4 text-xs text-emerald-300">
+                  Includes MealPrep.org.uk planning link
                 </p>
               </Link>
             ))}
