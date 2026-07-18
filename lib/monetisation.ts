@@ -20,6 +20,9 @@ export const AMAZON_LINK_ID = "33f39801ccfd3e1d63322455af2c9615";
 export const AMAZON_REF = "as_li_ss_tl";
 export const AMAZON_DISCLOSURE =
   "As an Amazon Associate I earn from qualifying purchases.";
+export const GOOGLE_ADSENSE_CLIENT_ID = "ca-pub-7917111630766281";
+export const GOOGLE_ADSENSE_SCRIPT_URL =
+  `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${GOOGLE_ADSENSE_CLIENT_ID}`;
 
 export const MONETISATION_PROVIDERS: MonetisationProvider[] = [
   {
