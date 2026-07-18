@@ -49,6 +49,31 @@ export default async function CommutePage({ params }: Props) {
     decisionPicks,
     valueTradeOff,
   } = data;
+  const allTimedNeighbourhoods = bands.flatMap((band) => band.neighbourhoods);
+  const commuteCategories = [
+    {
+      label: "Fastest under 30 minutes",
+      description: "Best starting points when commute time is non-negotiable.",
+      neighbourhoods: allTimedNeighbourhoods
+        .filter((n) => n.minutes <= 30)
+        .slice(0, 3),
+    },
+    {
+      label: "Cheapest under 45 minutes",
+      description: "Lower rents while keeping the commute broadly practical.",
+      neighbourhoods: [...allTimedNeighbourhoods]
+        .filter((n) => n.minutes <= 45)
+        .sort((a, b) => a.oneBedRent - b.oneBedRent || a.minutes - b.minutes)
+        .slice(0, 3),
+    },
+    {
+      label: "Lower-uncertainty routes",
+      description: "Areas backed by the reviewed commute matrix first.",
+      neighbourhoods: allTimedNeighbourhoods
+        .filter((n) => n.source === "staticMatrix")
+        .slice(0, 3),
+    },
+  ].filter((category) => category.neighbourhoods.length > 0);
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -238,6 +263,50 @@ export default async function CommutePage({ params }: Props) {
                       {n.sourceLabel}
                     </p>
                   </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {commuteCategories.length > 0 && (
+            <section className="mb-12">
+              <h2 className="text-xl font-semibold mb-6">
+                Choose by commute priority
+              </h2>
+              <div className="grid gap-4 md:grid-cols-3">
+                {commuteCategories.map((category) => (
+                  <div
+                    key={category.label}
+                    className="rounded-lg bg-slate-900 border border-slate-800 p-5"
+                  >
+                    <h3 className="font-semibold text-white">
+                      {category.label}
+                    </h3>
+                    <p className="mt-2 text-sm text-slate-400">
+                      {category.description}
+                    </p>
+                    <div className="mt-4 space-y-3">
+                      {category.neighbourhoods.map((n) => (
+                        <Link
+                          key={n.id}
+                          href={`/neighbourhoods/${n.id}`}
+                          className="block rounded-md border border-slate-800 bg-slate-950 px-3 py-2 hover:border-slate-600 transition-colors"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-sm font-medium text-white">
+                              {n.name}
+                            </span>
+                            <span className="text-xs text-emerald-300 tabular-nums">
+                              ~{n.minutes} min
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-slate-400">
+                            GBP {n.oneBedRent.toLocaleString()}/mo 1-bed
+                          </p>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </section>

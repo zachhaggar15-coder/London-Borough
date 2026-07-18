@@ -9,6 +9,7 @@ import {
   getRenterEssentialPosts,
   getRenterEssentialSlugs,
 } from "@/lib/renter-essentials";
+import TrackedAffiliateLink from "@/components/TrackedAffiliateLink";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -200,15 +201,16 @@ export default async function EssentialPostPage({ params }: Props) {
                         if (!product) return null;
 
                         return (
-                          <a
+                          <TrackedAffiliateLink
                             key={asin}
                             href={amazonUkProductUrl(product.asin)}
-                            target="_blank"
-                            rel="sponsored nofollow noopener noreferrer"
+                            asin={product.asin}
+                            productLabel={product.shortName}
+                            location={`comparison:${post.slug}`}
                             className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-200 hover:bg-slate-700 transition-colors"
                           >
                             {product.shortName}
-                          </a>
+                          </TrackedAffiliateLink>
                         );
                       })}
                     </div>
@@ -280,14 +282,15 @@ export default async function EssentialPostPage({ params }: Props) {
                   <p className="text-sm text-slate-400 mb-5">
                     {product.reason}
                   </p>
-                  <a
+                  <TrackedAffiliateLink
                     href={amazonUkProductUrl(product.asin)}
-                    target="_blank"
-                    rel="sponsored nofollow noopener noreferrer"
+                    asin={product.asin}
+                    productLabel={product.shortName}
+                    location={`product-card:${post.slug}`}
                     className="inline-flex rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition-colors"
                   >
                     Check on Amazon UK
-                  </a>
+                  </TrackedAffiliateLink>
                 </article>
               ))}
             </div>

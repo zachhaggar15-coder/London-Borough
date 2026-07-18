@@ -649,7 +649,7 @@ const CHARACTER_LIFESTYLE: Record<Character, LifestyleScores> = {
   "outer-affordable":   { livelyVsQuiet: 4, greenSpace: 7, nightlife: 4, cafeDensity: 5, gymDensity: 5, walkability: 6, foodScene: 5, youngProfessionalDensity: 5, safety: 7, connectivity: 6 },
 };
 
-const CHARACTER_SUMMARY: Record<Character, string> = {
+export const CHARACTER_SUMMARY: Record<Character, string> = {
   "central-elite":      "Polished, expensive and central. Heritage architecture, top-tier dining, easy walks everywhere.",
   "trendy-creative":    "Bars, galleries and indie food. Loud, young, increasingly pricey.",
   "urban-busy":         "Crowded, lively, full of things to do. Less restful, more interesting.",
@@ -662,7 +662,7 @@ const CHARACTER_SUMMARY: Record<Character, string> = {
   "outer-affordable":   "Cheaper, quieter, further out. Worth it if your commute makes it work.",
 };
 
-const CHARACTER_STRENGTHS: Record<Character, string[]> = {
+export const CHARACTER_STRENGTHS: Record<Character, string[]> = {
   "central-elite":      ["Walkable central location", "World-class shopping and dining", "Top-quality housing stock"],
   "trendy-creative":    ["Excellent food and nightlife", "Creative, independent retail", "Young, social crowd"],
   "urban-busy":         ["Everything within walking distance", "Strong food and drink scene", "Fast central transport"],
@@ -675,7 +675,7 @@ const CHARACTER_STRENGTHS: Record<Character, string[]> = {
   "outer-affordable":   ["Cheaper rent for the postcode", "More space for the money", "Quieter residential streets"],
 };
 
-const CHARACTER_TRADEOFFS: Record<Character, string[]> = {
+export const CHARACTER_TRADEOFFS: Record<Character, string[]> = {
   "central-elite":      ["Very expensive", "Tourist-heavy in places", "Limited green space"],
   "trendy-creative":    ["Noisy at night", "Rents rising fast", "Few real services beyond bars and food"],
   "urban-busy":         ["Crowded", "Limited residential character", "Loud at all hours"],

@@ -47,6 +47,37 @@ export default async function SalaryPage({ params }: Props) {
 
   const data = getSalaryPageData(salary);
   const { takeHomeMonthly, budget33, budget35, comfortable, stretch } = data;
+  const salaryDecisionGroups = [
+    {
+      label: "Keep rent conservative",
+      description:
+        "Areas at or below 33% of take-home, leaving more room for bills, savings and life outside rent.",
+      areas: comfortable.filter((n) => n.rentAsPct <= 33).slice(0, 4),
+    },
+    {
+      label: "Prioritise transport",
+      description:
+        "Within-budget areas with the most line variety in this dataset.",
+      areas: [...comfortable]
+        .sort(
+          (a, b) =>
+            b.lines.length - a.lines.length || a.oneBedRent - b.oneBedRent,
+        )
+        .slice(0, 4),
+    },
+    {
+      label: "Central stretch picks",
+      description:
+        "More central options to consider only if the area genuinely improves your week.",
+      areas: [...stretch]
+        .sort(
+          (a, b) =>
+            Math.min(...a.zones) - Math.min(...b.zones) ||
+            a.rentAsPct - b.rentAsPct,
+        )
+        .slice(0, 4),
+    },
+  ].filter((group) => group.areas.length > 0);
 
   const formattedSalary = `£${salary.toLocaleString()}`;
 
@@ -185,6 +216,48 @@ export default async function SalaryPage({ params }: Props) {
                 : `At £${budget35.toLocaleString()}/month, renting a 1-bed flat alone in London is challenging. House sharing is the realistic option for most areas.`}
             </p>
           </section>
+
+          {salaryDecisionGroups.length > 0 && (
+            <section className="mb-12">
+              <h2 className="text-xl font-semibold mb-6">
+                Choose your budget strategy
+              </h2>
+              <div className="grid gap-4 md:grid-cols-3">
+                {salaryDecisionGroups.map((group) => (
+                  <div
+                    key={group.label}
+                    className="rounded-lg bg-slate-900 border border-slate-800 p-5"
+                  >
+                    <h3 className="font-semibold text-white">{group.label}</h3>
+                    <p className="mt-2 text-sm text-slate-400">
+                      {group.description}
+                    </p>
+                    <div className="mt-4 space-y-3">
+                      {group.areas.map((area) => (
+                        <Link
+                          key={area.id}
+                          href={`/neighbourhoods/${area.id}`}
+                          className="block rounded-md border border-slate-800 bg-slate-950 px-3 py-2 hover:border-slate-600 transition-colors"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-sm font-medium text-white">
+                              {area.name}
+                            </span>
+                            <span className="text-xs text-slate-400 tabular-nums">
+                              {area.rentAsPct}%
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-slate-400">
+                            GBP {area.oneBedRent.toLocaleString()}/mo 1-bed
+                          </p>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Comfortable areas */}
           {comfortable.length > 0 && (

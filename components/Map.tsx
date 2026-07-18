@@ -106,6 +106,7 @@ export default function MapView() {
   const commute = useStore((s) => s.commute);
   const selected = useStore((s) => s.selectedNeighbourhoodId);
   const selectNeighbourhood = useStore((s) => s.selectNeighbourhood);
+  const shortlistedIds = useStore((s) => s.shortlistedNeighbourhoodIds);
   const isochrone = useStore((s) => s.isochrone);
   const topN = useStore((s) => s.topN);
 
@@ -136,12 +137,18 @@ export default function MapView() {
   // the top N (so clicking a card in "show all" still highlights on map).
   const visibleScored = useMemo(() => {
     const top = scored.filter((s) => !s.isExcluded).slice(0, topN);
+    for (const id of shortlistedIds) {
+      if (!top.some((s) => s.neighbourhood.id === id)) {
+        const saved = scored.find((s) => s.neighbourhood.id === id);
+        if (saved) top.push(saved);
+      }
+    }
     if (selected && !top.some((s) => s.neighbourhood.id === selected)) {
       const sel = scored.find((s) => s.neighbourhood.id === selected);
       if (sel) top.push(sel);
     }
     return top;
-  }, [scored, topN, selected]);
+  }, [scored, topN, selected, shortlistedIds]);
 
   // Points layer — centroids, used for the score chip and click target.
   const geojson = useMemo(() => {
@@ -155,11 +162,14 @@ export default function MapView() {
           color: matchScoreHex(s.matchScore, s.isExcluded),
           opacity: s.isExcluded ? 0.35 : 0.95,
           selected: s.neighbourhood.id === selected,
+          shortlisted: shortlistedIds.includes(s.neighbourhood.id),
           // Score pins stay compact so the area footprint, not the marker,
           // carries the neighbourhood shape.
           radius:
             s.neighbourhood.id === selected
               ? 16
+              : shortlistedIds.includes(s.neighbourhood.id)
+              ? 13
               : s.isExcluded
               ? 5
               : 7 + s.matchScore * 4,
@@ -170,7 +180,7 @@ export default function MapView() {
         },
       })),
     };
-  }, [visibleScored]);
+  }, [visibleScored, selected, shortlistedIds]);
 
   // Polygons layer: launch neighbourhood footprints under the centroids.
   // Explicit polygons on the neighbourhood record win; otherwise the
@@ -201,7 +211,7 @@ export default function MapView() {
       ];
     });
     return { type: "FeatureCollection" as const, features };
-  }, [visibleScored]);
+  }, [visibleScored, selected]);
 
   useEffect(() => {
     if (!selected || !ref.current) return;
@@ -405,12 +415,16 @@ export default function MapView() {
                 "case",
                 ["==", ["get", "selected"], true],
                 "#38bdf8",
+                ["==", ["get", "shortlisted"], true],
+                "#34d399",
                 "#ffffff",
               ],
               "circle-stroke-width": [
                 "case",
                 ["==", ["get", "selected"], true],
                 4,
+                ["==", ["get", "shortlisted"], true],
+                3,
                 2,
               ],
               "circle-stroke-opacity": 0.95,

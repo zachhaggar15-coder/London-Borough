@@ -8,9 +8,10 @@
 import type { ScoredNeighbourhood } from "@/lib/types";
 import { gbp } from "@/lib/affordability";
 import { commuteRouteSummary } from "@/lib/commute-details";
+import { recommendationExplanation } from "@/lib/decision";
 import { formatApproxMinutes } from "@/lib/format";
 import { rentBasisShortLabel } from "@/lib/rent";
-import { matchScoreHex, shortlistReason, suitsWho } from "@/lib/scoring";
+import { matchScoreHex, suitsWho } from "@/lib/scoring";
 import { useStore } from "@/lib/store";
 
 type Props = {
@@ -18,6 +19,7 @@ type Props = {
   isSelected: boolean;
   onClick: () => void;
   compact?: boolean;
+  allScored?: ScoredNeighbourhood[];
 };
 
 export default function NeighbourhoodCard({
@@ -25,9 +27,11 @@ export default function NeighbourhoodCard({
   isSelected,
   onClick,
   compact,
+  allScored = [scored],
 }: Props) {
   const query = useStore((s) => s.query);
   const commuteSources = useStore((s) => s.commuteSources);
+  const shortlistedIds = useStore((s) => s.shortlistedNeighbourhoodIds);
   const {
     neighbourhood: n,
     commuteMinutes,
@@ -38,9 +42,10 @@ export default function NeighbourhoodCard({
   } = scored;
   const colour = matchScoreHex(matchScore, isExcluded);
   const scoreOutOf10 = Math.round(matchScore * 10 * 10) / 10;
-  const reason = shortlistReason(scored, query);
+  const explanation = recommendationExplanation(scored, allScored, query);
   const suits = suitsWho(n);
   const route = commuteRouteSummary(n, query, commuteSources[n.id]);
+  const isSaved = shortlistedIds.includes(n.id);
 
   return (
     <button
@@ -75,6 +80,11 @@ export default function NeighbourhoodCard({
                   Selected
                 </span>
               )}
+              {isSaved && (
+                <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-emerald-200">
+                  Saved
+                </span>
+              )}
               <div className="text-[10px] uppercase tracking-wider text-slate-500">
                 Zone {n.transportZones.join("/")}
               </div>
@@ -106,9 +116,8 @@ export default function NeighbourhoodCard({
                   </span>
                 )}
               </div>
-              {/* Why it's shortlisted */}
               <div className="mt-1.5 text-[11px] leading-snug text-sky-300/90">
-                {reason}
+                Best feature: {explanation.bestFeature}
               </div>
               <div className="mt-0.5 truncate text-[11px] leading-snug text-slate-400">
                 Route: {route.primary} · {route.durationSourceLabel}
@@ -116,9 +125,12 @@ export default function NeighbourhoodCard({
               {/* Key tradeoff — first item from the neighbourhood's tradeoffs.
                   Keeps the decision honest: the card always shows one reason
                   this place might not work. */}
-              {n.tradeoffs[0] && (
-                <div className="mt-0.5 text-[11px] leading-snug text-amber-300/80">
-                  Tradeoff: {n.tradeoffs[0]}
+              <div className="mt-0.5 text-[11px] leading-snug text-amber-300/80">
+                Tradeoff: {explanation.tradeoff}
+              </div>
+              {explanation.betterIf && (
+                <div className="mt-0.5 text-[11px] leading-snug text-slate-400">
+                  Better if: {explanation.betterIf}
                 </div>
               )}
               {/* Who it suits */}

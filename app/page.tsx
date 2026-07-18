@@ -173,6 +173,23 @@ export default function HomePage() {
           </div>
         </section>
 
+        <section className="border-t border-slate-800 mx-auto max-w-5xl px-6 py-16">
+          <h2 className="text-2xl font-bold tracking-tight mb-2">
+            Choosing as a couple or flatmates?
+          </h2>
+          <p className="text-slate-400 mb-6 max-w-3xl">
+            Compare two commute destinations and a shared budget to find areas
+            that work for both people, not just the person with the easiest
+            journey.
+          </p>
+          <Link
+            href="/couples"
+            className="inline-block rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium hover:bg-emerald-500 transition-colors"
+          >
+            Try couples / flatmates mode
+          </Link>
+        </section>
+
         {/* Popular comparisons */}
         <section className="border-t border-slate-800 mx-auto max-w-5xl px-6 py-16">
           <h2 className="text-2xl font-bold tracking-tight mb-2">
@@ -383,6 +400,9 @@ export default function HomePage() {
               </Link>
               <Link href="/compare" className="hover:text-white transition-colors">
                 Compare areas
+              </Link>
+              <Link href="/couples" className="hover:text-white transition-colors">
+                Couples mode
               </Link>
               <Link href="/lifestyle/young-professionals" className="hover:text-white transition-colors">
                 Young professionals

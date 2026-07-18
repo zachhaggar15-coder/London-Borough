@@ -4,10 +4,12 @@ import { useEffect } from "react";
 import { useStore } from "@/lib/store";
 import ControlPanel from "@/components/ControlPanel";
 import NeighbourhoodList from "@/components/NeighbourhoodList";
+import ResultsSummaryPanel from "@/components/ResultsSummaryPanel";
 import ShortlistPanel from "@/components/ShortlistPanel";
 import DetailDrawer from "@/components/DetailDrawer";
 import Map from "@/components/Map";
 import { NEIGHBOURHOODS } from "@/lib/data/neighbourhoods";
+import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
 import type { CommuteEstimate } from "@/lib/types";
 
 export default function HomeClient() {
@@ -19,6 +21,10 @@ export default function HomeClient() {
   const setLoadingCommute = useStore((s) => s.setLoadingCommute);
   const setIsochrone = useStore((s) => s.setIsochrone);
   const setLoadingIsochrone = useStore((s) => s.setLoadingIsochrone);
+
+  useEffect(() => {
+    trackEvent(ANALYTICS_EVENTS.finderStarted);
+  }, []);
 
   useEffect(() => {
     if (!destination) {
@@ -51,6 +57,10 @@ export default function HomeClient() {
             ]),
           ),
         );
+        trackEvent(ANALYTICS_EVENTS.finderCompleted, {
+          destination: destination.id,
+          result_count: Object.keys(data.commute ?? {}).length,
+        });
       })
       .catch((err) => {
         console.error("Commute fetch failed", err);
@@ -123,6 +133,7 @@ export default function HomeClient() {
         </header>
         <div className="flex-1 overflow-y-auto">
           <ControlPanel />
+          <ResultsSummaryPanel />
           <NeighbourhoodList />
           <ShortlistPanel />
         </div>

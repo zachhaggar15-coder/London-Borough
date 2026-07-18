@@ -7,7 +7,8 @@ import {
   boroughSlug,
   SITE_URL,
 } from "@/lib/seo-data";
-import { LIFESTYLE_LABELS } from "@/lib/types";
+import { LIFESTYLE_LABELS, type Neighbourhood } from "@/lib/types";
+import type { SimilarArea } from "@/lib/similarity";
 import EssentialsPreview from "@/components/EssentialsPreview";
 import { provenanceLabel } from "@/lib/provenance";
 
@@ -55,8 +56,7 @@ export default async function NeighbourhoodPage({ params }: Props) {
     commuteTimes,
     bestDestination,
     topPersonalities,
-    similarNeighbourhoods,
-    relatedComparisonSlugs,
+    similarAreaGroups,
   } = data;
 
   const zoneStr =
@@ -67,6 +67,7 @@ export default async function NeighbourhoodPage({ params }: Props) {
   const bSlug = boroughSlug(n.borough.split("/")[0].trim());
 
   const allLines = [...new Set(n.mainStations.flatMap((s) => s.lines))];
+  const decisionWatchout = getDecisionWatchout(n);
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -398,6 +399,32 @@ export default async function NeighbourhoodPage({ params }: Props) {
             </div>
           </section>
 
+          <section className="mb-12 rounded-lg bg-slate-900 border border-slate-800 p-6">
+            <h2 className="text-xl font-semibold mb-4">
+              Decision guide for {n.name}
+            </h2>
+            <div className="grid md:grid-cols-3 gap-4">
+              <DecisionCard
+                label="Best reason"
+                title="Why it makes the shortlist"
+                body={n.strengths[0] ?? `${n.name} has a balanced profile.`}
+              />
+              <DecisionCard
+                label="Give up"
+                title="The compromise to check"
+                body={
+                  n.tradeoffs[0] ??
+                  "Compare your exact commute and viewing notes before deciding."
+                }
+              />
+              <DecisionCard
+                label="Reconsider if"
+                title="Where it may fall short"
+                body={decisionWatchout}
+              />
+            </div>
+          </section>
+
           {/* Who it suits */}
           {topPersonalities.length > 0 && (
             <section className="mb-12 rounded-lg bg-slate-900 border border-slate-800 p-6">
@@ -496,19 +523,18 @@ export default async function NeighbourhoodPage({ params }: Props) {
           </section>
 
           {/* Compare with similar */}
-          {relatedComparisonSlugs.length > 0 && (
+          {similarAreaGroups.mostSimilar.length > 0 && (
             <section className="mb-12">
               <h2 className="text-xl font-semibold mb-4">
-                Compare {n.name} with similar areas
+                Compare {n.name} with alternatives
               </h2>
               <div className="grid sm:grid-cols-2 gap-3">
-                {relatedComparisonSlugs.map((compSlug, i) => {
-                  const other = similarNeighbourhoods[i];
+                {similarAreaGroups.mostSimilar.map(({ neighbourhood: other }) => {
                   if (!other) return null;
                   return (
                     <Link
-                      key={compSlug}
-                      href={`/compare/${compSlug}`}
+                      key={other.id}
+                      href={`/neighbourhoods/${other.id}`}
                       className="rounded-lg bg-slate-900 border border-slate-800 px-4 py-3 hover:border-slate-600 transition-colors"
                     >
                       <p className="font-medium text-sm">
@@ -521,6 +547,33 @@ export default async function NeighbourhoodPage({ params }: Props) {
                     </Link>
                   );
                 })}
+              </div>
+              <div className="mt-5 grid lg:grid-cols-2 gap-5">
+                <SimilarGroup
+                  title="Cheaper options"
+                  items={similarAreaGroups.cheaper}
+                  targetName={n.name}
+                />
+                <SimilarGroup
+                  title="Livelier options"
+                  items={similarAreaGroups.livelier}
+                  targetName={n.name}
+                />
+                <SimilarGroup
+                  title="Quieter options"
+                  items={similarAreaGroups.quieter}
+                  targetName={n.name}
+                />
+                <SimilarGroup
+                  title="Greener options"
+                  items={similarAreaGroups.greener}
+                  targetName={n.name}
+                />
+                <SimilarGroup
+                  title="More central options"
+                  items={similarAreaGroups.moreCentral}
+                  targetName={n.name}
+                />
               </div>
             </section>
           )}
@@ -573,5 +626,96 @@ export default async function NeighbourhoodPage({ params }: Props) {
         </main>
       </div>
     </>
+  );
+}
+
+function DecisionCard({
+  label,
+  title,
+  body,
+}: {
+  label: string;
+  title: string;
+  body: string;
+}) {
+  return (
+    <div className="rounded-lg border border-slate-800 bg-slate-950 p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-emerald-300">
+        {label}
+      </p>
+      <h3 className="mt-2 font-semibold text-white">{title}</h3>
+      <p className="mt-2 text-sm text-slate-300">{body}</p>
+    </div>
+  );
+}
+
+function SimilarGroup({
+  title,
+  items,
+  targetName,
+}: {
+  title: string;
+  items: SimilarArea[];
+  targetName: string;
+}) {
+  if (items.length === 0) return null;
+
+  return (
+    <div className="rounded-lg bg-slate-900 border border-slate-800 p-4">
+      <h3 className="font-semibold text-white mb-3">{title}</h3>
+      <div className="space-y-3">
+        {items.slice(0, 3).map((item) => (
+          <Link
+            key={item.neighbourhood.id}
+            href={`/neighbourhoods/${item.neighbourhood.id}`}
+            className="block rounded-md border border-slate-800 bg-slate-950 px-3 py-3 hover:border-slate-600 transition-colors"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-medium text-sm text-white">
+                  {item.neighbourhood.name}
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {item.neighbourhood.borough} - GBP{" "}
+                  {item.neighbourhood.rent.oneBedMedianGbp.toLocaleString()}/mo
+                  1-bed
+                </p>
+              </div>
+              <span className="text-xs text-slate-400">
+                {Math.round(item.score * 100)}%
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 mt-2">{item.reason}</p>
+            <p className="text-xs text-emerald-300 mt-2">
+              Compare against {targetName}
+            </p>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function getDecisionWatchout(neighbourhood: Neighbourhood): string {
+  const { lifestyle } = neighbourhood;
+
+  if (lifestyle.greenSpace <= 5) {
+    return "You want parks and open space to be the deciding factor.";
+  }
+  if (lifestyle.nightlife <= 5 && lifestyle.livelyVsQuiet <= 5) {
+    return "You want a strong late-night or high-energy social scene.";
+  }
+  if (lifestyle.nightlife >= 8 || lifestyle.livelyVsQuiet >= 8) {
+    return "You are prioritising very quiet evenings and low street noise.";
+  }
+  if (lifestyle.connectivity <= 6) {
+    return "You need multiple fast routes across London rather than one main line.";
+  }
+  if (lifestyle.safety <= 6) {
+    return "Perceived safety and calm streets are your highest priority.";
+  }
+  return (
+    neighbourhood.tradeoffs[1] ??
+    "Your commute test comes out materially worse than nearby alternatives."
   );
 }

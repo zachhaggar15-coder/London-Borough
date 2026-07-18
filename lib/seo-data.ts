@@ -10,6 +10,7 @@ import { commuteSourceLabel, LONDON_BOROUGHS } from "@/lib/commute-details";
 import { STATIC_COMMUTE_TIMES } from "@/lib/commute";
 import { PERSONALITY_SCORERS } from "@/lib/personalities";
 import { getRenterEssentialSlugs } from "@/lib/renter-essentials";
+import { similarAreasFor, type SimilarAreaGroups } from "@/lib/similarity";
 import type {
   CommuteEstimateSource,
   Neighbourhood,
@@ -38,6 +39,7 @@ export function getIndexableRoutes(): IndexableRoute[] {
     { path: "/boroughs", priority: 0.8, changefreq: "weekly" },
     { path: "/commute", priority: 0.8, changefreq: "weekly" },
     { path: "/compare", priority: 0.75, changefreq: "weekly" },
+    { path: "/couples", priority: 0.8, changefreq: "weekly" },
     { path: "/lifestyle", priority: 0.8, changefreq: "weekly" },
     { path: "/salary", priority: 0.7, changefreq: "weekly" },
     { path: "/methodology", priority: 0.75, changefreq: "monthly" },
@@ -906,6 +908,7 @@ export type NeighbourhoodPageData = {
   bestDestination: NeighbourhoodCommute;
   topPersonalities: string[];
   similarNeighbourhoods: Neighbourhood[];
+  similarAreaGroups: SimilarAreaGroups;
   relatedComparisonSlugs: string[];
 };
 
@@ -958,34 +961,8 @@ export function getNeighbourhoodPageData(slug: string): NeighbourhoodPageData | 
     .slice(0, 3)
     .map((p) => p.label);
 
-  // Same-borough neighbours first, then similar-rent from anywhere
-  const primaryBorough = neighbourhood.borough.split("/")[0].trim();
-  const sameBoroughIds = new Set(
-    NEIGHBOURHOODS
-      .filter(
-        (n) =>
-          n.id !== neighbourhood.id &&
-          n.borough.split("/").map((p) => p.trim()).includes(primaryBorough),
-      )
-      .map((n) => n.id),
-  );
-
-  const similar = NEIGHBOURHOODS.filter(
-    (n) =>
-      n.id !== neighbourhood.id &&
-      (sameBoroughIds.has(n.id) ||
-        Math.abs(n.rent.oneBedMedianGbp - neighbourhood.rent.oneBedMedianGbp) <= 200),
-  )
-    .sort((a, b) => {
-      const aSame = sameBoroughIds.has(a.id) ? 0 : 1;
-      const bSame = sameBoroughIds.has(b.id) ? 0 : 1;
-      if (aSame !== bSame) return aSame - bSame;
-      return (
-        Math.abs(a.rent.oneBedMedianGbp - neighbourhood.rent.oneBedMedianGbp) -
-        Math.abs(b.rent.oneBedMedianGbp - neighbourhood.rent.oneBedMedianGbp)
-      );
-    })
-    .slice(0, 4);
+  const similarAreaGroups = similarAreasFor(neighbourhood);
+  const similar = similarAreaGroups.mostSimilar.map((item) => item.neighbourhood);
 
   return {
     neighbourhood,
@@ -993,6 +970,7 @@ export function getNeighbourhoodPageData(slug: string): NeighbourhoodPageData | 
     bestDestination: commuteTimes[0],
     topPersonalities,
     similarNeighbourhoods: similar,
+    similarAreaGroups,
     relatedComparisonSlugs: similar.map((n) =>
       comparisonSlugFor(neighbourhood.id, n.id),
     ),

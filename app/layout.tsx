@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { SITE_URL } from "@/lib/seo-data";
 
@@ -64,6 +65,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-slate-950 text-slate-100 font-sans antialiased">
         {children}
+        <Analytics />
       </body>
     </html>
   );

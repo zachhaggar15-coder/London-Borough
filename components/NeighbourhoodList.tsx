@@ -90,6 +90,7 @@ export default function NeighbourhoodList() {
               scored={s}
               isSelected={s.neighbourhood.id === selected}
               onClick={() => selectNeighbourhood(s.neighbourhood.id)}
+              allScored={scored}
             />
           ))}
         </div>
@@ -128,6 +129,7 @@ export default function NeighbourhoodList() {
                 scored={s}
                 isSelected={s.neighbourhood.id === selected}
                 onClick={() => selectNeighbourhood(s.neighbourhood.id)}
+                allScored={scored}
                 compact
               />
             ))}

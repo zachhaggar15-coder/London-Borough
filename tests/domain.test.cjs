@@ -48,6 +48,21 @@ const {
   scoreNeighbourhood,
 } = jiti("../lib/scoring.ts");
 const {
+  comparisonDecision,
+  personalResultsSummary,
+  recommendationExplanation,
+} = jiti("../lib/decision.ts");
+const {
+  similarAreasFor,
+} = jiti("../lib/similarity.ts");
+const {
+  rankCouplesNeighbourhoods,
+} = jiti("../lib/couples.ts");
+const {
+  decodeShareState,
+  encodeShareState,
+} = jiti("../lib/share-state.ts");
+const {
   selectedRentGbp,
 } = jiti("../lib/rent.ts");
 const {
@@ -210,6 +225,112 @@ test("commute cap excludes neighbourhoods beyond the user threshold", () => {
   assert.equal(included.isExcluded, false);
   assert.equal(excluded.isExcluded, true);
   assert.equal(excluded.matchScore, 0);
+});
+
+test("recommendation score strongly penalises material rent over budget", () => {
+  const affordable = {
+    ...neighbourhood,
+    id: "affordable-area",
+    rent: { ...neighbourhood.rent, oneBedMedianGbp: 1300 },
+    lifestyle: { ...neighbourhood.lifestyle, greenSpace: 6 },
+  };
+  const overBudget = {
+    ...neighbourhood,
+    id: "over-budget-area",
+    rent: { ...neighbourhood.rent, oneBedMedianGbp: 1900 },
+    lifestyle: { ...neighbourhood.lifestyle, greenSpace: 10 },
+  };
+  const budgetQuery = {
+    ...query,
+    monthlyRentBudgetGbp: 1400,
+    lifestyleWeights: { greenSpace: 1 },
+  };
+
+  const affordableScore = scoreNeighbourhood(affordable, 30, budgetQuery);
+  const overBudgetScore = scoreNeighbourhood(overBudget, 30, budgetQuery);
+
+  assert.ok(overBudgetScore.rentVsBudget > 1.25);
+  assert.ok(affordableScore.matchScore > overBudgetScore.matchScore);
+});
+
+test("decision utilities explain shortlist trade-offs without new data", () => {
+  const scored = scoreAll(NEIGHBOURHOODS, {}, query).filter((item) => !item.isExcluded);
+  const explanation = recommendationExplanation(scored[0], scored.slice(1), query);
+  const comparison = comparisonDecision(scored.slice(0, 3), query);
+  const summary = personalResultsSummary(scored, query);
+
+  assert.ok(explanation.bestFeature.length > 0);
+  assert.ok(explanation.tradeoff.length > 0);
+  assert.ok(comparison.bestFor.length >= 2);
+  assert.ok(comparison.recommendation.length > 0);
+  assert.ok(summary.priorityBullets.length > 0);
+  assert.ok(summary.keyDecision.length > 0);
+});
+
+test("similarity engine groups alternatives by more than rent alone", () => {
+  const expensiveArea = NEIGHBOURHOODS.reduce((best, area) =>
+    area.rent.oneBedMedianGbp > best.rent.oneBedMedianGbp ? area : best,
+  );
+  const groups = similarAreasFor(expensiveArea);
+
+  assert.ok(groups.mostSimilar.length > 0);
+  assert.ok(groups.cheaper.length > 0);
+  assert.ok(
+    groups.mostSimilar.every(
+      (item) =>
+        item.neighbourhood.id !== expensiveArea.id &&
+        item.reason.length > 0 &&
+        item.score > 0,
+    ),
+  );
+  assert.ok(
+    groups.cheaper.every(
+      (item) =>
+        item.neighbourhood.rent.oneBedMedianGbp <=
+        expensiveArea.rent.oneBedMedianGbp - 100,
+    ),
+  );
+});
+
+test("couples mode prefers balanced two-person commutes", () => {
+  const candidates = ["stratford", "brixton"]
+    .map((id) => NEIGHBOURHOODS.find((area) => area.id === id))
+    .filter(Boolean);
+  assert.equal(candidates.length, 2);
+
+  const ranked = rankCouplesNeighbourhoods(candidates, {
+    commuteA: { stratford: 15, brixton: 35 },
+    commuteB: { stratford: 75, brixton: 40 },
+    maxCommuteA: 45,
+    maxCommuteB: 45,
+    monthlyRentBudgetGbp: 2600,
+    rentBasis: "twoBedFlat",
+    sharedQuery: { ...query, monthlyRentBudgetGbp: 2600, rentBasis: "twoBedFlat" },
+  });
+
+  assert.equal(ranked[0].neighbourhood.id, "brixton");
+  assert.ok(ranked[0].matchScore > ranked[1].matchScore);
+  assert.equal(ranked[1].isExcluded, true);
+});
+
+test("share state preserves decision inputs but omits salary", () => {
+  const state = encodeShareState(
+    {
+      ...query,
+      annualSalaryGbp: 85_000,
+      monthlyRentBudgetGbp: 2125,
+      personality: "social",
+      lifestyleWeights: { greenSpace: 0.6 },
+    },
+    ["brixton", "stratford"],
+  );
+  const decoded = decodeShareState(state);
+
+  assert.ok(decoded);
+  assert.equal(decoded.query.annualSalaryGbp, null);
+  assert.equal(decoded.query.monthlyRentBudgetGbp, 2100);
+  assert.equal(decoded.query.personality, "social");
+  assert.deepEqual(decoded.topIds, ["brixton", "stratford"]);
 });
 
 test("commute display never falls back to unknown when a destination exists", () => {
@@ -452,7 +573,7 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
   const routes = getIndexableRoutes();
   const paths = routes.map((route) => route.path);
   const expectedCount =
-    8 +
+    9 +
     getAllNeighbourhoodSlugs().length +
     getAllBoroughSlugs().length +
     getAllCommuteSlugs().length +
@@ -469,6 +590,7 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
   assert.ok(paths.includes("/boroughs"));
   assert.ok(paths.includes("/commute"));
   assert.ok(paths.includes("/compare"));
+  assert.ok(paths.includes("/couples"));
   assert.ok(paths.includes("/lifestyle"));
   assert.ok(paths.includes("/salary"));
   assert.ok(paths.includes("/methodology"));
