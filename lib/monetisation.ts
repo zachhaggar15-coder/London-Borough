@@ -16,7 +16,8 @@ export type MonetisationProvider = {
 
 export const AMAZON_ASSOCIATE_TAG = "amazonaff01d8-21";
 export const AMAZON_LINK_CODE = "ll2";
-export const AMAZON_LINK_ID = "33f39801ccfd3e1d63322455af2c9615";
+export const AMAZON_LINK_ID = "e52bf7af8a9a046c0c577e25c1ff7df2";
+export const AMAZON_SHORT_URL = "https://amzn.to/3RqSy4O";
 export const AMAZON_REF = "as_li_ss_tl";
 export const AMAZON_DISCLOSURE =
   "As an Amazon Associate I earn from qualifying purchases.";
@@ -69,6 +70,24 @@ export function activeProvidersForSlot(
   return MONETISATION_PROVIDERS.filter(
     (provider) => provider.active && provider.slots.includes(slot),
   );
+}
+
+/**
+ * Tagged Amazon UK search link.
+ *
+ * Used for product categories that do not yet have a confirmed ASIN. Search
+ * links carry the associate tag and never 404, so they are safe to ship. Swap
+ * them for `amazonUkProductUrl(asin)` once a specific product is chosen.
+ */
+export function amazonUkSearchUrl(query: string): string {
+  const params = new URLSearchParams({
+    k: query,
+    linkCode: AMAZON_LINK_CODE,
+    tag: AMAZON_ASSOCIATE_TAG,
+    ref_: AMAZON_REF,
+  });
+
+  return `https://www.amazon.co.uk/s?${params.toString()}`;
 }
 
 export function amazonUkProductUrl(asin: string): string {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import CompareAffiliatePicks from "@/components/CompareAffiliatePicks";
 import {
   boroughSlug,
   getComparePageData,
@@ -431,6 +432,8 @@ export default async function ComparePage({ params }: Props) {
               higher in the current model.
             </p>
           </section>
+
+          <CompareAffiliatePicks a={a} b={b} />
 
           {/* Strengths / tradeoffs */}
           <section className="grid sm:grid-cols-2 gap-6 mb-10">
