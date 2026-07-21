@@ -43,6 +43,38 @@ export default async function CommutePage({ params }: Props) {
 
   const { destinationLabel, bands, topPicks } = data;
 
+  const under30 = bands
+    .filter((b) => b.maxMinutes <= 30)
+    .flatMap((b) => b.neighbourhoods);
+
+  // Single source for FAQ so visible copy and JSON-LD stay in sync.
+  const faqItems: { question: string; answer: string }[] = [
+    {
+      question: `Where is the best place to live for commuting to ${destinationLabel}?`,
+      answer:
+        topPicks.length > 0
+          ? `${topPicks
+              .slice(0, 3)
+              .map((n) => n.name)
+              .join(", ")} all offer fast commutes to ${destinationLabel}. The quickest is ${topPicks[0].name} at approximately ${topPicks[0].minutes} minutes.`
+          : `Several areas offer good commute access to ${destinationLabel}.`,
+    },
+    {
+      question: `What London areas are within 30 minutes of ${destinationLabel}?`,
+      answer:
+        under30.length > 0
+          ? `Areas within about 30 minutes of ${destinationLabel} include ${under30
+              .slice(0, 4)
+              .map((n) => n.name)
+              .join(", ")}.`
+          : `Commute times to ${destinationLabel} vary by area and transport connection.`,
+    },
+    {
+      question: `How do I balance commute time and rent near ${destinationLabel}?`,
+      answer: `Areas closest to ${destinationLabel} tend to carry a rent premium. For most people the sweet spot is the 25–35 minute band — a few more minutes on the tube in exchange for meaningfully cheaper rent and more space.`,
+    },
+  ];
+
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -66,42 +98,11 @@ export default async function CommutePage({ params }: Props) {
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: `Where is the best place to live for commuting to ${destinationLabel}?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            topPicks.length > 0
-              ? `The best areas for commuting to ${destinationLabel} include ${topPicks
-                  .slice(0, 3)
-                  .map((n) => n.name)
-                  .join(
-                    ", ",
-                  )}, with commute times of approximately ${topPicks[0].minutes} to ${topPicks[2]?.minutes ?? topPicks[0].minutes} minutes.`
-              : `Several areas offer good commute access to ${destinationLabel}.`,
-        },
-      },
-      {
-        "@type": "Question",
-        name: `What London areas are within 30 minutes of ${destinationLabel}?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: (() => {
-            const under30 = bands
-              .filter((b) => b.maxMinutes <= 30)
-              .flatMap((b) => b.neighbourhoods);
-            return under30.length > 0
-              ? `Areas within 30 minutes of ${destinationLabel} include ${under30
-                  .slice(0, 4)
-                  .map((n) => n.name)
-                  .join(", ")}.`
-              : `Commute times to ${destinationLabel} vary by area and transport connection.`;
-          })(),
-        },
-      },
-    ],
+    mainEntity: faqItems.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: { "@type": "Answer", text: item.answer },
+    })),
   };
 
   return (
@@ -256,37 +257,14 @@ export default async function CommutePage({ params }: Props) {
               Frequently asked questions
             </h2>
             <div className="space-y-6">
-              <div>
-                <h3 className="font-medium text-white mb-2">
-                  Where is the best place to live for commuting to{" "}
-                  {destinationLabel}?
-                </h3>
-                <p className="text-slate-300">
-                  {topPicks[0] && (
-                    <>
-                      {topPicks
-                        .slice(0, 3)
-                        .map((n) => n.name)
-                        .join(", ")}{" "}
-                      all offer fast commutes to {destinationLabel}. The
-                      quickest is {topPicks[0].name} at approximately{" "}
-                      {topPicks[0].minutes} minutes.
-                    </>
-                  )}
-                </p>
-              </div>
-              <div>
-                <h3 className="font-medium text-white mb-2">
-                  How should I balance commute time and rent near{" "}
-                  {destinationLabel}?
-                </h3>
-                <p className="text-slate-300">
-                  Areas closest to {destinationLabel} tend to carry a rent
-                  premium. The sweet spot for most people is the 25–35 minute
-                  band — you trade a few extra minutes on the tube for
-                  meaningfully cheaper rent and more living space.
-                </p>
-              </div>
+              {faqItems.map((item) => (
+                <div key={item.question}>
+                  <h3 className="font-medium text-white mb-2">
+                    {item.question}
+                  </h3>
+                  <p className="text-slate-300">{item.answer}</p>
+                </div>
+              ))}
             </div>
           </section>
 

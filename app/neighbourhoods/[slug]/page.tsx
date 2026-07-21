@@ -27,8 +27,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     n.transportZones.length > 1
       ? `Zones ${n.transportZones.join("–")}`
       : `Zone ${n.transportZones[0]}`;
-  const title = `Living in ${n.name}, ${n.borough} — rent, transport & area guide`;
-  const description = `${n.name} average 1-bed rent £${n.rent.oneBedMedianGbp.toLocaleString()}/month. ${zoneStr}. ${n.summary}`;
+  const title = `Living in ${n.name}: rent & is it worth it? (2026)`;
+  const description = `Living in ${n.name}? One-bed rent averages £${n.rent.oneBedMedianGbp.toLocaleString()}/month, ${zoneStr}. Is ${n.name} a nice place to live? See transport, lifestyle scores and the verdict.`;
 
   return {
     title,
@@ -62,9 +62,30 @@ export default async function NeighbourhoodPage({ params }: Props) {
       ? `Zones ${n.transportZones.join(" & ")}`
       : `Zone ${n.transportZones[0]}`;
 
-  const bSlug = boroughSlug(n.borough.split("/")[0].trim());
+  const primaryBorough = n.borough.split("/")[0].trim();
+  const bSlug = boroughSlug(primaryBorough);
 
   const allLines = [...new Set(n.mainStations.flatMap((s) => s.lines))];
+
+  const lifestyleValues = Object.values(n.lifestyle);
+  const avgLifestyle =
+    Math.round(
+      (lifestyleValues.reduce((sum, v) => sum + v, 0) / lifestyleValues.length) * 10,
+    ) / 10;
+  const topStrengthsPhrase = n.strengths.slice(0, 2).join(" and ").toLowerCase();
+  const primaryTradeoff = n.tradeoffs[0]
+    ? n.tradeoffs[0].toLowerCase()
+    : "the usual London trade-offs on price and space";
+  const niceToLiveAnswer = `Yes — ${n.name} is well-regarded for ${topStrengthsPhrase}. The main trade-off is ${primaryTradeoff}. Average lifestyle scores sit at ${avgLifestyle}/10, and a 1-bed flat costs around £${n.rent.oneBedMedianGbp.toLocaleString()}/month, making it a solid choice for most renters in ${primaryBorough}.`;
+
+  const vibeDescriptor =
+    n.lifestyle.livelyVsQuiet >= 7
+      ? "a lively, buzzing character"
+      : n.lifestyle.livelyVsQuiet <= 4
+      ? "a calm, quiet character"
+      : "a balanced mix of lively and quiet streets";
+  const whoItSuits = topPersonalities[0] ?? "a wide range of renters";
+  const whatIsItLikeAnswer = `${n.name} has ${vibeDescriptor}, scoring ${n.lifestyle.nightlife}/10 for nightlife and ${n.lifestyle.greenSpace}/10 for green space. It's particularly well-suited to ${whoItSuits}, and sits in ${zoneStr} of ${n.borough}.`;
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -104,47 +125,54 @@ export default async function NeighbourhoodPage({ params }: Props) {
     },
   };
 
+  // Extra FAQ items rendered below the two intent H2s. Kept as one source so
+  // the visible copy and the JSON-LD never drift apart (Google drops FAQ
+  // schema whose answer text isn't visible on the page).
+  const bankCommute = commuteTimes.find((c) => c.destinationId === "bank");
+  const rentAnswer = `The average 1-bedroom flat in ${n.name} costs around £${n.rent.oneBedMedianGbp.toLocaleString()} per month. A 2-bedroom flat costs around £${n.rent.twoBedMedianGbp.toLocaleString()} per month (market review estimate).`;
+  const commuteAnswer = bestDestination
+    ? `The fastest commute from ${n.name} is to ${bestDestination.destinationLabel} at approximately ${bestDestination.minutes} minutes by public transport.${bankCommute ? ` The commute to Bank/City is around ${bankCommute.minutes} minutes.` : ""}`
+    : `${n.name} is in ${zoneStr} and is served by ${n.mainStations[0]?.name ?? "local public transport"}.`;
+  const goodPlaceAnswer =
+    topPersonalities.length > 0
+      ? `${n.name} is in ${n.borough}, ${zoneStr}. It's particularly well-suited to ${topPersonalities[0]}. ${n.tradeoffs[0] ? `The main trade-off is: ${n.tradeoffs[0].toLowerCase()}.` : ""}`
+      : `${n.name} is a ${n.borough} neighbourhood in ${zoneStr}. ${n.summary}`;
+
+  const extraFaqItems: { question: string; answer: string }[] = [
+    { question: `What is the average rent in ${n.name}?`, answer: rentAnswer },
+    ...(bestDestination
+      ? [
+          {
+            question: `How long is the commute from ${n.name}?`,
+            answer: commuteAnswer,
+          },
+        ]
+      : []),
+    {
+      question: `Is ${n.name} a good place to live?`,
+      answer: goodPlaceAnswer,
+    },
+  ];
+
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     mainEntity: [
       {
         "@type": "Question",
+        name: `Is ${n.name} a nice place to live?`,
+        acceptedAnswer: { "@type": "Answer", text: niceToLiveAnswer },
+      },
+      {
+        "@type": "Question",
         name: `What is ${n.name} like to live in?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `${n.summary} Strengths include: ${n.strengths.join(", ")}. Trade-offs: ${n.tradeoffs.join(", ")}.`,
-        },
+        acceptedAnswer: { "@type": "Answer", text: whatIsItLikeAnswer },
       },
-      {
+      ...extraFaqItems.map((item) => ({
         "@type": "Question",
-        name: `What is the average rent in ${n.name}?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `The average 1-bedroom flat in ${n.name} costs around £${n.rent.oneBedMedianGbp.toLocaleString()} per month. A 2-bedroom flat costs around £${n.rent.twoBedMedianGbp.toLocaleString()} per month.`,
-        },
-      },
-      {
-        "@type": "Question",
-        name: `How long is the commute from ${n.name} to the City?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: bestDestination
-            ? `The fastest commute from ${n.name} is to ${bestDestination.destinationLabel} at approximately ${bestDestination.minutes} minutes. ${commuteTimes.find((c) => c.destinationId === "bank") ? `The commute to Bank/City is approximately ${commuteTimes.find((c) => c.destinationId === "bank")!.minutes} minutes.` : ""}`
-            : `${n.name} is in ${zoneStr} and is served by ${n.mainStations[0]?.name ?? "local public transport"}.`,
-        },
-      },
-      {
-        "@type": "Question",
-        name: `Is ${n.name} a good place to live?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            topPersonalities.length > 0
-              ? `${n.name} is particularly well-suited to ${topPersonalities[0]}. ${n.summary}`
-              : `${n.name} is a ${n.borough} neighbourhood in ${zoneStr}. ${n.summary}`,
-        },
-      },
+        name: item.question,
+        acceptedAnswer: { "@type": "Answer", text: item.answer },
+      })),
     ],
   };
 
@@ -226,6 +254,22 @@ export default async function NeighbourhoodPage({ params }: Props) {
                 <p className="text-xl font-semibold">{value}</p>
               </div>
             ))}
+          </section>
+
+          {/* Query-matched intent sections */}
+          <section className="mb-12 space-y-8">
+            <div>
+              <h2 className="text-xl font-semibold mb-3">
+                Is {n.name} a nice place to live?
+              </h2>
+              <p className="text-slate-300">{niceToLiveAnswer}</p>
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold mb-3">
+                What is {n.name} like to live in?
+              </h2>
+              <p className="text-slate-300">{whatIsItLikeAnswer}</p>
+            </div>
           </section>
 
           {/* Transport */}
@@ -408,66 +452,14 @@ export default async function NeighbourhoodPage({ params }: Props) {
               Frequently asked questions
             </h2>
             <div className="space-y-6">
-              <div>
-                <h3 className="font-medium text-white mb-2">
-                  What is {n.name} like to live in?
-                </h3>
-                <p className="text-slate-300">
-                  {n.summary} The main strengths are{" "}
-                  {n.strengths.slice(0, 2).join(" and ").toLowerCase()}.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-medium text-white mb-2">
-                  What is the average rent in {n.name}?
-                </h3>
-                <p className="text-slate-300">
-                  The average 1-bedroom flat in {n.name} costs around £
-                  {n.rent.oneBedMedianGbp.toLocaleString()} per month. A
-                  2-bedroom flat costs around £
-                  {n.rent.twoBedMedianGbp.toLocaleString()} per month (market
-                  review estimate).
-                </p>
-              </div>
-              {bestDestination && (
-                <div>
+              {extraFaqItems.map((item) => (
+                <div key={item.question}>
                   <h3 className="font-medium text-white mb-2">
-                    How long is the commute from {n.name}?
+                    {item.question}
                   </h3>
-                  <p className="text-slate-300">
-                    The fastest commute from {n.name} is to{" "}
-                    {bestDestination.destinationLabel} at approximately{" "}
-                    {bestDestination.minutes} minutes by public transport.{" "}
-                    {(() => {
-                      const bank = commuteTimes.find(
-                        (c) => c.destinationId === "bank",
-                      );
-                      const canaryWharf = commuteTimes.find(
-                        (c) => c.destinationId === "canary-wharf",
-                      );
-                      if (bank)
-                        return `The commute to Bank/City is around ${bank.minutes} minutes.`;
-                      if (canaryWharf)
-                        return `The commute to Canary Wharf is around ${canaryWharf.minutes} minutes.`;
-                      return "";
-                    })()}
-                  </p>
+                  <p className="text-slate-300">{item.answer}</p>
                 </div>
-              )}
-              <div>
-                <h3 className="font-medium text-white mb-2">
-                  Is {n.name} a good area to live in London?
-                </h3>
-                <p className="text-slate-300">
-                  {n.name} is in {n.borough}, {zoneStr}.{" "}
-                  {topPersonalities.length > 0
-                    ? `It's well-suited to ${topPersonalities[0]}.`
-                    : ""}{" "}
-                  {n.tradeoffs[0]
-                    ? `The main trade-off is: ${n.tradeoffs[0].toLowerCase()}.`
-                    : ""}
-                </p>
-              </div>
+              ))}
             </div>
           </section>
 
@@ -509,8 +501,7 @@ export default async function NeighbourhoodPage({ params }: Props) {
             >
               <div>
                 <p className="font-medium">
-                  {n.name} is in{" "}
-                  {n.borough.split("/")[0].trim()}
+                  {n.name} is in {primaryBorough}
                 </p>
                 <p className="text-sm text-slate-400">
                   See all neighbourhoods in this borough →

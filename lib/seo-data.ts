@@ -773,6 +773,33 @@ export function getAllNeighbourhoodSlugs(): string[] {
   return NEIGHBOURHOODS.map((n) => n.id);
 }
 
+export type NeighbourhoodBoroughGroup = {
+  borough: string;
+  neighbourhoods: Neighbourhood[];
+};
+
+/**
+ * Every neighbourhood, grouped by its primary borough — used by the
+ * neighbourhood hub so every neighbourhood page has a link from a
+ * high-priority index page.
+ */
+export function getNeighbourhoodsByBorough(): NeighbourhoodBoroughGroup[] {
+  const groups = new Map<string, Neighbourhood[]>();
+  for (const n of NEIGHBOURHOODS) {
+    const primary = n.borough.split("/")[0].trim();
+    const arr = groups.get(primary) ?? [];
+    arr.push(n);
+    groups.set(primary, arr);
+  }
+
+  return [...groups.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([borough, neighbourhoods]) => ({
+      borough,
+      neighbourhoods: neighbourhoods.sort((a, b) => a.name.localeCompare(b.name)),
+    }));
+}
+
 export type NeighbourhoodCommute = {
   destinationId: string;
   destinationLabel: string;

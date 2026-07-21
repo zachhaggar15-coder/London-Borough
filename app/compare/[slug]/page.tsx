@@ -28,8 +28,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!data) return {};
 
   const { a, b } = data;
-  const title = `${a.name} vs ${b.name}: rent, transport & lifestyle`;
-  const description = `${a.name} vs ${b.name}: compare 1-bed rents (£${a.rent.oneBedMedianGbp.toLocaleString()} vs £${b.rent.oneBedMedianGbp.toLocaleString()}), transport, safety, green space, nightlife and who each area suits.`;
+  const title = `${a.name} vs ${b.name} (2026): rent, transport & lifestyle`;
+  const description = `${a.name} vs ${b.name} (2026): one-bed rents £${a.rent.oneBedMedianGbp.toLocaleString()} vs £${b.rent.oneBedMedianGbp.toLocaleString()}/mo, plus transport, green space, nightlife and safety compared — and who each area suits.`;
 
   return {
     title,
@@ -91,12 +91,15 @@ export default async function ComparePage({ params }: Props) {
     overallRecommendation,
   } = data;
 
-  const related = relatedComparisons(a.id, 8)
+  const related = relatedComparisons(a.id, 5)
     .filter((s) => s !== slug)
     .slice(0, 4);
   const relatedData = related
     .map((s) => getComparePageData(s))
     .filter(Boolean);
+  const exploreAreas = relatedData
+    .map((item) => (item!.a.id === a.id ? item!.b : item!.a))
+    .filter((n, i, arr) => arr.findIndex((x) => x.id === n.id) === i);
   const aBorough = primaryBoroughName(a.borough);
   const bBorough = primaryBoroughName(b.borough);
   const rentSummary =
@@ -111,6 +114,110 @@ export default async function ComparePage({ params }: Props) {
   const greenSpaceWinner = greenWinner === a.id ? a.name : b.name;
   const nightlifeArea = nightlifeWinner === a.id ? a.name : b.name;
   const safetyArea = safetyWinner === a.id ? a.name : b.name;
+
+  // ── Data-driven copy (unique per pair, no fabricated numbers) ──────
+  const rentGap = Math.abs(rentDiff);
+  const cheaperN = rentWinner === a.id ? a : b;
+  const dearerN = rentWinner === a.id ? b : a;
+
+  const zoneLabel = (n: typeof a): string =>
+    n.transportZones.length > 1
+      ? `Zones ${n.transportZones.join(" & ")}`
+      : `Zone ${n.transportZones[0]}`;
+
+  const linesFor = (n: typeof a): string[] => [
+    ...new Set(n.mainStations.flatMap((s) => s.lines)),
+  ];
+  const stationsFor = (n: typeof a): string[] =>
+    n.mainStations.map((s) => s.name);
+  const listWords = (items: string[]): string =>
+    items.length <= 1
+      ? items.join("")
+      : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+
+  // Dimension where each area most out-scores the other → "who suits" copy.
+  const CONTRAST_DIMS: [keyof typeof LIFESTYLE_LABELS, string][] = [
+    ["connectivity", "fast transport"],
+    ["nightlife", "nightlife"],
+    ["greenSpace", "green space"],
+    ["safety", "a safer, quieter feel"],
+    ["foodScene", "its food scene"],
+    ["youngProfessionalDensity", "a young professional crowd"],
+  ];
+  const edgeFor = (
+    x: typeof a,
+    y: typeof a,
+  ): string => {
+    let best = CONTRAST_DIMS[0];
+    let bestGap = -Infinity;
+    for (const dim of CONTRAST_DIMS) {
+      const gap = x.lifestyle[dim[0]] - y.lifestyle[dim[0]];
+      if (gap > bestGap) {
+        bestGap = gap;
+        best = dim;
+      }
+    }
+    return best[1];
+  };
+  const aEdge = edgeFor(a, b);
+  const bEdge = edgeFor(b, a);
+
+  // Winner sentence — collapses when one area leads several dimensions so the
+  // copy doesn't repeat the same name three times.
+  const dimSweep =
+    transportWinner === greenSpaceWinner && greenSpaceWinner === nightlifeArea;
+  const winnerSentence = dimSweep
+    ? `${transportWinner} leads on transport, green space and nightlife`
+    : `${transportWinner} has the stronger transport score, ${greenSpaceWinner} the better green space and ${nightlifeArea} the livelier nights`;
+
+  // Unique intro — structure varies by whether rents diverge.
+  const introParagraph =
+    rentGap >= 100
+      ? `Choosing between ${a.name} and ${b.name} usually comes down to rent versus lifestyle. ${cheaperN.name} is the cheaper of the two, with a one-bed averaging about £${rentGap.toLocaleString()}/month less. ${winnerSentence}. ${a.name} leans towards ${aEdge}, while ${b.name} is stronger on ${bEdge}. In short, ${overallRecommendation}`
+      : `${a.name} and ${b.name} sit at almost the same price — within £${rentGap.toLocaleString()}/month on a one-bed — so the choice is really about character. ${winnerSentence}. ${a.name} leans towards ${aEdge}, whereas ${b.name} is stronger on ${bEdge}. ${overallRecommendation}`;
+
+  // Largest lifestyle gap → dynamic "which is better for X" question.
+  const QUESTION_DIMS: [keyof typeof LIFESTYLE_LABELS, string][] = [
+    ["connectivity", "transport"],
+    ["nightlife", "nightlife"],
+    ["greenSpace", "green space"],
+    ["safety", "safety"],
+  ];
+  let bestDim = QUESTION_DIMS[0];
+  let bestDimGap = -1;
+  for (const dim of QUESTION_DIMS) {
+    const gap = Math.abs(a.lifestyle[dim[0]] - b.lifestyle[dim[0]]);
+    if (gap > bestDimGap) {
+      bestDimGap = gap;
+      bestDim = dim;
+    }
+  }
+  const dimKey = bestDim[0];
+  const dimLabel = bestDim[1];
+  const dimWinner = a.lifestyle[dimKey] >= b.lifestyle[dimKey] ? a : b;
+  const dimLoser = a.lifestyle[dimKey] >= b.lifestyle[dimKey] ? b : a;
+
+  // Single source of truth for FAQ — visible copy and JSON-LD stay in sync.
+  const faqItems: { question: string; answer: string }[] = [
+    {
+      question: `Is ${a.name} or ${b.name} cheaper to rent?`,
+      answer:
+        rentDiff === 0
+          ? `${a.name} and ${b.name} have near-identical average rents — about £${a.rent.oneBedMedianGbp.toLocaleString()}/month for a one-bed flat in both.`
+          : `${cheaperN.name} is cheaper. A one-bed flat averages £${cheaperN.rent.oneBedMedianGbp.toLocaleString()}/month in ${cheaperN.name} versus £${dearerN.rent.oneBedMedianGbp.toLocaleString()}/month in ${dearerN.name} — a difference of about £${rentGap.toLocaleString()}/month.`,
+    },
+    {
+      question: `Which is better for ${dimLabel}, ${a.name} or ${b.name}?`,
+      answer:
+        a.lifestyle[dimKey] === b.lifestyle[dimKey]
+          ? `${a.name} and ${b.name} score the same for ${dimLabel} (${a.lifestyle[dimKey]}/10 each in the area model).`
+          : `${dimWinner.name} scores higher for ${dimLabel} — ${dimWinner.lifestyle[dimKey]}/10 versus ${dimLoser.lifestyle[dimKey]}/10 for ${dimLoser.name} in the area model.`,
+    },
+    {
+      question: `Should I live in ${a.name} or ${b.name}?`,
+      answer: `${overallRecommendation} Pick ${a.name} for ${aEdge}, or ${b.name} for ${bEdge}.`,
+    },
+  ];
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -135,37 +242,14 @@ export default async function ComparePage({ params }: Props) {
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: `Is ${a.name} or ${b.name} better to live in?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: overallRecommendation,
-        },
+    mainEntity: faqItems.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
       },
-      {
-        "@type": "Question",
-        name: `Is ${a.name} cheaper than ${b.name}?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            rentDiff > 0
-              ? `${a.name} is cheaper. The average 1-bed rent in ${a.name} is £${a.rent.oneBedMedianGbp.toLocaleString()}/month vs £${b.rent.oneBedMedianGbp.toLocaleString()}/month in ${b.name} — a difference of £${Math.abs(rentDiff).toLocaleString()}/month.`
-              : rentDiff < 0
-              ? `${b.name} is cheaper. The average 1-bed rent in ${b.name} is £${b.rent.oneBedMedianGbp.toLocaleString()}/month vs £${a.rent.oneBedMedianGbp.toLocaleString()}/month in ${a.name} — a difference of £${Math.abs(rentDiff).toLocaleString()}/month.`
-              : `${a.name} and ${b.name} have similar average rents at £${a.rent.oneBedMedianGbp.toLocaleString()}/month for a 1-bed flat.`,
-        },
-      },
-      {
-        "@type": "Question",
-        name: `What is the difference between ${a.name} and ${b.name}?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `${a.name}: ${a.summary} ${b.name}: ${b.summary}`,
-        },
-      },
-    ],
+    })),
   };
 
   return (
@@ -202,12 +286,33 @@ export default async function ComparePage({ params }: Props) {
             <h1 className="text-4xl font-bold tracking-tight mb-4">
               {a.name} vs {b.name}
             </h1>
-            <p className="text-lg text-slate-300 max-w-2xl">
-              A side-by-side comparison of rent, transport, lifestyle and
-              overall liveability, with links through to the full area guides
-              for each neighbourhood.
-            </p>
+            <p className="text-lg text-slate-300 max-w-2xl">{introParagraph}</p>
           </header>
+
+          {/* Living in A and B — prominent links into the full area guides */}
+          <section className="grid sm:grid-cols-2 gap-4 mb-10">
+            {[
+              { neighbourhood: a, borough: aBorough },
+              { neighbourhood: b, borough: bBorough },
+            ].map(({ neighbourhood, borough }) => (
+              <Link
+                key={neighbourhood.id}
+                href={`/neighbourhoods/${neighbourhood.id}`}
+                className="block rounded-lg bg-slate-900 border border-slate-800 p-5 hover:border-emerald-700/60 transition-colors"
+              >
+                <p className="text-xs text-slate-400 mb-2">
+                  {borough} · Zone{neighbourhood.transportZones.length > 1 ? "s" : ""}{" "}
+                  {neighbourhood.transportZones.join("/")}
+                </p>
+                <p className="font-semibold text-emerald-400">
+                  Living in {neighbourhood.name} — full area guide
+                </p>
+                <p className="text-sm text-slate-300 mt-2">
+                  {neighbourhood.summary}
+                </p>
+              </Link>
+            ))}
+          </section>
 
           {/* Recommendation callout */}
           <section className="mb-10 rounded-lg border border-emerald-700/40 bg-emerald-950/30 p-5">
@@ -294,40 +399,58 @@ export default async function ComparePage({ params }: Props) {
                 on a 1-bed flat.
               </p>
             )}
+            <p className="mt-2 text-xs text-slate-500">
+              Median asking rents reviewed on{" "}
+              <time dateTime={RENT_MARKET_REVIEW_AS_OF}>
+                {RENT_MARKET_REVIEW_AS_OF}
+              </time>{" "}
+              from {RENT_MARKET_SOURCES[1]}.
+            </p>
           </section>
 
-          {/* Area guide links */}
-          <section className="grid sm:grid-cols-2 gap-4 mb-10">
-            {[
-              { neighbourhood: a, borough: aBorough },
-              { neighbourhood: b, borough: bBorough },
-            ].map(({ neighbourhood, borough }) => (
-              <div
-                key={neighbourhood.id}
-                className="rounded-lg bg-slate-900 border border-slate-800 p-5"
+          {/* How they compare on transport */}
+          <section className="mb-10">
+            <h2 className="text-xl font-semibold mb-4">
+              How they compare on transport
+            </h2>
+            <p className="text-slate-300">
+              {a.name} sits in {zoneLabel(a)} and is served by{" "}
+              {listWords(stationsFor(a))}
+              {linesFor(a).length > 0
+                ? `, giving access to the ${listWords(linesFor(a))} ${
+                    linesFor(a).length > 1 ? "lines" : "line"
+                  }`
+                : ""}
+              . {b.name} sits in {zoneLabel(b)} and is served by{" "}
+              {listWords(stationsFor(b))}
+              {linesFor(b).length > 0
+                ? `, giving access to the ${listWords(linesFor(b))} ${
+                    linesFor(b).length > 1 ? "lines" : "line"
+                  }`
+                : ""}
+              .{" "}
+              {a.lifestyle.connectivity === b.lifestyle.connectivity
+                ? `Both score ${a.lifestyle.connectivity}/10 for overall connectivity in the area model.`
+                : `${transportWinner} has the higher overall connectivity score of the two (${Math.max(
+                    a.lifestyle.connectivity,
+                    b.lifestyle.connectivity,
+                  )}/10 vs ${Math.min(
+                    a.lifestyle.connectivity,
+                    b.lifestyle.connectivity,
+                  )}/10).`}
+            </p>
+          </section>
+
+          {/* Borough guide links */}
+          <section className="flex flex-wrap gap-3 mb-10">
+            {[...new Set([aBorough, bBorough])].map((borough) => (
+              <Link
+                key={borough}
+                href={`/boroughs/${boroughSlug(borough)}`}
+                className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:text-white transition-colors"
               >
-                <p className="text-xs text-slate-400 mb-2">Read next</p>
-                <h2 className="text-xl font-semibold mb-3">
-                  Full {neighbourhood.name} area guide
-                </h2>
-                <p className="text-sm text-slate-300 mb-4">
-                  {neighbourhood.summary}
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <Link
-                    href={`/neighbourhoods/${neighbourhood.id}`}
-                    className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-sm font-medium transition-colors"
-                  >
-                    View {neighbourhood.name}
-                  </Link>
-                  <Link
-                    href={`/boroughs/${boroughSlug(borough)}`}
-                    className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:text-white transition-colors"
-                  >
-                    {borough} borough guide
-                  </Link>
-                </div>
-              </div>
+                {borough} borough guide
+              </Link>
             ))}
           </section>
 
@@ -455,42 +578,14 @@ export default async function ComparePage({ params }: Props) {
               Frequently asked questions
             </h2>
             <div className="space-y-6">
-              <div>
-                <h3 className="font-medium text-white mb-2">
-                  Is {a.name} or {b.name} better to live in?
-                </h3>
-                <p className="text-slate-300">{overallRecommendation}</p>
-              </div>
-              <div>
-                <h3 className="font-medium text-white mb-2">
-                  Is {a.name} cheaper than {b.name}?
-                </h3>
-                <p className="text-slate-300">
-                  {rentDiff > 0
-                    ? `${a.name} is cheaper — average 1-bed rent is £${a.rent.oneBedMedianGbp.toLocaleString()} vs £${b.rent.oneBedMedianGbp.toLocaleString()} in ${b.name}, a saving of £${Math.abs(rentDiff).toLocaleString()}/month.`
-                    : rentDiff < 0
-                    ? `${b.name} is cheaper — average 1-bed rent is £${b.rent.oneBedMedianGbp.toLocaleString()} vs £${a.rent.oneBedMedianGbp.toLocaleString()} in ${a.name}, a saving of £${Math.abs(rentDiff).toLocaleString()}/month.`
-                    : `${a.name} and ${b.name} have similar rents — both around £${a.rent.oneBedMedianGbp.toLocaleString()}/month for a 1-bed flat.`}
-                </p>
-              </div>
-              <div>
-                <h3 className="font-medium text-white mb-2">
-                  Which has better transport — {a.name} or {b.name}?
-                </h3>
-                <p className="text-slate-300">
-                  {a.lifestyle.connectivity > b.lifestyle.connectivity
-                    ? `${a.name} scores higher for transport (${a.lifestyle.connectivity}/10 vs ${b.lifestyle.connectivity}/10). `
-                    : a.lifestyle.connectivity < b.lifestyle.connectivity
-                    ? `${b.name} scores higher for transport (${b.lifestyle.connectivity}/10 vs ${a.lifestyle.connectivity}/10). `
-                    : `${a.name} and ${b.name} score equally on transport (${a.lifestyle.connectivity}/10). `}
-                  {a.name} is served by{" "}
-                  {a.mainStations.slice(0, 2).map((s) => s.name).join(" and ")}
-                  {". "}
-                  {b.name} is served by{" "}
-                  {b.mainStations.slice(0, 2).map((s) => s.name).join(" and ")}
-                  .
-                </p>
-              </div>
+              {faqItems.map((item) => (
+                <div key={item.question}>
+                  <h3 className="font-medium text-white mb-2">
+                    {item.question}
+                  </h3>
+                  <p className="text-slate-300">{item.answer}</p>
+                </div>
+              ))}
             </div>
           </section>
 
@@ -513,6 +608,26 @@ export default async function ComparePage({ params }: Props) {
                     </Link>
                   );
                 })}
+              </div>
+            </section>
+          )}
+
+          {/* Explore these areas — sends equity into the neighbourhood pages */}
+          {exploreAreas.length > 0 && (
+            <section className="mb-12">
+              <h2 className="text-xl font-semibold mb-4">
+                Explore these areas
+              </h2>
+              <div className="flex flex-wrap gap-3">
+                {exploreAreas.map((n) => (
+                  <Link
+                    key={n.id}
+                    href={`/neighbourhoods/${n.id}`}
+                    className="rounded-lg bg-slate-900 border border-slate-800 px-4 py-2 text-sm hover:border-emerald-700/60 transition-colors"
+                  >
+                    Living in {n.name}
+                  </Link>
+                ))}
               </div>
             </section>
           )}

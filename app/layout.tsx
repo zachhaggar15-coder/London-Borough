@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { SITE_URL } from "@/lib/seo-data";
+import SiteFooter from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -64,6 +65,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-slate-950 text-slate-100 font-sans antialiased">
         {children}
+        <SiteFooter />
       </body>
     </html>
   );

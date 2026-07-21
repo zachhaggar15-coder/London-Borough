@@ -336,36 +336,6 @@ export default function HomePage() {
             ))}
           </div>
         </section>
-
-        {/* Footer */}
-        <footer className="border-t border-slate-800 px-6 py-8">
-          <div className="mx-auto max-w-5xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-sm text-slate-400">
-            <p>© {new Date().getFullYear()} Where in London</p>
-            <nav className="flex flex-wrap gap-4">
-              <Link href="/neighbourhoods" className="hover:text-white transition-colors">
-                Neighbourhoods
-              </Link>
-              <Link href="/boroughs" className="hover:text-white transition-colors">
-                Boroughs
-              </Link>
-              <Link href="/compare" className="hover:text-white transition-colors">
-                Compare areas
-              </Link>
-              <Link href="/lifestyle/young-professionals" className="hover:text-white transition-colors">
-                Young professionals
-              </Link>
-              <Link href="/lifestyle/runners" className="hover:text-white transition-colors">
-                Runners
-              </Link>
-              <Link href="/salary/50000" className="hover:text-white transition-colors">
-                £50k salary guide
-              </Link>
-              <Link href="/commute/canary-wharf" className="hover:text-white transition-colors">
-                Canary Wharf commute
-              </Link>
-            </nav>
-          </div>
-        </footer>
       </div>
     </>
   );
