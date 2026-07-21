@@ -6,7 +6,6 @@ import {
   getCommutePageData,
   SITE_URL,
 } from "@/lib/seo-data";
-import EssentialsPreview from "@/components/EssentialsPreview";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -250,12 +249,6 @@ export default async function CommutePage({ params }: Props) {
               </div>
             </section>
           ))}
-
-          <EssentialsPreview
-            slugs={["commuter-kit", "work-lunch-meal-prep-new-commute"]}
-            title={`Useful kit for commuting to ${destinationLabel}`}
-            description="Compact Amazon UK picks for public-transport days, rainy station walks, work lunches and long office commutes."
-          />
 
           {/* FAQ */}
           <section className="mb-12">

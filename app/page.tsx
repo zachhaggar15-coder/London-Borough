@@ -19,7 +19,6 @@ import {
   SITE_URL,
 } from "@/lib/seo-data";
 import { DESTINATIONS } from "@/lib/data/destinations";
-import { getRenterEssentialPosts } from "@/lib/renter-essentials";
 
 export const metadata: Metadata = {
   title: "Where in London — find your neighbourhood",
@@ -40,7 +39,6 @@ export default function HomePage() {
   const popularComparisons = getFeaturedCompareSlugs(6)
     .map((slug) => getComparePageData(slug))
     .filter(Boolean);
-  const renterEssentials = getRenterEssentialPosts();
 
   const websiteSchema = {
     "@context": "https://schema.org",
@@ -251,37 +249,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Renter essentials */}
-        <section className="border-t border-slate-800 mx-auto max-w-5xl px-6 py-16">
-          <h2 className="text-2xl font-bold tracking-tight mb-2">
-            London renter essentials
-          </h2>
-          <p className="text-slate-400 mb-8">
-            Practical Amazon UK guides for flat viewings, moving in, small
-            spaces, meal prep, indoor laundry and commuting.
-          </p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {renterEssentials.map((post) => (
-              <Link
-                key={post.slug}
-                href={`/essentials/${post.slug}`}
-                className="rounded-lg bg-slate-900 border border-slate-800 px-4 py-3 hover:border-slate-600 transition-colors"
-              >
-                <p className="font-medium text-sm">{post.shortTitle}</p>
-                <p className="mt-1 text-xs text-slate-400 line-clamp-2">
-                  {post.metaDescription}
-                </p>
-              </Link>
-            ))}
-          </div>
-          <Link
-            href="/essentials"
-            className="mt-6 inline-block rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:text-white transition-colors"
-          >
-            View renter essentials -&gt;
-          </Link>
-        </section>
-
         {/* Popular neighbourhoods */}
         <section className="border-t border-slate-800 mx-auto max-w-5xl px-6 py-16">
           <h2 className="text-2xl font-bold tracking-tight mb-2">
@@ -392,9 +359,6 @@ export default function HomePage() {
               </Link>
               <Link href="/salary/50000" className="hover:text-white transition-colors">
                 £50k salary guide
-              </Link>
-              <Link href="/essentials" className="hover:text-white transition-colors">
-                Renter essentials
               </Link>
               <Link href="/commute/canary-wharf" className="hover:text-white transition-colors">
                 Canary Wharf commute

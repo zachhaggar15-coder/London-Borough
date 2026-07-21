@@ -89,17 +89,6 @@ const {
   LIFESTYLE_PAGES,
   SALARY_LEVELS,
 } = jiti("../lib/seo-data.ts");
-const {
-  AMAZON_ASSOCIATE_TAG,
-  AMAZON_LINK_CODE,
-  AMAZON_LINK_ID,
-  AMAZON_REF,
-  AMAZON_STORE_URL,
-  MEALPREP_ORG_URL,
-  amazonUkProductUrl,
-  getRenterEssentialPosts,
-  getRenterEssentialSlugs,
-} = jiti("../lib/renter-essentials.ts");
 
 const query = {
   destination: { id: "test", label: "Test", centroid: { lat: 51.5, lng: -0.1 } },
@@ -402,14 +391,13 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
   const routes = getIndexableRoutes();
   const paths = routes.map((route) => route.path);
   const expectedCount =
-    7 +
+    6 +
     getAllNeighbourhoodSlugs().length +
     getAllBoroughSlugs().length +
     getAllCommuteSlugs().length +
     SALARY_LEVELS.length +
     LIFESTYLE_PAGES.length +
     getCompareStaticParams().length +
-    getRenterEssentialSlugs().length +
     1;
 
   assert.equal(routes.length, expectedCount);
@@ -421,63 +409,9 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
   assert.ok(paths.includes("/compare"));
   assert.ok(paths.includes("/lifestyle"));
   assert.ok(paths.includes("/salary"));
-  assert.ok(paths.includes("/essentials"));
-  assert.ok(getRenterEssentialSlugs().every((slug) => paths.includes(`/essentials/${slug}`)));
   assert.ok(paths.every((path) => path === "/" || !path.endsWith("/")));
   assert.ok(paths.every((path) => absoluteUrl(path).startsWith(SITE_URL)));
   assert.ok(routes.every((route) => route.priority > 0 && route.priority <= 1));
-});
-
-test("meal prep moving guides are routable and link to MealPrep.org.uk", () => {
-  const mealPrepSlugs = [
-    "meal-prep-before-moving-house",
-    "first-week-meal-prep-new-flat",
-    "work-lunch-meal-prep-new-commute",
-  ];
-  const posts = getRenterEssentialPosts(mealPrepSlugs);
-  const routes = new Set(getIndexableRoutes().map((route) => route.path));
-
-  assert.equal(posts.length, mealPrepSlugs.length);
-  assert.deepEqual(posts.map((post) => post.slug), mealPrepSlugs);
-  assert.ok(posts.every((post) => post.products.length >= 3));
-  assert.ok(posts.every((post) => post.articleSections?.length >= 3));
-  assert.ok(posts.every((post) => post.comparisonRows?.length >= 3));
-  assert.ok(
-    posts.every((post) => {
-      const productAsins = new Set(post.products.map((product) => product.asin));
-      return post.comparisonRows?.every((row) =>
-        row.productAsins.every((asin) => productAsins.has(asin)),
-      );
-    }),
-  );
-  assert.ok(
-    posts.every((post) =>
-      post.externalLinks?.some((link) => link.href === MEALPREP_ORG_URL),
-    ),
-  );
-  assert.ok(mealPrepSlugs.every((slug) => routes.has(`/essentials/${slug}`)));
-});
-
-test("renter essential Amazon URLs use the configured associate link params", () => {
-  const products = getRenterEssentialPosts().flatMap((post) => post.products);
-
-  assert.ok(products.length > 0);
-  assert.ok(AMAZON_STORE_URL.startsWith("https://www.amazon.co.uk?"));
-  assert.ok(AMAZON_STORE_URL.includes(`tag=${AMAZON_ASSOCIATE_TAG}`));
-  assert.ok(AMAZON_STORE_URL.includes(`linkCode=${AMAZON_LINK_CODE}`));
-  assert.ok(AMAZON_STORE_URL.includes(`linkId=${AMAZON_LINK_ID}`));
-  assert.ok(AMAZON_STORE_URL.includes(`ref_=${AMAZON_REF}`));
-
-  for (const product of products) {
-    const url = new URL(amazonUkProductUrl(product.asin));
-
-    assert.equal(url.origin, "https://www.amazon.co.uk");
-    assert.equal(url.pathname, `/dp/${product.asin}`);
-    assert.equal(url.searchParams.get("tag"), AMAZON_ASSOCIATE_TAG);
-    assert.equal(url.searchParams.get("linkCode"), AMAZON_LINK_CODE);
-    assert.equal(url.searchParams.get("linkId"), AMAZON_LINK_ID);
-    assert.equal(url.searchParams.get("ref_"), AMAZON_REF);
-  }
 });
 
 test("comparison hub exposes featured crawl paths that exist in static params", () => {
