@@ -9,7 +9,6 @@ import { DESTINATIONS } from "@/lib/data/destinations";
 import { commuteSourceLabel, LONDON_BOROUGHS } from "@/lib/commute-details";
 import { STATIC_COMMUTE_TIMES } from "@/lib/commute";
 import { PERSONALITY_SCORERS } from "@/lib/personalities";
-import { getRenterEssentialSlugs } from "@/lib/renter-essentials";
 import { similarAreasFor, type SimilarAreaGroups } from "@/lib/similarity";
 import type {
   CommuteEstimateSource,
@@ -43,7 +42,6 @@ export function getIndexableRoutes(): IndexableRoute[] {
     { path: "/lifestyle", priority: 0.8, changefreq: "weekly" },
     { path: "/salary", priority: 0.7, changefreq: "weekly" },
     { path: "/methodology", priority: 0.75, changefreq: "monthly" },
-    { path: "/essentials", priority: 0.65, changefreq: "monthly" },
     ...getAllNeighbourhoodSlugs().map((slug) => ({
       path: `/neighbourhoods/${slug}`,
       priority: 0.9,
@@ -72,11 +70,6 @@ export function getIndexableRoutes(): IndexableRoute[] {
     ...getIndexableCompareSlugs().map((slug) => ({
       path: `/compare/${slug}`,
       priority: 0.6,
-      changefreq: "monthly" as const,
-    })),
-    ...getRenterEssentialSlugs().map((slug) => ({
-      path: `/essentials/${slug}`,
-      priority: 0.65,
       changefreq: "monthly" as const,
     })),
   ];

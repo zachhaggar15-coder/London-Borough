@@ -8,7 +8,6 @@ export const ANALYTICS_EVENTS = {
   comparisonStarted: "comparison_started",
   comparisonCompleted: "comparison_completed",
   resultsShared: "results_shared",
-  affiliateCtaClicked: "affiliate_cta_clicked",
   filtersChanged: "filters_changed",
   rankChanged: "recommendation_rank_changed",
 } as const;

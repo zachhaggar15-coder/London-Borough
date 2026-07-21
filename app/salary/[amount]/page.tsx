@@ -6,7 +6,6 @@ import {
   getSalaryPageData,
   SITE_URL,
 } from "@/lib/seo-data";
-import EssentialsPreview from "@/components/EssentialsPreview";
 
 type Props = { params: Promise<{ amount: string }> };
 
@@ -399,16 +398,6 @@ export default async function SalaryPage({ params }: Props) {
               </div>
             </div>
           </section>
-
-          <EssentialsPreview
-            slugs={[
-              "small-flat-storage",
-              "first-week-meal-prep-new-flat",
-              "damp-laundry-kit",
-            ]}
-            title="Useful kit once you have found a flat"
-            description="Storage, meal prep and indoor-laundry picks that fit the space and budget trade-offs behind London rent."
-          />
 
           {/* Other salary guides */}
           <section className="mb-12">
