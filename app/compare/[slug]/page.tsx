@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import {
   boroughSlug,
+  comparisonSlugFor,
   getComparePageData,
   getCompareStaticParams,
+  isCompareSlug,
   relatedComparisons,
   SITE_URL,
 } from "@/lib/seo-data";
@@ -20,7 +22,19 @@ export async function generateStaticParams() {
   return getCompareStaticParams().map((slug) => ({ slug }));
 }
 
-export const dynamicParams = false;
+// Curated pairs are prerendered; any other slug is resolved on demand so that
+// a non-canonical ordering (e.g. `streatham-vs-walthamstow` when the canonical
+// page is `walthamstow-vs-streatham`) 308-redirects to the canonical URL
+// instead of 404ing. Non-curated pairs still 404.
+export const dynamicParams = true;
+
+/** Resolve a slug to its canonical curated form, or null if it isn't one. */
+function canonicalCompareSlug(slug: string): string | null {
+  const data = getComparePageData(slug);
+  if (!data) return null;
+  const canonical = comparisonSlugFor(data.a.id, data.b.id);
+  return isCompareSlug(canonical) ? canonical : null;
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -28,17 +42,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!data) return {};
 
   const { a, b } = data;
+  // Point canonical/OG at the canonical URL even when reached via a reversed slug.
+  const canonicalSlug = canonicalCompareSlug(slug) ?? slug;
   const title = `${a.name} vs ${b.name} (2026): rent, transport & lifestyle`;
   const description = `${a.name} vs ${b.name} (2026): one-bed rents £${a.rent.oneBedMedianGbp.toLocaleString()} vs £${b.rent.oneBedMedianGbp.toLocaleString()}/mo, plus transport, green space, nightlife and safety compared — and who each area suits.`;
 
   return {
     title,
     description,
-    alternates: { canonical: `${SITE_URL}/compare/${slug}` },
+    alternates: { canonical: `${SITE_URL}/compare/${canonicalSlug}` },
     openGraph: {
       title,
       description,
-      url: `${SITE_URL}/compare/${slug}`,
+      url: `${SITE_URL}/compare/${canonicalSlug}`,
       type: "article",
     },
   };
@@ -77,6 +93,12 @@ export default async function ComparePage({ params }: Props) {
   const { slug } = await params;
   const data = getComparePageData(slug);
   if (!data) notFound();
+
+  // Canonicalise ordering: a non-curated pair 404s; a reversed ordering of a
+  // curated pair 308-redirects to the canonical URL.
+  const canonicalSlug = canonicalCompareSlug(slug);
+  if (!canonicalSlug) notFound();
+  if (canonicalSlug !== slug) permanentRedirect(`/compare/${canonicalSlug}`);
 
   const {
     a,

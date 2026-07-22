@@ -709,6 +709,13 @@ export function comparisonSlugFor(aId: string, bId: string): string {
 }
 
 let compareStaticParamsCache: string[] | null = null;
+let compareSlugSet: Set<string> | null = null;
+
+/** True if `slug` is one of the curated, statically-generated compare pages. */
+export function isCompareSlug(slug: string): boolean {
+  if (!compareSlugSet) compareSlugSet = new Set(getCompareStaticParams());
+  return compareSlugSet.has(slug);
+}
 
 export function getCompareStaticParams(): string[] {
   if (compareStaticParamsCache) return compareStaticParamsCache;
