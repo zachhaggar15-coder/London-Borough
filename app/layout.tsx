@@ -56,6 +56,16 @@ export const metadata: Metadata = {
   },
 };
 
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Where in London",
+  url: SITE_URL,
+  description:
+    "An independent, data-driven guide to choosing a London neighbourhood by commute, rent and lifestyle.",
+  logo: `${SITE_URL}/opengraph-image`,
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -64,6 +74,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-slate-950 text-slate-100 font-sans antialiased">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema),
+          }}
+        />
         {children}
         <SiteFooter />
       </body>

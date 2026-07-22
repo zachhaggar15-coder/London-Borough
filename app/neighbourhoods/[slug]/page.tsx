@@ -5,9 +5,15 @@ import {
   getAllNeighbourhoodSlugs,
   getNeighbourhoodPageData,
   boroughSlug,
+  londonRentMedians,
+  oneBedRentPercentile,
   SITE_URL,
 } from "@/lib/seo-data";
 import { LIFESTYLE_LABELS } from "@/lib/types";
+import {
+  RENT_MARKET_REVIEW_AS_OF,
+  RENT_MARKET_SOURCES,
+} from "@/lib/data/rent-market";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -86,6 +92,26 @@ export default async function NeighbourhoodPage({ params }: Props) {
       : "a balanced mix of lively and quiet streets";
   const whoItSuits = topPersonalities[0] ?? "a wide range of renters";
   const whatIsItLikeAnswer = `${n.name} has ${vibeDescriptor}, scoring ${n.lifestyle.nightlife}/10 for nightlife and ${n.lifestyle.greenSpace}/10 for green space. It's particularly well-suited to ${whoItSuits}, and sits in ${zoneStr} of ${n.borough}.`;
+
+  // "Is it expensive?" — rent vs the London-wide median across tracked areas.
+  const { oneBed: londonMedianOneBed, count: trackedCount } = londonRentMedians();
+  const rentVsMedian = n.rent.oneBedMedianGbp - londonMedianOneBed;
+  const expensiveAnswer =
+    rentVsMedian === 0
+      ? `A one-bed in ${n.name} averages £${n.rent.oneBedMedianGbp.toLocaleString()}/month — right on the London-wide median of £${londonMedianOneBed.toLocaleString()} across the ${trackedCount} areas we track. So on rent, ${n.name} is about average for London.`
+      : rentVsMedian > 0
+      ? `A one-bed in ${n.name} averages £${n.rent.oneBedMedianGbp.toLocaleString()}/month — about £${rentVsMedian.toLocaleString()} above the London-wide median of £${londonMedianOneBed.toLocaleString()} (across ${trackedCount} tracked areas). On rent alone, ${n.name} is more expensive than the typical London neighbourhood.`
+      : `A one-bed in ${n.name} averages £${n.rent.oneBedMedianGbp.toLocaleString()}/month — about £${Math.abs(rentVsMedian).toLocaleString()} below the London-wide median of £${londonMedianOneBed.toLocaleString()} (across ${trackedCount} tracked areas). On rent alone, ${n.name} is cheaper than the typical London neighbourhood.`;
+
+  // "Is it posh?" — stated as a transparent proxy, not an editorial claim.
+  const rentPercentile = oneBedRentPercentile(n.rent.oneBedMedianGbp);
+  const poshVerdict =
+    rentPercentile >= 70 && n.lifestyle.safety >= 7 && n.lifestyle.greenSpace >= 6
+      ? `On that basis it reads as an affluent, quieter residential area.`
+      : rentPercentile <= 40
+      ? `On that basis it reads as more affordable and less exclusive than London's priciest districts.`
+      : `On that basis it sits mid-table — comfortable, but not among London's most exclusive addresses.`;
+  const poshAnswer = `"Posh" isn't something we measure directly, so as a transparent proxy we combine rent level with a couple of lifestyle scores. ${n.name}'s one-bed rent sits around the ${rentPercentile}th percentile of tracked London areas (higher = pricier), with safety ${n.lifestyle.safety}/10, green space ${n.lifestyle.greenSpace}/10 and nightlife ${n.lifestyle.nightlife}/10. ${poshVerdict}`;
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -167,6 +193,16 @@ export default async function NeighbourhoodPage({ params }: Props) {
         "@type": "Question",
         name: `What is ${n.name} like to live in?`,
         acceptedAnswer: { "@type": "Answer", text: whatIsItLikeAnswer },
+      },
+      {
+        "@type": "Question",
+        name: `Is ${n.name} expensive?`,
+        acceptedAnswer: { "@type": "Answer", text: expensiveAnswer },
+      },
+      {
+        "@type": "Question",
+        name: `Is ${n.name} posh?`,
+        acceptedAnswer: { "@type": "Answer", text: poshAnswer },
       },
       ...extraFaqItems.map((item) => ({
         "@type": "Question",
@@ -256,6 +292,22 @@ export default async function NeighbourhoodPage({ params }: Props) {
             ))}
           </section>
 
+          {/* Data provenance line */}
+          <p className="-mt-8 mb-12 text-xs text-slate-500">
+            Rent data as of{" "}
+            <time dateTime={RENT_MARKET_REVIEW_AS_OF}>
+              {RENT_MARKET_REVIEW_AS_OF}
+            </time>
+            , sourced from {RENT_MARKET_SOURCES[1]}.{" "}
+            <Link
+              href="/methodology"
+              className="text-slate-400 hover:text-white underline transition-colors"
+            >
+              Methodology
+            </Link>
+            .
+          </p>
+
           {/* Query-matched intent sections */}
           <section className="mb-12 space-y-8">
             <div>
@@ -269,6 +321,16 @@ export default async function NeighbourhoodPage({ params }: Props) {
                 What is {n.name} like to live in?
               </h2>
               <p className="text-slate-300">{whatIsItLikeAnswer}</p>
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold mb-3">
+                Is {n.name} expensive?
+              </h2>
+              <p className="text-slate-300">{expensiveAnswer}</p>
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold mb-3">Is {n.name} posh?</h2>
+              <p className="text-slate-300">{poshAnswer}</p>
             </div>
           </section>
 

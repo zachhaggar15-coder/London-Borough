@@ -42,6 +42,11 @@ export default async function LifestylePage({ params }: Props) {
   const { page, ranked } = result;
   const top10 = ranked.slice(0, 10);
   const rest = ranked.slice(10, 30);
+  const isGbp = page.unit === "gbp";
+  const fmtScore = (v: number) =>
+    isGbp ? `£${v.toLocaleString()}` : String(v);
+  const scoreLabel = isGbp ? "1-bed/mo" : "score";
+  const least = page.showLeast ? [...ranked].reverse().slice(0, 10) : [];
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -132,15 +137,21 @@ export default async function LifestylePage({ params }: Props) {
                           </h3>
                           <p className="text-xs text-slate-400">
                             {n.borough} · Zone{n.transportZones.length > 1 ? "s" : ""}{" "}
-                            {n.transportZones.join("/")} · £
-                            {n.rent.oneBedMedianGbp.toLocaleString()}/mo 1-bed
+                            {n.transportZones.join("/")}
+                            {!isGbp && (
+                              <>
+                                {" "}
+                                · £{n.rent.oneBedMedianGbp.toLocaleString()}/mo
+                                1-bed
+                              </>
+                            )}
                           </p>
                         </div>
                         <div className="flex-shrink-0 text-right">
                           <span className="text-lg font-bold text-emerald-400">
-                            {entry.score}
+                            {fmtScore(entry.score)}
                           </span>
-                          <p className="text-xs text-slate-400">score</p>
+                          <p className="text-xs text-slate-400">{scoreLabel}</p>
                         </div>
                       </div>
                       <p className="text-sm text-slate-300 mb-3">
@@ -190,10 +201,14 @@ export default async function LifestylePage({ params }: Props) {
                       <th className="pb-3 font-medium w-8">#</th>
                       <th className="pb-3 font-medium">Neighbourhood</th>
                       <th className="pb-3 font-medium">Borough</th>
-                      <th className="pb-3 font-medium text-right">Score</th>
                       <th className="pb-3 font-medium text-right">
-                        1-bed rent
+                        {isGbp ? "1-bed rent" : "Score"}
                       </th>
+                      {!isGbp && (
+                        <th className="pb-3 font-medium text-right">
+                          1-bed rent
+                        </th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -212,11 +227,51 @@ export default async function LifestylePage({ params }: Props) {
                           {entry.neighbourhood.borough}
                         </td>
                         <td className="py-2.5 text-right text-emerald-400 tabular-nums">
-                          {entry.score}
+                          {fmtScore(entry.score)}
                         </td>
-                        <td className="py-2.5 text-right tabular-nums">
-                          £
-                          {entry.neighbourhood.rent.oneBedMedianGbp.toLocaleString()}
+                        {!isGbp && (
+                          <td className="py-2.5 text-right tabular-nums">
+                            £
+                            {entry.neighbourhood.rent.oneBedMedianGbp.toLocaleString()}
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {/* Cheapest tail (rent ranking only) */}
+          {least.length > 0 && (
+            <section className="mb-12">
+              <h2 className="text-xl font-semibold mb-6">
+                10 cheapest areas to rent
+              </h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-left text-slate-400">
+                      <th className="pb-3 font-medium">Neighbourhood</th>
+                      <th className="pb-3 font-medium">Borough</th>
+                      <th className="pb-3 font-medium text-right">1-bed rent</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {least.map((entry) => (
+                      <tr
+                        key={entry.neighbourhood.id}
+                        className="border-b border-slate-800/50"
+                      >
+                        <td className="py-2.5 font-medium">
+                          {entry.neighbourhood.name}
+                        </td>
+                        <td className="py-2.5 text-slate-400">
+                          {entry.neighbourhood.borough}
+                        </td>
+                        <td className="py-2.5 text-right text-emerald-400 tabular-nums">
+                          £{entry.neighbourhood.rent.oneBedMedianGbp.toLocaleString()}
                         </td>
                       </tr>
                     ))}

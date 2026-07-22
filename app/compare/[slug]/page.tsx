@@ -400,11 +400,18 @@ export default async function ComparePage({ params }: Props) {
               </p>
             )}
             <p className="mt-2 text-xs text-slate-500">
-              Median asking rents reviewed on{" "}
+              Rent data as of{" "}
               <time dateTime={RENT_MARKET_REVIEW_AS_OF}>
                 {RENT_MARKET_REVIEW_AS_OF}
-              </time>{" "}
-              from {RENT_MARKET_SOURCES[1]}.
+              </time>
+              , sourced from {RENT_MARKET_SOURCES[1]}.{" "}
+              <Link
+                href="/methodology"
+                className="text-slate-400 hover:text-white underline transition-colors"
+              >
+                Methodology
+              </Link>
+              .
             </p>
           </section>
 

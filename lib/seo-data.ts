@@ -39,6 +39,8 @@ export function getIndexableRoutes(): IndexableRoute[] {
     { path: "/compare", priority: 0.75, changefreq: "weekly" },
     { path: "/lifestyle", priority: 0.8, changefreq: "weekly" },
     { path: "/rent-guide", priority: 0.7, changefreq: "weekly" },
+    { path: "/london-rent-index", priority: 0.7, changefreq: "monthly" },
+    { path: "/methodology", priority: 0.5, changefreq: "yearly" },
     { path: "/salary", priority: 0.7, changefreq: "weekly" },
     ...getAllNeighbourhoodSlugs().map((slug) => ({
       path: `/neighbourhoods/${slug}`,
@@ -417,6 +419,15 @@ export type LifestylePageDef = {
   metaDescription: string;
   intro: string;
   scoreFn: (s: LifestyleScores) => number;
+  /**
+   * Optional: rank by a whole-neighbourhood metric (e.g. rent) instead of a
+   * lifestyle score. When present, `score` holds this raw value.
+   */
+  rankFn?: (n: Neighbourhood) => number;
+  /** How the score column is rendered: an abstract 0–100 score, or £/month. */
+  unit?: "score" | "gbp";
+  /** Also show a "least" tail (used by the rent ranking for cheapest areas). */
+  showLeast?: boolean;
 };
 
 export const LIFESTYLE_PAGES: LifestylePageDef[] = [
@@ -512,6 +523,32 @@ export const LIFESTYLE_PAGES: LifestylePageDef[] = [
       "Some people don't have a strong preference — they just want somewhere that does everything reasonably well. These are the most well-rounded neighbourhoods in London: decent on nightlife, good on green space, solid on commute, and not a nightmare on rent.",
     scoreFn: PERSONALITY_SCORERS.balanced,
   },
+  {
+    slug: "best-for-food",
+    h1: "Best areas for food in London",
+    metaTitle: "Best areas for food in London (2026 guide)",
+    metaDescription:
+      "The best London neighbourhoods for eating out, ranked by restaurant and market strength — from destination food scenes to great everyday café streets.",
+    intro:
+      "These are London's best areas for food — ranked by restaurant diversity, market culture and café density. If where you live is where you want to eat, start here.",
+    scoreFn: (s) =>
+      (s.foodScene * 0.55 + s.cafeDensity * 0.25 + s.livelyVsQuiet * 0.1 + s.walkability * 0.1) /
+      10,
+  },
+  {
+    slug: "expensive",
+    h1: "Most and least expensive London neighbourhoods",
+    metaTitle: "Most & least expensive London neighbourhoods (2026)",
+    metaDescription:
+      "London neighbourhoods ranked by median one-bed rent — the most expensive areas and the cheapest, with the real monthly figures behind each.",
+    intro:
+      "Ranked purely by median one-bed asking rent across the areas we track. Top of the list is the priciest; scroll down for the cheapest places to rent in London.",
+    // scoreFn is unused when rankFn is set, but the type requires it.
+    scoreFn: () => 0,
+    rankFn: (n) => n.rent.oneBedMedianGbp,
+    unit: "gbp",
+    showLeast: true,
+  },
 ];
 
 export type ScoredNeighbourhoodEntry = {
@@ -527,15 +564,52 @@ export function getLifestylePageData(slug: string): {
   const page = LIFESTYLE_PAGES.find((p) => p.slug === slug);
   if (!page) return null;
 
+  const scoreOf = page.rankFn
+    ? (n: Neighbourhood) => page.rankFn!(n)
+    : (n: Neighbourhood) => Math.round(page.scoreFn(n.lifestyle) * 100);
+
   const ranked = NEIGHBOURHOODS.map((n) => ({
     neighbourhood: n,
-    score: Math.round(page.scoreFn(n.lifestyle) * 100),
+    score: scoreOf(n),
     rank: 0,
   }))
     .sort((a, b) => b.score - a.score)
     .map((e, i) => ({ ...e, rank: i + 1 }));
 
   return { page, ranked };
+}
+
+// ──────────────────────────────────────────────────────────────────
+// London-wide rent stats — used by the "expensive/posh" copy and the
+// rent-index asset. All derived from NEIGHBOURHOODS, no external data.
+// ──────────────────────────────────────────────────────────────────
+
+function median(sortedAsc: number[]): number {
+  const m = Math.floor(sortedAsc.length / 2);
+  return sortedAsc.length % 2 === 1
+    ? sortedAsc[m]
+    : Math.round((sortedAsc[m - 1] + sortedAsc[m]) / 2);
+}
+
+export function londonRentMedians(): {
+  oneBed: number;
+  twoBed: number;
+  count: number;
+} {
+  const one = NEIGHBOURHOODS.map((n) => n.rent.oneBedMedianGbp).sort(
+    (a, b) => a - b,
+  );
+  const two = NEIGHBOURHOODS.map((n) => n.rent.twoBedMedianGbp).sort(
+    (a, b) => a - b,
+  );
+  return { oneBed: median(one), twoBed: median(two), count: NEIGHBOURHOODS.length };
+}
+
+/** Percentile (0–100) of a one-bed rent among all tracked areas; higher = pricier. */
+export function oneBedRentPercentile(value: number): number {
+  const all = NEIGHBOURHOODS.map((n) => n.rent.oneBedMedianGbp);
+  const below = all.filter((v) => v < value).length;
+  return Math.round((below / all.length) * 100);
 }
 
 // ──────────────────────────────────────────────────────────────────
