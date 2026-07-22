@@ -9,6 +9,11 @@ import { DESTINATIONS } from "@/lib/data/destinations";
 import { LONDON_BOROUGHS } from "@/lib/commute-details";
 import { STATIC_COMMUTE_TIMES } from "@/lib/commute";
 import { PERSONALITY_SCORERS } from "@/lib/personalities";
+import {
+  ROOM_REGION_AVERAGE_GBP,
+  ROOM_AREA_OVERRIDES_GBP,
+  rentRegionForArea,
+} from "@/lib/data/rent-market";
 import type { Neighbourhood, LifestyleScores, PersonalityKey } from "@/lib/types";
 
 export const SITE_URL =
@@ -33,6 +38,7 @@ export function getIndexableRoutes(): IndexableRoute[] {
     { path: "/commute", priority: 0.8, changefreq: "weekly" },
     { path: "/compare", priority: 0.75, changefreq: "weekly" },
     { path: "/lifestyle", priority: 0.8, changefreq: "weekly" },
+    { path: "/rent-guide", priority: 0.7, changefreq: "weekly" },
     { path: "/salary", priority: 0.7, changefreq: "weekly" },
     ...getAllNeighbourhoodSlugs().map((slug) => ({
       path: `/neighbourhoods/${slug}`,
@@ -61,6 +67,16 @@ export function getIndexableRoutes(): IndexableRoute[] {
     })),
     ...getCompareStaticParams().map((slug) => ({
       path: `/compare/${slug}`,
+      priority: 0.6,
+      changefreq: "monthly" as const,
+    })),
+    ...getCommutePairStaticParams().map((slug) => ({
+      path: `/commute/route/${slug}`,
+      priority: 0.5,
+      changefreq: "monthly" as const,
+    })),
+    ...getAllNeighbourhoodSlugs().map((slug) => ({
+      path: `/rent-guide/${slug}`,
       priority: 0.6,
       changefreq: "monthly" as const,
     })),
@@ -766,6 +782,69 @@ export function relatedComparisons(neighbourhoodId: string, limit = 4): string[]
 }
 
 // ──────────────────────────────────────────────────────────────────
+// Commute-pair pages  →  /commute/route/[slug]   (slug: `${aId}-to-${bId}`)
+//
+// Mirrors the curated compare-pair set so the page count stays bounded and
+// editorial rather than a full N×N matrix. Times are straight-line estimates
+// (same transit-speed proxy the rest of the app uses) and are labelled as
+// estimates on the page — there is no station-level routing data.
+// ──────────────────────────────────────────────────────────────────
+
+export type CommutePairPageData = {
+  slug: string;
+  a: Neighbourhood;
+  b: Neighbourhood;
+  minutes: number;
+  distanceKm: number;
+  sharedLines: string[];
+  compareSlug: string;
+  relatedPairSlugs: string[];
+};
+
+export function getCommutePairStaticParams(): string[] {
+  return getCompareStaticParams().map((slug) => slug.replace("-vs-", "-to-"));
+}
+
+export function getCommutePairPageData(slug: string): CommutePairPageData | null {
+  const toIndex = slug.lastIndexOf("-to-");
+  if (toIndex === -1) return null;
+
+  const aId = slug.slice(0, toIndex);
+  const bId = slug.slice(toIndex + 4);
+
+  const a = NEIGHBOURHOODS.find((n) => n.id === aId);
+  const b = NEIGHBOURHOODS.find((n) => n.id === bId);
+  if (!a || !b || a.id === b.id) return null;
+
+  const TRANSIT_KMH = 25;
+  const minPerKm = 60 / TRANSIT_KMH;
+  const distanceKm = haversineKm(a.centroid, b.centroid);
+  const minutes = Math.max(10, Math.round(distanceKm * minPerKm));
+
+  const aLines = new Set(a.mainStations.flatMap((s) => s.lines));
+  const sharedLines = [
+    ...new Set(b.mainStations.flatMap((s) => s.lines)),
+  ].filter((l) => aLines.has(l));
+
+  const compareSlug = comparisonSlugFor(a.id, b.id);
+  const relatedPairSlugs = relatedComparisons(a.id, 6)
+    .filter((s) => s !== compareSlug)
+    .slice(0, 4)
+    .map((s) => s.replace("-vs-", "-to-"));
+
+  return {
+    slug,
+    a,
+    b,
+    minutes,
+    distanceKm,
+    sharedLines,
+    compareSlug,
+    relatedPairSlugs,
+  };
+}
+
+// ──────────────────────────────────────────────────────────────────
 // Neighbourhood detail pages  →  /neighbourhoods/[slug]
 // ──────────────────────────────────────────────────────────────────
 
@@ -898,5 +977,48 @@ export function getNeighbourhoodPageData(slug: string): NeighbourhoodPageData | 
     relatedComparisonSlugs: similar.map((n) =>
       comparisonSlugFor(neighbourhood.id, n.id),
     ),
+  };
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Rent-guide pages  →  /rent-guide/[slug]   (slug: neighbourhood id)
+//
+// Informational answer to "what's my {area} flat worth to rent?" — purely
+// data-driven from the rent-market baseline. No lead capture / no implied
+// service. Reuses neighbourhood + borough helpers so nothing is duplicated.
+// ──────────────────────────────────────────────────────────────────
+
+export type RentGuidePageData = {
+  neighbourhood: Neighbourhood;
+  roomGbp: number;
+  oneBedGbp: number;
+  twoBedGbp: number;
+  boroughName: string;
+  boroughAvgOneBed: number;
+  region: string;
+  similarNeighbourhoods: Neighbourhood[];
+  relatedComparisonSlugs: string[];
+};
+
+export function getRentGuidePageData(slug: string): RentGuidePageData | null {
+  const nData = getNeighbourhoodPageData(slug);
+  if (!nData) return null;
+
+  const n = nData.neighbourhood;
+  const region = rentRegionForArea(n.id, n.centroid);
+  const roomGbp = ROOM_AREA_OVERRIDES_GBP[n.id] ?? ROOM_REGION_AVERAGE_GBP[region];
+  const boroughName = n.borough.split("/")[0].trim();
+  const boroughData = getBoroughPageData(boroughSlug(boroughName));
+
+  return {
+    neighbourhood: n,
+    roomGbp,
+    oneBedGbp: n.rent.oneBedMedianGbp,
+    twoBedGbp: n.rent.twoBedMedianGbp,
+    boroughName,
+    boroughAvgOneBed: boroughData?.avgOneBedRent ?? n.rent.oneBedMedianGbp,
+    region,
+    similarNeighbourhoods: nData.similarNeighbourhoods,
+    relatedComparisonSlugs: nData.relatedComparisonSlugs,
   };
 }

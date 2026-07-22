@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DESTINATIONS } from "@/lib/data/destinations";
-import { SITE_URL } from "@/lib/seo-data";
+import {
+  getCommutePairPageData,
+  getFeaturedCompareSlugs,
+  SITE_URL,
+} from "@/lib/seo-data";
 
 export const metadata: Metadata = {
   title: "Best London areas by commute destination",
@@ -18,6 +22,10 @@ export const metadata: Metadata = {
 };
 
 export default function CommuteIndexPage() {
+  const featuredRoutes = getFeaturedCompareSlugs(12)
+    .map((slug) => getCommutePairPageData(slug.replace("-vs-", "-to-")))
+    .filter(Boolean);
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <nav className="border-b border-slate-800 px-6 py-4">
@@ -57,6 +65,31 @@ export default function CommuteIndexPage() {
             </Link>
           ))}
         </div>
+
+        {featuredRoutes.length > 0 && (
+          <section className="mt-16">
+            <h2 className="text-2xl font-bold tracking-tight mb-2">
+              Point-to-point commute guides
+            </h2>
+            <p className="text-slate-400 mb-8">
+              Estimated travel time and route between two London areas.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {featuredRoutes.map((route) => {
+                if (!route) return null;
+                return (
+                  <Link
+                    key={route.slug}
+                    href={`/commute/route/${route.slug}`}
+                    className="rounded-lg bg-slate-900 border border-slate-800 px-4 py-2 text-sm hover:border-slate-600 transition-colors"
+                  >
+                    {route.a.name} to {route.b.name}
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         <section className="mt-16 rounded-xl bg-slate-900 border border-slate-700 p-8 text-center">
           <h2 className="text-xl font-semibold mb-2">

@@ -493,8 +493,44 @@ export default async function NeighbourhoodPage({ params }: Props) {
             </section>
           )}
 
-          {/* Borough link */}
-          <section className="mb-12">
+          {/* Commuting from this area */}
+          {relatedComparisonSlugs.length > 0 && (
+            <section className="mb-12">
+              <h2 className="text-xl font-semibold mb-4">
+                Commuting from {n.name}
+              </h2>
+              <div className="flex flex-wrap gap-3">
+                {relatedComparisonSlugs.map((compSlug, i) => {
+                  const other = similarNeighbourhoods[i];
+                  if (!other) return null;
+                  const pairSlug = compSlug.replace("-vs-", "-to-");
+                  return (
+                    <Link
+                      key={pairSlug}
+                      href={`/commute/route/${pairSlug}`}
+                      className="rounded-lg bg-slate-900 border border-slate-800 px-4 py-2 text-sm hover:border-slate-600 transition-colors"
+                    >
+                      {n.name} to {other.name}
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* Rent guide + borough links */}
+          <section className="mb-12 grid gap-3 sm:grid-cols-2">
+            <Link
+              href={`/rent-guide/${n.id}`}
+              className="flex items-center justify-between rounded-lg bg-slate-900 border border-slate-800 px-5 py-4 hover:border-slate-600 transition-colors"
+            >
+              <div>
+                <p className="font-medium">What&apos;s rent worth in {n.name}?</p>
+                <p className="text-sm text-slate-400">
+                  Room, 1-bed &amp; 2-bed rent guide →
+                </p>
+              </div>
+            </Link>
             <Link
               href={`/boroughs/${bSlug}`}
               className="flex items-center justify-between rounded-lg bg-slate-900 border border-slate-800 px-5 py-4 hover:border-slate-600 transition-colors"

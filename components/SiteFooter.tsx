@@ -4,6 +4,7 @@ const HUB_LINKS = [
   { href: "/neighbourhoods", label: "Neighbourhoods" },
   { href: "/compare", label: "Compare" },
   { href: "/commute", label: "Commute" },
+  { href: "/rent-guide", label: "Rent guides" },
   { href: "/lifestyle", label: "Lifestyle" },
   { href: "/boroughs", label: "Boroughs" },
 ];
