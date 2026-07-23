@@ -37,6 +37,7 @@ import {
   RENT_BASIS_OPTIONS,
   rentBasisLabel,
 } from "@/lib/rent";
+import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
 
 export default function ControlPanel() {
   const query = useStore((s) => s.query);
@@ -94,6 +95,10 @@ export default function ControlPanel() {
       centroid: { lat: r.lat, lng: r.lng },
     };
     setDestination(dest);
+    trackEvent(ANALYTICS_EVENTS.filtersChanged, {
+      field: "destination",
+      destination_type: "custom",
+    });
     setSearchResults(null);
     setSearchError(null);
     setSearchInput("");
@@ -194,7 +199,13 @@ export default function ControlPanel() {
             value={isCustomDestination ? "" : query.destination?.id ?? ""}
             onChange={(e) => {
               const dest = DESTINATIONS.find((d) => d.id === e.target.value);
-              if (dest) setDestination(dest);
+              if (dest) {
+                setDestination(dest);
+                trackEvent(ANALYTICS_EVENTS.filtersChanged, {
+                  field: "destination",
+                  destination: dest.id,
+                });
+              }
             }}
             className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none"
           >
@@ -229,7 +240,14 @@ export default function ControlPanel() {
           max={90}
           step={5}
           value={query.maxCommuteMinutes}
-          onChange={(e) => setMaxCommute(parseInt(e.target.value, 10))}
+          onChange={(e) => {
+            const minutes = parseInt(e.target.value, 10);
+            setMaxCommute(minutes);
+            trackEvent(ANALYTICS_EVENTS.filtersChanged, {
+              field: "max_commute",
+              value: minutes,
+            });
+          }}
           className="w-full"
         />
         <div className="mt-1 flex justify-between text-[10px] text-slate-500">
@@ -256,9 +274,13 @@ export default function ControlPanel() {
             min={0}
             step={1000}
             value={query.annualSalaryGbp ?? ""}
-            onChange={(e) =>
-              setSalary(e.target.value === "" ? null : parseInt(e.target.value, 10))
-            }
+            onChange={(e) => {
+              setSalary(e.target.value === "" ? null : parseInt(e.target.value, 10));
+              trackEvent(ANALYTICS_EVENTS.filtersChanged, {
+                field: "salary_present",
+                value: e.target.value !== "",
+              });
+            }}
             placeholder="50000"
             className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none"
           />
@@ -281,11 +303,15 @@ export default function ControlPanel() {
                 min={0}
                 step={50}
                 value={query.monthlyRentBudgetGbp ?? ""}
-                onChange={(e) =>
-                  setRentBudget(
-                    e.target.value === "" ? null : parseInt(e.target.value, 10),
-                  )
-                }
+                onChange={(e) => {
+                  const budget =
+                    e.target.value === "" ? null : parseInt(e.target.value, 10);
+                  setRentBudget(budget);
+                  trackEvent(ANALYTICS_EVENTS.filtersChanged, {
+                    field: "rent_budget",
+                    value: budget == null ? "cleared" : "set",
+                  });
+                }}
                 placeholder="override /mo"
                 className="w-full rounded-md border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs focus:border-sky-500 focus:outline-none"
               />
@@ -308,7 +334,13 @@ export default function ControlPanel() {
       <Field label="Rent type" subtitle={rentBasisLabel(query.rentBasis)}>
         <select
           value={query.rentBasis}
-          onChange={(e) => setRentBasis(e.target.value as RentBasis)}
+          onChange={(e) => {
+            setRentBasis(e.target.value as RentBasis);
+            trackEvent(ANALYTICS_EVENTS.filtersChanged, {
+              field: "rent_basis",
+              value: e.target.value,
+            });
+          }}
           className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none"
         >
           {RENT_BASIS_OPTIONS.map((basis) => (
@@ -335,7 +367,13 @@ export default function ControlPanel() {
               <button
                 key={p.key}
                 type="button"
-                onClick={() => setPersonality(isActive ? null : p.key)}
+                onClick={() => {
+                  setPersonality(isActive ? null : p.key);
+                  trackEvent(ANALYTICS_EVENTS.filtersChanged, {
+                    field: "personality",
+                    value: isActive ? "cleared" : p.key,
+                  });
+                }}
                 className={[
                   "rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
                   isActive
@@ -375,9 +413,14 @@ export default function ControlPanel() {
                 max={100}
                 step={1}
                 value={Math.round(query.rentBudgetShareOfTakeHome * 100)}
-                onChange={(e) =>
-                  setRentBudgetShareOfTakeHome(parseInt(e.target.value, 10) / 100)
-                }
+                onChange={(e) => {
+                  const share = parseInt(e.target.value, 10) / 100;
+                  setRentBudgetShareOfTakeHome(share);
+                  trackEvent(ANALYTICS_EVENTS.filtersChanged, {
+                    field: "rent_budget_share",
+                    value: Math.round(share * 100),
+                  });
+                }}
                 className="w-full"
               />
             </div>
@@ -401,9 +444,15 @@ export default function ControlPanel() {
                     max={1}
                     step={0.1}
                     value={val}
-                    onChange={(e) =>
-                      setLifestyleWeight(key, parseFloat(e.target.value))
-                    }
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value);
+                      setLifestyleWeight(key, value);
+                      trackEvent(ANALYTICS_EVENTS.filtersChanged, {
+                        field: "lifestyle_weight",
+                        dimension: key,
+                        value,
+                      });
+                    }}
                     className="w-full"
                   />
                 </div>

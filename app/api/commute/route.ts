@@ -2,14 +2,21 @@
  * POST /api/commute
  *
  * Body: { destinationId: string } | { destinationLatLng: { lat, lng } }
- * Returns: { commute: { [neighbourhoodId]: minutes } }
+ * Returns: {
+ *   commute: { [neighbourhoodId]: minutes },
+ *   estimates: { [neighbourhoodId]: { minutes, source } }
+ * }
  *
  * The routing provider lives here so we never ship an API key to the browser.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { DESTINATIONS_BY_ID } from "@/lib/data/destinations";
-import { travelTimesFromDestination } from "@/lib/commute";
+import {
+  commuteMinutesFromEstimates,
+  travelTimeEstimatesFromDestination,
+  type CommuteEstimateMap,
+} from "@/lib/commute";
 import { TtlCache, coordKey } from "@/lib/cache";
 import { isLondonLatLng } from "@/lib/validation";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -22,7 +29,7 @@ type Body = {
 // Module-scoped cache — survives across requests in the same Next.js
 // server process. Commute matrices are stable so a long TTL is fine.
 const ONE_DAY = 24 * 60 * 60 * 1000;
-const cache = new TtlCache<Record<string, number>>(ONE_DAY, 200);
+const cache = new TtlCache<CommuteEstimateMap>(ONE_DAY, 200);
 const RATE_LIMIT = {
   scope: "api:commute",
   limit: 40,
@@ -80,13 +87,21 @@ export async function POST(req: NextRequest) {
   const key = coordKey(centroid.lat, centroid.lng);
   const cached = cache.get(key);
   if (cached) {
-    return NextResponse.json({ commute: cached, cached: true });
+    return NextResponse.json({
+      commute: commuteMinutesFromEstimates(cached),
+      estimates: cached,
+      cached: true,
+    });
   }
 
   try {
-    const commute = await travelTimesFromDestination(centroid);
-    cache.set(key, commute);
-    return NextResponse.json({ commute, cached: false });
+    const estimates = await travelTimeEstimatesFromDestination(centroid);
+    cache.set(key, estimates);
+    return NextResponse.json({
+      commute: commuteMinutesFromEstimates(estimates),
+      estimates,
+      cached: false,
+    });
   } catch (err) {
     console.error("travelTimesFromDestination failed", err);
     return NextResponse.json(

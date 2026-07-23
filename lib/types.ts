@@ -92,6 +92,16 @@ export type RentProfile = {
   oneBedSource: Provenance;
 };
 
+export type CommuteEstimateSource =
+  | "tflJourneyPlanner"
+  | "staticMatrix"
+  | "distanceHeuristic";
+
+export type CommuteEstimate = {
+  minutes: number;
+  source: CommuteEstimateSource;
+};
+
 export type Neighbourhood = {
   // Identity
   id: string;          // slug, e.g. "tooting"

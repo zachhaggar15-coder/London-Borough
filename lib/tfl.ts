@@ -2,7 +2,7 @@
  * TfL Journey Planner integration.
  *
  * Hits the public TfL Unified API at api.tfl.gov.uk to compute real
- * public-transport journey times between two lat/lng points in London.
+ * public-transport journey durations between two lat/lng points in London.
  *
  *   GET https://api.tfl.gov.uk/Journey/JourneyResults/{from}/to/{to}
  *       ?mode=tube,bus,national-rail,overground,dlr,elizabeth-line,tram

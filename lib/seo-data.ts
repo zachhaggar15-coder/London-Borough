@@ -6,7 +6,7 @@
 
 import { NEIGHBOURHOODS } from "@/lib/data/neighbourhoods";
 import { DESTINATIONS } from "@/lib/data/destinations";
-import { LONDON_BOROUGHS } from "@/lib/commute-details";
+import { commuteSourceLabel, LONDON_BOROUGHS } from "@/lib/commute-details";
 import { STATIC_COMMUTE_TIMES } from "@/lib/commute";
 import { PERSONALITY_SCORERS } from "@/lib/personalities";
 import {
@@ -14,7 +14,13 @@ import {
   ROOM_AREA_OVERRIDES_GBP,
   rentRegionForArea,
 } from "@/lib/data/rent-market";
-import type { Neighbourhood, LifestyleScores, PersonalityKey } from "@/lib/types";
+import { similarAreasFor, type SimilarAreaGroups } from "@/lib/similarity";
+import type {
+  CommuteEstimateSource,
+  Neighbourhood,
+  LifestyleScores,
+  PersonalityKey,
+} from "@/lib/types";
 
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://london-borough.vercel.app";
@@ -37,10 +43,11 @@ export function getIndexableRoutes(): IndexableRoute[] {
     { path: "/boroughs", priority: 0.8, changefreq: "weekly" },
     { path: "/commute", priority: 0.8, changefreq: "weekly" },
     { path: "/compare", priority: 0.75, changefreq: "weekly" },
+    { path: "/couples", priority: 0.8, changefreq: "weekly" },
     { path: "/lifestyle", priority: 0.8, changefreq: "weekly" },
     { path: "/rent-guide", priority: 0.7, changefreq: "weekly" },
     { path: "/london-rent-index", priority: 0.7, changefreq: "monthly" },
-    { path: "/methodology", priority: 0.5, changefreq: "yearly" },
+    { path: "/methodology", priority: 0.75, changefreq: "monthly" },
     { path: "/salary", priority: 0.7, changefreq: "weekly" },
     ...getAllNeighbourhoodSlugs().map((slug) => ({
       path: `/neighbourhoods/${slug}`,
@@ -67,7 +74,7 @@ export function getIndexableRoutes(): IndexableRoute[] {
       priority: 0.7,
       changefreq: "monthly" as const,
     })),
-    ...getCompareStaticParams().map((slug) => ({
+    ...getIndexableCompareSlugs().map((slug) => ({
       path: `/compare/${slug}`,
       priority: 0.6,
       changefreq: "monthly" as const,
@@ -243,6 +250,8 @@ export type CommuteNeighbourhood = {
   borough: string;
   minutes: number;
   isEstimate: boolean;
+  source: CommuteEstimateSource;
+  sourceLabel: string;
   oneBedRent: number;
   transportLines: string[];
   summary: string;
@@ -260,6 +269,21 @@ export type CommutePageData = {
   destinationCentroid: { lat: number; lng: number };
   bands: CommuteBand[];
   topPicks: CommuteNeighbourhood[];
+  decisionPicks: CommuteDecisionPick[];
+  valueTradeOff: CommuteValueTradeOff | null;
+};
+
+export type CommuteDecisionPick = {
+  label: string;
+  neighbourhood: CommuteNeighbourhood;
+  reason: string;
+};
+
+export type CommuteValueTradeOff = {
+  cheaperArea: CommuteNeighbourhood;
+  fasterArea: CommuteNeighbourhood;
+  monthlySaving: number;
+  extraMinutes: number;
 };
 
 export function getAllCommuteSlugs(): string[] {
@@ -276,6 +300,9 @@ export function getCommutePageData(slug: string): CommutePageData | null {
   const withTimes: CommuteNeighbourhood[] = NEIGHBOURHOODS.map((n) => {
     const staticTime = STATIC_COMMUTE_TIMES[n.id]?.[slug];
     const isEstimate = staticTime == null;
+    const source: CommuteEstimateSource = isEstimate
+      ? "distanceHeuristic"
+      : "staticMatrix";
     const minutes = staticTime
       ?? Math.max(10, Math.round(haversineKm(n.centroid, destination.centroid) * minPerKm));
 
@@ -285,6 +312,8 @@ export function getCommutePageData(slug: string): CommutePageData | null {
       borough: n.borough,
       minutes,
       isEstimate,
+      source,
+      sourceLabel: commuteSourceLabel(source),
       oneBedRent: n.rent.oneBedMedianGbp,
       transportLines: n.mainStations.flatMap((s) => s.lines).slice(0, 3),
       summary: n.summary,
@@ -309,6 +338,8 @@ export function getCommutePageData(slug: string): CommutePageData | null {
   }).filter((b) => b.neighbourhoods.length > 0);
 
   const topPicks = withTimes.slice(0, 6);
+  const decisionPicks = commuteDecisionPicks(withTimes);
+  const valueTradeOff = commuteValueTradeOff(withTimes);
 
   return {
     destinationId: destination.id,
@@ -316,6 +347,76 @@ export function getCommutePageData(slug: string): CommutePageData | null {
     destinationCentroid: destination.centroid,
     bands,
     topPicks,
+    decisionPicks,
+    valueTradeOff,
+  };
+}
+
+function commuteDecisionPicks(
+  neighbourhoods: CommuteNeighbourhood[],
+): CommuteDecisionPick[] {
+  const picks: CommuteDecisionPick[] = [];
+  const seen = new Set<string>();
+  const viable = neighbourhoods.filter((n) => n.minutes <= 60);
+
+  function add(
+    label: string,
+    neighbourhood: CommuteNeighbourhood | undefined,
+    reason: string,
+  ) {
+    if (!neighbourhood || seen.has(neighbourhood.id)) return;
+    picks.push({ label, neighbourhood, reason });
+    seen.add(neighbourhood.id);
+  }
+
+  add(
+    "Fastest commute",
+    neighbourhoods[0],
+    "Shortest estimated public-transport time in the current dataset.",
+  );
+  add(
+    "Best value",
+    [...viable].sort(
+      (a, b) => a.oneBedRent - b.oneBedRent || a.minutes - b.minutes,
+    )[0],
+    "Lowest 1-bed rent among areas with a broadly viable commute.",
+  );
+  add(
+    "Cheapest viable option",
+    [...neighbourhoods].sort(
+      (a, b) => a.oneBedRent - b.oneBedRent || a.minutes - b.minutes,
+    )[0],
+    "Lowest modelled 1-bed rent, with commute time shown so the trade-off is visible.",
+  );
+  add(
+    "Lower-uncertainty estimate",
+    neighbourhoods.find((n) => n.source === "staticMatrix"),
+    "Uses the reviewed static commute matrix rather than the distance fallback.",
+  );
+
+  return picks.slice(0, 4);
+}
+
+function commuteValueTradeOff(
+  neighbourhoods: CommuteNeighbourhood[],
+): CommuteValueTradeOff | null {
+  const fasterArea = neighbourhoods[0];
+  const cheaperArea = neighbourhoods
+    .filter((n) => n.minutes <= 60 && n.oneBedRent < fasterArea.oneBedRent)
+    .sort((a, b) => {
+      const savingA = fasterArea.oneBedRent - a.oneBedRent;
+      const savingB = fasterArea.oneBedRent - b.oneBedRent;
+      if (savingA !== savingB) return savingB - savingA;
+      return a.minutes - b.minutes;
+    })[0];
+
+  if (!cheaperArea) return null;
+
+  return {
+    cheaperArea,
+    fasterArea,
+    monthlySaving: fasterArea.oneBedRent - cheaperArea.oneBedRent,
+    extraMinutes: Math.max(0, cheaperArea.minutes - fasterArea.minutes),
   };
 }
 
@@ -710,6 +811,7 @@ export function comparisonSlugFor(aId: string, bId: string): string {
 
 let compareStaticParamsCache: string[] | null = null;
 let compareSlugSet: Set<string> | null = null;
+let indexableCompareSlugsCache: string[] | null = null;
 
 /** True if `slug` is one of the curated, statically-generated compare pages. */
 export function isCompareSlug(slug: string): boolean {
@@ -808,47 +910,57 @@ const COMPARE_INDEX_SECTIONS: {
 ];
 
 export function getCompareIndexSections(): CompareIndexSection[] {
-  const available = new Set(getCompareStaticParams());
+  const indexable = new Set(getIndexableCompareSlugs());
 
   return COMPARE_INDEX_SECTIONS.map(({ title, description, pairs }) => ({
     title,
     description,
     slugs: pairs
       .map(([aId, bId]) => comparisonSlugFor(aId, bId))
-      .filter((slug) => available.has(slug)),
+      .filter((slug) => indexable.has(slug)),
   })).filter((section) => section.slugs.length > 0);
 }
 
-export function getFeaturedCompareSlugs(limit = 24): string[] {
+export function getIndexableCompareSlugs(): string[] {
+  if (indexableCompareSlugsCache) return indexableCompareSlugsCache;
+
+  const available = new Set(getCompareStaticParams());
   const slugs: string[] = [];
-  const available = getCompareStaticParams();
   const seen = new Set<string>();
 
-  for (const section of getCompareIndexSections()) {
-    for (const slug of section.slugs) {
-      if (seen.has(slug)) continue;
+  for (const section of COMPARE_INDEX_SECTIONS) {
+    for (const [aId, bId] of section.pairs) {
+      const slug = comparisonSlugFor(aId, bId);
+      if (!available.has(slug) || seen.has(slug)) continue;
       slugs.push(slug);
       seen.add(slug);
-      if (slugs.length >= limit) return slugs;
     }
   }
 
-  for (const slug of available) {
-    if (seen.has(slug)) continue;
-    slugs.push(slug);
-    seen.add(slug);
-    if (slugs.length >= limit) return slugs;
-  }
+  indexableCompareSlugsCache = slugs;
+  return indexableCompareSlugsCache;
+}
 
-  return slugs;
+export function isIndexableCompareSlug(slug: string): boolean {
+  return getIndexableCompareSlugs().includes(slug);
+}
+
+export function getFeaturedCompareSlugs(limit = 24): string[] {
+  return getIndexableCompareSlugs().slice(0, limit);
 }
 
 // ──────────────────────────────────────────────────────────────────
 // Internal link generation helpers
 // ──────────────────────────────────────────────────────────────────
 
-export function relatedComparisons(neighbourhoodId: string, limit = 4): string[] {
-  const available = new Set(getCompareStaticParams());
+export function relatedComparisons(
+  neighbourhoodId: string,
+  limit = 4,
+  options: { indexableOnly?: boolean } = {},
+): string[] {
+  const available = new Set(
+    options.indexableOnly ? getIndexableCompareSlugs() : getCompareStaticParams(),
+  );
 
   return NEIGHBOURHOODS.filter((n) => n.id !== neighbourhoodId)
     .sort((a, b) => {
@@ -965,6 +1077,8 @@ export type NeighbourhoodCommute = {
   destinationLabel: string;
   minutes: number;
   isEstimate: boolean;
+  source: CommuteEstimateSource;
+  sourceLabel: string;
 };
 
 export type NeighbourhoodPageData = {
@@ -973,6 +1087,7 @@ export type NeighbourhoodPageData = {
   bestDestination: NeighbourhoodCommute;
   topPersonalities: string[];
   similarNeighbourhoods: Neighbourhood[];
+  similarAreaGroups: SimilarAreaGroups;
   relatedComparisonSlugs: string[];
 };
 
@@ -995,6 +1110,9 @@ export function getNeighbourhoodPageData(slug: string): NeighbourhoodPageData | 
   const commuteTimes: NeighbourhoodCommute[] = DESTINATIONS.map((d) => {
     const staticTime = STATIC_COMMUTE_TIMES[neighbourhood.id]?.[d.id];
     const isEstimate = staticTime == null;
+    const source: CommuteEstimateSource = isEstimate
+      ? "distanceHeuristic"
+      : "staticMatrix";
     const minutes =
       staticTime ??
       Math.max(
@@ -1006,6 +1124,8 @@ export function getNeighbourhoodPageData(slug: string): NeighbourhoodPageData | 
       destinationLabel: d.label,
       minutes,
       isEstimate,
+      source,
+      sourceLabel: commuteSourceLabel(source),
     };
   }).sort((a, b) => a.minutes - b.minutes);
 
@@ -1020,34 +1140,8 @@ export function getNeighbourhoodPageData(slug: string): NeighbourhoodPageData | 
     .slice(0, 3)
     .map((p) => p.label);
 
-  // Same-borough neighbours first, then similar-rent from anywhere
-  const primaryBorough = neighbourhood.borough.split("/")[0].trim();
-  const sameBoroughIds = new Set(
-    NEIGHBOURHOODS
-      .filter(
-        (n) =>
-          n.id !== neighbourhood.id &&
-          n.borough.split("/").map((p) => p.trim()).includes(primaryBorough),
-      )
-      .map((n) => n.id),
-  );
-
-  const similar = NEIGHBOURHOODS.filter(
-    (n) =>
-      n.id !== neighbourhood.id &&
-      (sameBoroughIds.has(n.id) ||
-        Math.abs(n.rent.oneBedMedianGbp - neighbourhood.rent.oneBedMedianGbp) <= 200),
-  )
-    .sort((a, b) => {
-      const aSame = sameBoroughIds.has(a.id) ? 0 : 1;
-      const bSame = sameBoroughIds.has(b.id) ? 0 : 1;
-      if (aSame !== bSame) return aSame - bSame;
-      return (
-        Math.abs(a.rent.oneBedMedianGbp - neighbourhood.rent.oneBedMedianGbp) -
-        Math.abs(b.rent.oneBedMedianGbp - neighbourhood.rent.oneBedMedianGbp)
-      );
-    })
-    .slice(0, 4);
+  const similarAreaGroups = similarAreasFor(neighbourhood);
+  const similar = similarAreaGroups.mostSimilar.map((item) => item.neighbourhood);
 
   return {
     neighbourhood,
@@ -1055,6 +1149,7 @@ export function getNeighbourhoodPageData(slug: string): NeighbourhoodPageData | 
     bestDestination: commuteTimes[0],
     topPersonalities,
     similarNeighbourhoods: similar,
+    similarAreaGroups,
     relatedComparisonSlugs: similar.map((n) =>
       comparisonSlugFor(neighbourhood.id, n.id),
     ),

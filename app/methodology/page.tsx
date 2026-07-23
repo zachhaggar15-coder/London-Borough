@@ -1,23 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { DESTINATIONS } from "@/lib/data/destinations";
 import { NEIGHBOURHOODS } from "@/lib/data/neighbourhoods";
 import { LONDON_BOROUGHS } from "@/lib/commute-details";
+import { LONDON_TRANSIT_KMH } from "@/lib/isochrone";
 import { LIFESTYLE_LABELS } from "@/lib/types";
 import { londonRentMedians, SITE_URL } from "@/lib/seo-data";
 import {
   RENT_MARKET_REVIEW_AS_OF,
   RENT_MARKET_SOURCES,
+  ROOM_REGION_AVERAGE_GBP,
 } from "@/lib/data/rent-market";
 
 export const metadata: Metadata = {
   title: "Methodology — how our London rent & area data works",
   description:
-    "How Where in London sources rent data, derives lifestyle scores and estimates commute times — including the review date and the limits of the data.",
+    "How Where in London calculates commute estimates, rent estimates, affordability, lifestyle scores and neighbourhood rankings.",
   alternates: { canonical: `${SITE_URL}/methodology` },
   openGraph: {
     title: "Methodology — how our London rent & area data works",
     description:
-      "How Where in London sources rent data, derives lifestyle scores and estimates commute times.",
+      "Data sources, assumptions and limitations behind the Where in London neighbourhood finder.",
     url: `${SITE_URL}/methodology`,
     type: "article",
   },
@@ -25,161 +28,238 @@ export const metadata: Metadata = {
 
 export default function MethodologyPage() {
   const { oneBed, twoBed, count } = londonRentMedians();
+  const roomRegionValues = Object.values(ROOM_REGION_AVERAGE_GBP);
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Methodology",
+        item: `${SITE_URL}/methodology`,
+      },
+    ],
+  };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <nav className="border-b border-slate-800 px-6 py-4">
-        <div className="mx-auto max-w-3xl flex items-center gap-2 text-sm text-slate-400">
-          <Link href="/" className="hover:text-white transition-colors">
-            Where in London
-          </Link>
-          <span>/</span>
-          <span className="text-slate-200">Methodology</span>
-        </div>
-      </nav>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
 
-      <main className="mx-auto max-w-3xl px-6 py-12">
-        <header className="mb-10">
-          <h1 className="text-4xl font-bold tracking-tight mb-4">
-            Methodology & data sources
-          </h1>
-          <p className="text-lg text-slate-300">
-            Where in London helps people choose a London neighbourhood by
-            commute, rent and lifestyle. This page explains where the numbers
-            come from, how the scores are built, and what the data can and
-            can&apos;t tell you.
-          </p>
-        </header>
+      <div className="min-h-screen bg-slate-950 text-slate-100">
+        <nav className="border-b border-slate-800 px-6 py-4">
+          <div className="mx-auto max-w-5xl flex items-center gap-2 text-sm text-slate-400">
+            <Link href="/" className="hover:text-white transition-colors">
+              Where in London
+            </Link>
+            <span>/</span>
+            <span className="text-slate-200">Methodology</span>
+          </div>
+        </nav>
 
-        <div className="space-y-10 text-slate-300">
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-3">
-              What&apos;s in the dataset
-            </h2>
-            <p>
-              The site covers {NEIGHBOURHOODS.length} London neighbourhoods
-              across {LONDON_BOROUGHS.length} boroughs. Each area has a curated
-              record: median one- and two-bed rents, transport zones and main
-              stations, ten lifestyle scores, and a short editorial summary with
-              strengths and trade-offs. Everything shown on the site — every
-              comparison, ranking, commute estimate and rent guide — is derived
-              from this single dataset.
+        <main className="mx-auto max-w-5xl px-6 py-12">
+          <header className="mb-12">
+            <p className="mb-3 text-sm uppercase tracking-wide text-emerald-400">
+              Data and assumptions
             </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-3">
-              Rent data & review date
-            </h2>
-            <p className="mb-3">
-              Rent figures are median asking rents, reviewed as of{" "}
-              <strong className="text-white">
-                <time dateTime={RENT_MARKET_REVIEW_AS_OF}>
-                  {RENT_MARKET_REVIEW_AS_OF}
-                </time>
-              </strong>
-              . They are neighbourhood-level estimates for orientation, not
-              property-level valuations. Across the {count} tracked areas the
-              current London-wide medians are about £{oneBed.toLocaleString()}
-              /month for a one-bed and £{twoBed.toLocaleString()}/month for a
-              two-bed. Sources:
+            <h1 className="mb-4 text-4xl font-bold tracking-tight">
+              Methodology & data sources
+            </h1>
+            <p className="max-w-3xl text-lg text-slate-300">
+              Where in London is a decision-support tool for choosing London
+              areas. It combines public-transport estimates,
+              neighbourhood-level rent estimates and lifestyle scores. It is
+              not a live property portal, guaranteed route planner or financial
+              advice.
             </p>
-            <ul className="space-y-2">
-              {RENT_MARKET_SOURCES.map((source) => (
-                <li key={source} className="flex gap-2">
-                  <span className="text-emerald-400">-</span>
-                  {source}
+          </header>
+
+          <div className="space-y-12">
+            <MethodSection title="What is in the dataset">
+              <p>
+                The site covers {NEIGHBOURHOODS.length} London neighbourhoods
+                across {LONDON_BOROUGHS.length} boroughs. Each area has a
+                curated record: median one- and two-bed rents, transport zones
+                and main stations, ten lifestyle scores, a centroid for route
+                estimates, and a short editorial summary with strengths and
+                trade-offs.
+              </p>
+              <p>
+                Every comparison, ranking, commute estimate and rent guide is
+                derived from this shared dataset so the public pages and the
+                discovery tool stay consistent.
+              </p>
+            </MethodSection>
+
+            <MethodSection title="Commute estimates">
+              <p>
+                The interactive finder sends the selected destination to{" "}
+                <code>/api/commute</code>. Where available, the server requests
+                public-transport durations from TfL Journey Planner and caches
+                the origin/destination pair. If TfL cannot return a usable
+                journey, the site falls back to a reviewed static matrix for
+                common destinations or, where no reviewed pair exists, a
+                distance-based estimate using {LONDON_TRANSIT_KMH} km/h as a
+                typical London public-transport speed.
+              </p>
+              <p>
+                Commute pages for {DESTINATIONS.length} common destinations use
+                the same reviewed static matrix and label fallback estimates.
+                Exact line-by-line instructions are not fabricated; users
+                should verify precise door-to-door timings on TfL before
+                arranging viewings.
+              </p>
+            </MethodSection>
+
+            <MethodSection title="Rent data & review date">
+              <p>
+                One-bed and two-bed figures are median asking-rent estimates,
+                reviewed as of{" "}
+                <strong className="text-white">
+                  <time dateTime={RENT_MARKET_REVIEW_AS_OF}>
+                    {RENT_MARKET_REVIEW_AS_OF}
+                  </time>
+                </strong>
+                . Across the {count} tracked areas, the current London-wide
+                medians are about GBP {oneBed.toLocaleString()}/month for a
+                one-bed and GBP {twoBed.toLocaleString()}/month for a two-bed.
+              </p>
+              <p>
+                Room rents are derived from listing-sample regional averages
+                and local overrides. Current regional average inputs range from
+                GBP {Math.min(...roomRegionValues).toLocaleString("en-GB")} to
+                GBP {Math.max(...roomRegionValues).toLocaleString("en-GB")} per
+                month before neighbourhood adjustment.
+              </p>
+              <ul className="list-disc space-y-2 pl-5">
+                {RENT_MARKET_SOURCES.map((source) => (
+                  <li key={source}>{source}</li>
+                ))}
+              </ul>
+            </MethodSection>
+
+            <MethodSection title="Salary and affordability">
+              <p>
+                Salary pages estimate England take-home pay from the personal
+                allowance, income-tax bands and employee National Insurance
+                rates, then show rent budgets at 33% and 35% of take-home pay.
+                The calculation does not include pension contributions, student
+                loans, benefits, council tax, utilities or the personal
+                allowance taper above GBP 100,000.
+              </p>
+              <p>
+                In the matching tool, an explicit monthly rent budget overrides
+                salary-derived affordability. If a salary is used, the default
+                rent budget is 35% of estimated monthly take-home pay.
+              </p>
+            </MethodSection>
+
+            <MethodSection title="Lifestyle scores and rankings">
+              <p>
+                Each area is scored from 0 to 10 on{" "}
+                {Object.values(LIFESTYLE_LABELS).join(", ").toLowerCase()}.
+                These are relative ratings from manual review of each
+                neighbourhood&apos;s amenities, open space, transport and
+                character; they are directional decision signals, not official
+                statistics.
+              </p>
+              <p>
+                Rankings first exclude areas over the commute cap, then combine
+                affordability and lifestyle. With default settings,
+                affordability and lifestyle are weighted equally. If advanced
+                lifestyle weights are set, affordability carries 60% and the
+                selected lifestyle dimensions carry 40%, with weak matches
+                demoted more strongly.
+              </p>
+            </MethodSection>
+
+            <MethodSection title="Who is behind the site">
+              <p>
+                Where in London is an independent project, not affiliated with
+                any estate agent, letting platform or local authority. Rankings
+                are not influenced by listings or advertising; they come from
+                the dataset and assumptions described on this page.
+              </p>
+            </MethodSection>
+
+            <MethodSection title="Known limitations">
+              <ul className="list-disc space-y-2 pl-5">
+                <li>
+                  A neighbourhood centroid cannot capture address-level walking
+                  time or every station entrance.
                 </li>
-              ))}
-            </ul>
-          </section>
+                <li>
+                  TfL journey times vary by time of day, disruptions, closures,
+                  access needs and walking speed.
+                </li>
+                <li>
+                  Rent estimates compare areas, but individual listings vary by
+                  exact street, condition, bills and tenancy terms.
+                </li>
+                <li>
+                  Neighbourhood footprints are launch map polygons, not legal
+                  or statistical boundaries.
+                </li>
+                <li>
+                  Softer questions, such as whether an area feels expensive or
+                  polished, use stated proxies rather than presenting them as
+                  facts.
+                </li>
+              </ul>
+            </MethodSection>
 
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-3">
-              How lifestyle scores are derived
-            </h2>
-            <p className="mb-3">
-              Each area is scored 0–10 on ten dimensions:{" "}
-              {Object.values(LIFESTYLE_LABELS).join(", ").toLowerCase()}. These
-              are relative, comparable-across-areas ratings from manual review
-              of each neighbourhood&apos;s amenities, open space, transport and
-              character — not survey data. They power the lifestyle rankings and
-              the &quot;who each area suits&quot; guidance.
-            </p>
-            <p>
-              Where the site answers softer questions — for example &quot;is an
-              area posh?&quot; — it says so transparently and uses a stated
-              proxy (rent percentile plus relevant lifestyle scores) rather than
-              presenting it as a fact.
-            </p>
-          </section>
+            <section className="rounded-xl border border-slate-700 bg-slate-900 p-8 text-center">
+              <h2 className="mb-2 text-xl font-semibold">
+                Use the data as a shortlist, then verify
+              </h2>
+              <p className="mb-6 text-slate-300">
+                Compare a few candidate areas, check exact TfL routes for your
+                commute and view actual listings before making a decision.
+              </p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Link
+                  href="/"
+                  className="rounded-lg bg-emerald-600 px-5 py-3 text-sm font-medium hover:bg-emerald-500 transition-colors"
+                >
+                  Open the finder
+                </Link>
+                <Link
+                  href="/london-rent-index"
+                  className="rounded-lg border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+                >
+                  London rent index
+                </Link>
+                <Link
+                  href="/compare"
+                  className="rounded-lg border border-slate-700 px-5 py-3 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+                >
+                  Compare areas
+                </Link>
+              </div>
+            </section>
+          </div>
+        </main>
+      </div>
+    </>
+  );
+}
 
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-3">
-              How commute times are estimated
-            </h2>
-            <p>
-              Where a curated station-to-destination time exists, it is used
-              directly. Otherwise commute times are estimated from the
-              straight-line distance between area centroids at an average
-              transit speed, and are labelled as estimates on the page. They are
-              a planning guide — real journeys with interchanges can take
-              longer. For a precise door-to-door time, always check a live
-              journey planner.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-3">
-              Who&apos;s behind the site
-            </h2>
-            <p>
-              Where in London is an independent project, not affiliated with any
-              estate agent, letting platform or local authority. It exists to
-              make choosing a London area less overwhelming by putting rent,
-              transport and lifestyle side by side. Because it&apos;s
-              independent, the rankings aren&apos;t influenced by listings or
-              advertising — they come straight from the dataset described above.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-white mb-3">
-              Limits of the data
-            </h2>
-            <p>
-              Rents move, and neighbourhoods vary street by street — a median
-              can&apos;t capture that. Lifestyle scores are judgements, not
-              measurements. Treat everything here as a well-informed starting
-              point for your own research, not the final word.
-            </p>
-          </section>
-
-          <section className="rounded-lg bg-slate-900 border border-slate-800 p-6">
-            <h2 className="text-lg font-semibold text-white mb-2">
-              Explore the data
-            </h2>
-            <p className="mb-4 text-sm">
-              See every area&apos;s median rents in one place, or start from the
-              discovery tool.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/london-rent-index"
-                className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-sm font-medium transition-colors"
-              >
-                London rent index →
-              </Link>
-              <Link
-                href="/neighbourhoods"
-                className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:text-white transition-colors"
-              >
-                All neighbourhoods
-              </Link>
-            </div>
-          </section>
-        </div>
-      </main>
-    </div>
+function MethodSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section>
+      <h2 className="mb-4 text-2xl font-bold tracking-tight">{title}</h2>
+      <div className="space-y-4 text-slate-300">{children}</div>
+    </section>
   );
 }

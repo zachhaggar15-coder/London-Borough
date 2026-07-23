@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import {
   getAllBoroughSlugs,
   getBoroughPageData,
-  boroughSlug,
   SITE_URL,
 } from "@/lib/seo-data";
 import { LIFESTYLE_LABELS } from "@/lib/types";

@@ -30,6 +30,7 @@ const {
   LONDON_TRANSIT_KMH,
 } = jiti("../lib/isochrone.ts");
 const {
+  DESTINATIONS,
   DESTINATIONS_BY_ID,
 } = jiti("../lib/data/destinations.ts");
 const {
@@ -47,6 +48,21 @@ const {
   scoreNeighbourhood,
 } = jiti("../lib/scoring.ts");
 const {
+  comparisonDecision,
+  personalResultsSummary,
+  recommendationExplanation,
+} = jiti("../lib/decision.ts");
+const {
+  similarAreasFor,
+} = jiti("../lib/similarity.ts");
+const {
+  rankCouplesNeighbourhoods,
+} = jiti("../lib/couples.ts");
+const {
+  decodeShareState,
+  encodeShareState,
+} = jiti("../lib/share-state.ts");
+const {
   selectedRentGbp,
 } = jiti("../lib/rent.ts");
 const {
@@ -55,9 +71,14 @@ const {
 } = jiti("../lib/insights.ts");
 const {
   boroughCoverage,
+  commuteSourceLabel,
   commuteRouteSummary,
   displayCommuteMinutes,
+  routeSummaryUsesOnlySupportedServices,
 } = jiti("../lib/commute-details.ts");
+const {
+  commuteMinutesFromEstimates,
+} = jiti("../lib/commute.ts");
 const {
   boroughSummaries,
 } = jiti("../lib/boroughs.ts");
@@ -84,11 +105,18 @@ const {
   getAllNeighbourhoodSlugs,
   getCompareIndexSections,
   getCompareStaticParams,
+  getCommutePairStaticParams,
   getFeaturedCompareSlugs,
+  getIndexableCompareSlugs,
   getIndexableRoutes,
+  isIndexableCompareSlug,
   LIFESTYLE_PAGES,
   SALARY_LEVELS,
 } = jiti("../lib/seo-data.ts");
+const {
+  MONETISATION_PROVIDERS,
+  activeProvidersForSlot,
+} = jiti("../lib/monetisation.ts");
 
 const query = {
   destination: { id: "test", label: "Test", centroid: { lat: 51.5, lng: -0.1 } },
@@ -189,6 +217,112 @@ test("commute cap excludes neighbourhoods beyond the user threshold", () => {
   assert.equal(excluded.matchScore, 0);
 });
 
+test("recommendation score strongly penalises material rent over budget", () => {
+  const affordable = {
+    ...neighbourhood,
+    id: "affordable-area",
+    rent: { ...neighbourhood.rent, oneBedMedianGbp: 1300 },
+    lifestyle: { ...neighbourhood.lifestyle, greenSpace: 6 },
+  };
+  const overBudget = {
+    ...neighbourhood,
+    id: "over-budget-area",
+    rent: { ...neighbourhood.rent, oneBedMedianGbp: 1900 },
+    lifestyle: { ...neighbourhood.lifestyle, greenSpace: 10 },
+  };
+  const budgetQuery = {
+    ...query,
+    monthlyRentBudgetGbp: 1400,
+    lifestyleWeights: { greenSpace: 1 },
+  };
+
+  const affordableScore = scoreNeighbourhood(affordable, 30, budgetQuery);
+  const overBudgetScore = scoreNeighbourhood(overBudget, 30, budgetQuery);
+
+  assert.ok(overBudgetScore.rentVsBudget > 1.25);
+  assert.ok(affordableScore.matchScore > overBudgetScore.matchScore);
+});
+
+test("decision utilities explain shortlist trade-offs without new data", () => {
+  const scored = scoreAll(NEIGHBOURHOODS, {}, query).filter((item) => !item.isExcluded);
+  const explanation = recommendationExplanation(scored[0], scored.slice(1), query);
+  const comparison = comparisonDecision(scored.slice(0, 3), query);
+  const summary = personalResultsSummary(scored, query);
+
+  assert.ok(explanation.bestFeature.length > 0);
+  assert.ok(explanation.tradeoff.length > 0);
+  assert.ok(comparison.bestFor.length >= 2);
+  assert.ok(comparison.recommendation.length > 0);
+  assert.ok(summary.priorityBullets.length > 0);
+  assert.ok(summary.keyDecision.length > 0);
+});
+
+test("similarity engine groups alternatives by more than rent alone", () => {
+  const expensiveArea = NEIGHBOURHOODS.reduce((best, area) =>
+    area.rent.oneBedMedianGbp > best.rent.oneBedMedianGbp ? area : best,
+  );
+  const groups = similarAreasFor(expensiveArea);
+
+  assert.ok(groups.mostSimilar.length > 0);
+  assert.ok(groups.cheaper.length > 0);
+  assert.ok(
+    groups.mostSimilar.every(
+      (item) =>
+        item.neighbourhood.id !== expensiveArea.id &&
+        item.reason.length > 0 &&
+        item.score > 0,
+    ),
+  );
+  assert.ok(
+    groups.cheaper.every(
+      (item) =>
+        item.neighbourhood.rent.oneBedMedianGbp <=
+        expensiveArea.rent.oneBedMedianGbp - 100,
+    ),
+  );
+});
+
+test("couples mode prefers balanced two-person commutes", () => {
+  const candidates = ["stratford", "brixton"]
+    .map((id) => NEIGHBOURHOODS.find((area) => area.id === id))
+    .filter(Boolean);
+  assert.equal(candidates.length, 2);
+
+  const ranked = rankCouplesNeighbourhoods(candidates, {
+    commuteA: { stratford: 15, brixton: 35 },
+    commuteB: { stratford: 75, brixton: 40 },
+    maxCommuteA: 45,
+    maxCommuteB: 45,
+    monthlyRentBudgetGbp: 2600,
+    rentBasis: "twoBedFlat",
+    sharedQuery: { ...query, monthlyRentBudgetGbp: 2600, rentBasis: "twoBedFlat" },
+  });
+
+  assert.equal(ranked[0].neighbourhood.id, "brixton");
+  assert.ok(ranked[0].matchScore > ranked[1].matchScore);
+  assert.equal(ranked[1].isExcluded, true);
+});
+
+test("share state preserves decision inputs but omits salary", () => {
+  const state = encodeShareState(
+    {
+      ...query,
+      annualSalaryGbp: 85_000,
+      monthlyRentBudgetGbp: 2125,
+      personality: "social",
+      lifestyleWeights: { greenSpace: 0.6 },
+    },
+    ["brixton", "stratford"],
+  );
+  const decoded = decodeShareState(state);
+
+  assert.ok(decoded);
+  assert.equal(decoded.query.annualSalaryGbp, null);
+  assert.equal(decoded.query.monthlyRentBudgetGbp, 2100);
+  assert.equal(decoded.query.personality, "social");
+  assert.deepEqual(decoded.topIds, ["brixton", "stratford"]);
+});
+
 test("commute display never falls back to unknown when a destination exists", () => {
   assert.equal(
     displayCommuteMinutes(neighbourhood, null, query) > 0,
@@ -219,6 +353,44 @@ test("known destination route summaries include named services", () => {
   assert.ok(route.routeOptions.length >= 1);
   assert.ok(route.routeOptions[0].label.includes("Best"));
   assert.ok(Array.isArray(route.warnings));
+});
+
+test("commute source labels and estimate conversion expose provenance", () => {
+  assert.equal(commuteSourceLabel("tflJourneyPlanner"), "TfL duration");
+  assert.equal(commuteSourceLabel("staticMatrix"), "reviewed estimate");
+  assert.equal(commuteSourceLabel("distanceHeuristic"), "distance estimate");
+  assert.equal(commuteSourceLabel(undefined), "typical estimate");
+
+  assert.deepEqual(
+    commuteMinutesFromEstimates({
+      brixton: { minutes: 18, source: "staticMatrix" },
+      stratford: { minutes: 14, source: "tflJourneyPlanner" },
+    }),
+    { brixton: 18, stratford: 14 },
+  );
+});
+
+test("route summaries avoid unsupported line-by-line instructions", () => {
+  for (const area of NEIGHBOURHOODS) {
+    for (const destination of DESTINATIONS) {
+      const route = commuteRouteSummary(
+        area,
+        { ...query, destination },
+        "staticMatrix",
+      );
+      const legs = route.routeOptions.flatMap((option) => option.legs);
+
+      assert.ok(routeSummaryUsesOnlySupportedServices(route, area, destination));
+      assert.ok(legs.every((leg) => leg.instruction.length > 0));
+      assert.ok(legs.every((leg) => !/^Change at /.test(leg.instruction)));
+      assert.ok(
+        legs.every(
+          (leg) =>
+            !/^Take .+ from .+ to .+$/.test(leg.instruction) || Boolean(leg.line),
+        ),
+      );
+    }
+  }
 });
 
 test("bus-first areas surface transport watch-outs", () => {
@@ -390,38 +562,80 @@ test("approximate isochrone returns a closed polygon around the destination", ()
 test("SEO inventory exposes every generated public page for sitemap discovery", () => {
   const routes = getIndexableRoutes();
   const paths = routes.map((route) => route.path);
+  const topLevelRoutes = [
+    "/",
+    "/neighbourhoods",
+    "/boroughs",
+    "/commute",
+    "/compare",
+    "/couples",
+    "/lifestyle",
+    "/rent-guide",
+    "/london-rent-index",
+    "/methodology",
+    "/salary",
+  ];
   const expectedCount =
-    6 +
+    topLevelRoutes.length +
     getAllNeighbourhoodSlugs().length +
     getAllBoroughSlugs().length +
     getAllCommuteSlugs().length +
     SALARY_LEVELS.length +
     LIFESTYLE_PAGES.length +
-    getCompareStaticParams().length +
-    1;
+    getIndexableCompareSlugs().length +
+    getCommutePairStaticParams().length +
+    getAllNeighbourhoodSlugs().length;
 
   assert.equal(routes.length, expectedCount);
   assert.equal(new Set(paths).size, paths.length);
-  assert.ok(paths.includes("/"));
-  assert.ok(paths.includes("/neighbourhoods"));
-  assert.ok(paths.includes("/boroughs"));
-  assert.ok(paths.includes("/commute"));
-  assert.ok(paths.includes("/compare"));
-  assert.ok(paths.includes("/lifestyle"));
-  assert.ok(paths.includes("/salary"));
+  assert.ok(topLevelRoutes.every((path) => paths.includes(path)));
+  assert.ok(paths.includes("/methodology"));
+  assert.ok(getIndexableCompareSlugs().every((slug) => paths.includes(`/compare/${slug}`)));
+  assert.ok(
+    getCompareStaticParams()
+      .filter((slug) => !isIndexableCompareSlug(slug))
+      .every((slug) => !paths.includes(`/compare/${slug}`)),
+  );
+  assert.ok(
+    getCommutePairStaticParams().every((slug) =>
+      paths.includes(`/commute/route/${slug}`),
+    ),
+  );
+  assert.ok(
+    getAllNeighbourhoodSlugs().every((slug) =>
+      paths.includes(`/rent-guide/${slug}`),
+    ),
+  );
   assert.ok(paths.every((path) => path === "/" || !path.endsWith("/")));
   assert.ok(paths.every((path) => absoluteUrl(path).startsWith(SITE_URL)));
   assert.ok(routes.every((route) => route.priority > 0 && route.priority <= 1));
 });
 
+test("monetisation providers are centralised and inactive slots stay hidden", () => {
+  assert.ok(MONETISATION_PROVIDERS.length > 0);
+  assert.ok(MONETISATION_PROVIDERS.every((provider) => !provider.active));
+  assert.ok(
+    MONETISATION_PROVIDERS.some(
+      (provider) => provider.slots.includes("broadband") && !provider.active,
+    ),
+  );
+  assert.deepEqual(activeProvidersForSlot("broadband"), []);
+});
+
 test("comparison hub exposes featured crawl paths that exist in static params", () => {
   const allComparisons = new Set(getCompareStaticParams());
+  const indexable = getIndexableCompareSlugs();
   const featured = getFeaturedCompareSlugs();
   const sections = getCompareIndexSections();
+  const sectionSlugs = sections.flatMap((section) => section.slugs);
 
   assert.ok(featured.length > 0);
+  assert.ok(indexable.length > 0);
+  assert.ok(indexable.length < getCompareStaticParams().length);
   assert.ok(sections.length > 0);
+  assert.deepEqual(indexable, sectionSlugs);
   assert.ok(featured.every((slug) => allComparisons.has(slug)));
+  assert.ok(featured.every((slug) => isIndexableCompareSlug(slug)));
   assert.ok(
     sections.every((section) =>
       section.slugs.every((slug) => allComparisons.has(slug)),

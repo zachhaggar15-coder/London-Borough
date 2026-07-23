@@ -59,6 +59,13 @@ export default function RentIndexTable({ rows }: { rows: RentIndexRow[] }) {
                 <th
                   key={col.key}
                   className={`pb-3 font-medium ${col.numeric ? "text-right" : ""}`}
+                  aria-sort={
+                    active
+                      ? sortDir === "asc"
+                        ? "ascending"
+                        : "descending"
+                      : "none"
+                  }
                 >
                   <button
                     type="button"
@@ -66,13 +73,6 @@ export default function RentIndexTable({ rows }: { rows: RentIndexRow[] }) {
                     className={`inline-flex items-center gap-1 hover:text-white transition-colors ${
                       active ? "text-white" : ""
                     }`}
-                    aria-sort={
-                      active
-                        ? sortDir === "asc"
-                          ? "ascending"
-                          : "descending"
-                        : "none"
-                    }
                   >
                     {col.label}
                     <span className="text-xs text-emerald-400 w-2">

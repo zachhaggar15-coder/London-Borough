@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
+import { GOOGLE_ADSENSE_SCRIPT_URL } from "@/lib/monetisation";
 import { SITE_URL } from "@/lib/seo-data";
 import SiteFooter from "@/components/SiteFooter";
 
@@ -74,6 +75,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <script
+          async
+          src={GOOGLE_ADSENSE_SCRIPT_URL}
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="bg-slate-950 text-slate-100 font-sans antialiased">
         <script
           type="application/ld+json"

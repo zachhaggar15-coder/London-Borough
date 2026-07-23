@@ -16,12 +16,12 @@ import type {
 } from "@/lib/types";
 import { affordabilityScore, defaultMonthlyRentBudgetGbp } from "@/lib/affordability";
 import { displayCommuteMinutes } from "@/lib/commute-details";
+import { activePreferenceKeys, commuteFitScore } from "@/lib/decision";
 import { PERSONALITY_SCORERS } from "@/lib/personalities";
 import { selectedRentGbp } from "@/lib/rent";
 
-/** Final score = α * affordability + β * lifestyle (with α + β = 1). */
-const DEFAULT_WEIGHTS = { affordability: 0.5, lifestyle: 0.5 };
-const ADVANCED_WEIGHTS = { affordability: 0.6, lifestyle: 0.4 };
+const DEFAULT_WEIGHTS = { affordability: 0.42, lifestyle: 0.38, commute: 0.2 };
+const ADVANCED_WEIGHTS = { affordability: 0.46, lifestyle: 0.34, commute: 0.2 };
 
 function activeLifestyleWeights(query: UserQuery): [
   keyof LifestyleScores,
@@ -103,9 +103,14 @@ export function scoreNeighbourhood(
   const life = lifestyleScore(neighbourhood.lifestyle, query);
   const weights =
     activeLifestyleWeights(query).length > 0 ? ADVANCED_WEIGHTS : DEFAULT_WEIGHTS;
+  const commuteFit = commuteFitScore(effectiveCommute, query);
+  const baseScore =
+    Math.pow(Math.max(0.05, aff), weights.affordability) *
+    Math.pow(Math.max(0.05, life), weights.lifestyle) *
+    Math.pow(Math.max(0.05, commuteFit), weights.commute);
   const matchScore = isExcluded
     ? 0
-    : weights.affordability * aff + weights.lifestyle * life;
+    : clamp01(baseScore * budgetPenalty(selectedRent, effectiveBudget) * mismatchPenalty(neighbourhood, query));
 
   return {
     neighbourhood,
@@ -120,6 +125,29 @@ export function scoreNeighbourhood(
         : selectedRent / effectiveBudget,
     selectedRentGbp: selectedRent,
   };
+}
+
+function budgetPenalty(rentGbp: number, budgetGbp: number | null): number {
+  if (budgetGbp == null || budgetGbp <= 0) return 1;
+  const ratio = rentGbp / budgetGbp;
+  if (ratio <= 1) return 1;
+  if (ratio <= 1.1) return 0.82;
+  if (ratio <= 1.25) return 0.58;
+  return 0.34;
+}
+
+function mismatchPenalty(neighbourhood: Neighbourhood, query: UserQuery): number {
+  const active = activePreferenceKeys(query);
+  if (active.length === 0) return 1;
+  const weakWeightedPreferences = active.filter(
+    (key) => neighbourhood.lifestyle[key] <= 5,
+  ).length;
+  if (weakWeightedPreferences === 0) return 1;
+  return Math.max(0.5, 1 - weakWeightedPreferences * 0.18);
+}
+
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value));
 }
 
 /** Score and sort every neighbourhood. Excluded ones drop to the bottom. */

@@ -1,4 +1,9 @@
-import type { Destination, Neighbourhood, UserQuery } from "@/lib/types";
+import type {
+  CommuteEstimateSource,
+  Destination,
+  Neighbourhood,
+  UserQuery,
+} from "@/lib/types";
 import { LONDON_TRANSIT_KMH } from "@/lib/isochrone";
 import { DESTINATIONS_BY_ID } from "@/lib/data/destinations";
 
@@ -55,132 +60,66 @@ export function displayCommuteMinutes(
   return commuteMinutes ?? fallbackCommuteMinutes(neighbourhood, query.destination);
 }
 
+export function commuteSourceLabel(
+  source: CommuteEstimateSource | null | undefined,
+): string {
+  switch (source) {
+    case "tflJourneyPlanner":
+      return "TfL duration";
+    case "staticMatrix":
+      return "reviewed estimate";
+    case "distanceHeuristic":
+      return "distance estimate";
+    default:
+      return "typical estimate";
+  }
+}
+
+export function commuteSourceDescription(
+  source: CommuteEstimateSource | null | undefined,
+): string {
+  switch (source) {
+    case "tflJourneyPlanner":
+      return "Duration returned by TfL Journey Planner; route legs are simplified for decision support.";
+    case "staticMatrix":
+      return "Duration from the reviewed static commute matrix for common London destinations.";
+    case "distanceHeuristic":
+      return "Duration estimated from London distance and typical public-transport speed; verify before booking viewings.";
+    default:
+      return "Typical public-transport estimate; choose a destination to refresh with live routing where available.";
+  }
+}
+
 export function commuteRouteSummary(
   neighbourhood: Neighbourhood,
   query: UserQuery,
+  source?: CommuteEstimateSource | null,
 ): CommuteRouteSummary {
-  const station = neighbourhood.mainStations[0];
+  const station = neighbourhood.mainStations[0] ?? null;
   const destination = query.destination?.label ?? "your destination";
   const anchor = routeAnchorFor(query.destination);
 
-  if (!station) {
-    const legs: CommuteRouteLeg[] = [
-      {
-        mode: "walk",
-        instruction: "Walk or use local buses to the nearest station",
-      },
-      {
-        mode: "public transport",
-        instruction: `Use the fastest public transport connection toward ${destination}`,
-      },
-      {
-        mode: "walk",
-        instruction: `Final walk from the closest stop to ${destination}`,
-      },
-    ];
-    return completeRouteSummary({
-      neighbourhood,
-      query,
-      primary: `Public transport toward ${destination}`,
-      legs,
-      destinationLines: anchor?.lines ?? [],
-      station: null,
-      anchor,
-      originLine: null,
-    });
-  }
+  const legs = routeLegsFor(neighbourhood, station, destination, anchor);
+  const backup = backupRouteOption(neighbourhood, station, destination, anchor);
 
-  const originLines = station.lines.map(canonicalLine);
-  const accessLeg = accessLegFor(neighbourhood, station.name, originLines);
-
-  if (!anchor) {
-    const line = bestOriginLine(originLines);
-    const legs: CommuteRouteLeg[] = [
-      accessLeg,
-      {
-        mode: modeForLine(line),
-        service: lineServiceLabel(line),
-        instruction: `Use ${lineServiceLabel(line)} from ${station.name}; follow the fastest TfL interchange toward ${destination}`,
-      },
-      {
-        mode: "walk",
-        instruction: `Final walk from the closest stop to ${destination}`,
-      },
-    ];
-    return completeRouteSummary({
-      neighbourhood,
-      query,
-      primary: `${station.name} toward ${destination}`,
-      legs,
-      destinationLines: [],
-      station,
-      anchor,
-      originLine: line,
-    });
-  }
-
-  const directLine = originLines.find((line) => anchor.lines.includes(line));
-  if (directLine) {
-    const legs: CommuteRouteLeg[] = [
-      accessLeg,
-      {
-        mode: modeForLine(directLine),
-        service: lineServiceLabel(directLine),
-        instruction: `Take ${lineServiceLabel(directLine)} to ${anchor.station}`,
-      },
-      {
-        mode: "walk",
-        instruction: `Final walk from ${anchor.station} to ${destination}`,
-      },
-    ];
-    return completeRouteSummary({
-      neighbourhood,
-      query,
-      primary: `${station.name} to ${anchor.station}`,
-      legs,
-      destinationLines: anchor.lines,
-      station,
-      anchor,
-      originLine: directLine,
-    });
-  }
-
-  const originLine = bestOriginLine(originLines);
-  const destinationLine = bestDestinationLine(anchor.lines, originLine);
-  const interchange = interchangeFor(originLine, destinationLine, anchor.id);
-
-  const legs: CommuteRouteLeg[] = [
-    accessLeg,
-    {
-      mode: modeForLine(originLine),
-      service: lineServiceLabel(originLine),
-      instruction: `Take ${lineServiceLabel(originLine)} from ${station.name} to ${interchange}`,
-    },
-    {
-      mode: "interchange",
-      instruction: `Change at ${interchange}`,
-    },
-    {
-      mode: modeForLine(destinationLine),
-      service: lineServiceLabel(destinationLine),
-      instruction: `Take ${lineServiceLabel(destinationLine)} to ${anchor.station}`,
-    },
-    {
-      mode: "walk",
-      instruction: `Final walk from ${anchor.station} to ${destination}`,
-    },
-  ];
-
-  return completeRouteSummary({
-    neighbourhood,
-    query,
-    primary: `${station.name} to ${anchor.station}`,
+  return {
+    primary: routePrimary(station, destination, anchor, legs),
     legs,
-    destinationLines: anchor.lines,
-    station,
-    anchor,
-    originLine,
-  });
+    destinationLines: anchor?.lines ?? [],
+    routeOptions: [
+      { label: "Best available structure", legs },
+      ...(backup ? [backup] : []),
+    ],
+    warnings: routeWarnings(neighbourhood, query, station, anchor, legs, source),
+    durationSourceLabel: commuteSourceLabel(source),
+    methodology: commuteSourceDescription(source),
+    confidence:
+      legs.some((leg) => leg.line) && source === "tflJourneyPlanner"
+        ? "direct-service-estimate"
+        : source === "tflJourneyPlanner"
+        ? "tfl-duration-structured-estimate"
+        : "structured-estimate",
+  };
 }
 
 export type CommuteRouteSummary = {
@@ -189,6 +128,12 @@ export type CommuteRouteSummary = {
   destinationLines: string[];
   routeOptions: CommuteRouteOption[];
   warnings: string[];
+  durationSourceLabel: string;
+  methodology: string;
+  confidence:
+    | "direct-service-estimate"
+    | "tfl-duration-structured-estimate"
+    | "structured-estimate";
 };
 
 export type CommuteRouteOption = {
@@ -210,6 +155,7 @@ export type CommuteRouteLeg = {
     | "public transport";
   instruction: string;
   service?: string;
+  line?: string;
 };
 
 type RouteAnchor = {
@@ -227,12 +173,28 @@ const DESTINATION_ROUTE_ANCHORS: Record<string, RouteAnchor> = {
   "kings-cross": {
     id: "kings-cross",
     station: "King's Cross St Pancras",
-    lines: ["Northern", "Piccadilly", "Victoria", "Circle", "Hammersmith & City", "Metropolitan", "National Rail"],
+    lines: [
+      "Northern",
+      "Piccadilly",
+      "Victoria",
+      "Circle",
+      "Hammersmith & City",
+      "Metropolitan",
+      "National Rail",
+    ],
   },
   "liverpool-st": {
     id: "liverpool-st",
     station: "Liverpool Street",
-    lines: ["Central", "Elizabeth", "Circle", "Hammersmith & City", "Metropolitan", "Overground", "National Rail"],
+    lines: [
+      "Central",
+      "Elizabeth",
+      "Circle",
+      "Hammersmith & City",
+      "Metropolitan",
+      "Overground",
+      "National Rail",
+    ],
   },
   "canary-wharf": {
     id: "canary-wharf",
@@ -262,7 +224,14 @@ const DESTINATION_ROUTE_ANCHORS: Record<string, RouteAnchor> = {
   paddington: {
     id: "paddington",
     station: "Paddington",
-    lines: ["Bakerloo", "Circle", "District", "Elizabeth", "Hammersmith & City", "National Rail"],
+    lines: [
+      "Bakerloo",
+      "Circle",
+      "District",
+      "Elizabeth",
+      "Hammersmith & City",
+      "National Rail",
+    ],
   },
   "london-bridge": {
     id: "london-bridge",
@@ -280,122 +249,211 @@ const ACCESS_BUS_LEGS: Record<string, { routes: string[]; target: string }> = {
   peckham: { routes: ["12", "36", "63", "436"], target: "Peckham Rye, Elephant & Castle, or Victoria" },
 };
 
-function completeRouteSummary({
-  neighbourhood,
-  query,
-  primary,
-  legs,
-  destinationLines,
-  station,
-  anchor,
-  originLine,
-}: {
-  neighbourhood: Neighbourhood;
-  query: UserQuery;
-  primary: string;
-  legs: CommuteRouteLeg[];
-  destinationLines: string[];
-  station: Neighbourhood["mainStations"][number] | null;
-  anchor: RouteAnchor | null;
-  originLine: string | null;
-}): CommuteRouteSummary {
-  const backup = backupRouteOption(
-    neighbourhood,
-    query,
-    station,
-    anchor,
-    originLine,
+const DIRECT_RENDERABLE_LINES = new Set([
+  "Bakerloo",
+  "Central",
+  "Circle",
+  "District",
+  "DLR",
+  "Elizabeth",
+  "Hammersmith & City",
+  "Jubilee",
+  "Metropolitan",
+  "Northern",
+  "Piccadilly",
+  "Tramlink",
+  "Victoria",
+  "Waterloo & City",
+]);
+
+const VERIFIED_DIRECT_SERVICE_KEYS = new Set([
+  "Bermondsey|canary-wharf|Jubilee",
+  "Bermondsey|london-bridge|Jubilee",
+  "Bethnal Green|bank|Central",
+  "Bethnal Green|liverpool-st|Central",
+  "Bethnal Green|oxford-circus|Central",
+  "Brixton|kings-cross|Victoria",
+  "Brixton|oxford-circus|Victoria",
+  "Brixton|victoria|Victoria",
+  "Ealing Broadway|bank|Central",
+  "Ealing Broadway|liverpool-st|Elizabeth",
+  "Ealing Broadway|oxford-circus|Central",
+  "Ealing Broadway|paddington|Elizabeth",
+  "Finsbury Park|kings-cross|Victoria",
+  "Finsbury Park|oxford-circus|Victoria",
+  "Finsbury Park|victoria|Victoria",
+  "Green Park|canary-wharf|Jubilee",
+  "Green Park|oxford-circus|Victoria",
+  "Green Park|victoria|Victoria",
+  "Hammersmith|kings-cross|Piccadilly",
+  "Hammersmith|paddington|Hammersmith & City",
+  "Leyton|bank|Central",
+  "Leyton|liverpool-st|Central",
+  "Leyton|oxford-circus|Central",
+  "Old Street|bank|Northern",
+  "Pimlico|kings-cross|Victoria",
+  "Pimlico|oxford-circus|Victoria",
+  "Pimlico|victoria|Victoria",
+  "Stockwell|kings-cross|Victoria",
+  "Stockwell|oxford-circus|Victoria",
+  "Stockwell|victoria|Victoria",
+  "Stratford|bank|Central",
+  "Stratford|canary-wharf|Jubilee",
+  "Stratford|liverpool-st|Central",
+  "Stratford|london-bridge|Jubilee",
+  "Tottenham Court Road|bank|Central",
+  "Tottenham Court Road|liverpool-st|Elizabeth",
+  "Tottenham Court Road|oxford-circus|Central",
+  "Tottenham Hale|kings-cross|Victoria",
+  "Tottenham Hale|oxford-circus|Victoria",
+  "Tottenham Hale|victoria|Victoria",
+  "Vauxhall|kings-cross|Victoria",
+  "Vauxhall|oxford-circus|Victoria",
+  "Vauxhall|victoria|Victoria",
+  "Walthamstow Central|kings-cross|Victoria",
+  "Walthamstow Central|oxford-circus|Victoria",
+  "Walthamstow Central|victoria|Victoria",
+  "Waterloo|bank|Waterloo & City",
+]);
+
+function routeLegsFor(
+  neighbourhood: Neighbourhood,
+  station: Neighbourhood["mainStations"][number] | null,
+  destination: string,
+  anchor: RouteAnchor | null,
+): CommuteRouteLeg[] {
+  if (!station) {
+    return [
+      {
+        mode: "walk",
+        instruction: "Walk or use local buses to the nearest suitable station or stop",
+      },
+      {
+        mode: "public transport",
+        service: "TfL public transport",
+        instruction: `Use the fastest public-transport connection toward ${destination}`,
+      },
+      {
+        mode: "walk",
+        instruction: `Final walk from the nearest stop to ${destination}`,
+      },
+    ];
+  }
+
+  const originLines = station.lines.map(canonicalLine);
+  const accessLeg = accessLegFor(neighbourhood, station.name, originLines);
+
+  if (!anchor) {
+    return [
+      accessLeg,
+      {
+        mode: "public transport",
+        service: "TfL public transport",
+        instruction: `Use TfL Journey Planner from ${station.name} to the stop nearest ${destination}`,
+      },
+      {
+        mode: "walk",
+        instruction: `Final walk from the nearest stop to ${destination}`,
+      },
+    ];
+  }
+
+  const directLine = originLines.find(
+    (line) =>
+      anchor.lines.includes(line) &&
+      DIRECT_RENDERABLE_LINES.has(line) &&
+      isVerifiedDirectService(station.name, anchor.id, line),
   );
-  return {
-    primary,
-    legs,
-    destinationLines,
-    routeOptions: [
-      { label: "Best route", legs },
-      ...(backup ? [backup] : []),
-    ],
-    warnings: routeWarnings(neighbourhood, query, station, anchor, legs),
-  };
+
+  if (directLine) {
+    return [
+      accessLeg,
+      {
+        mode: modeForLine(directLine),
+        service: lineServiceLabel(directLine),
+        line: directLine,
+        instruction: `Take ${lineServiceLabel(directLine)} from ${station.name} to ${anchor.station}`,
+      },
+      {
+        mode: "walk",
+        instruction: `Final walk from ${anchor.station} to ${destination}`,
+      },
+    ];
+  }
+
+  return [
+    accessLeg,
+    {
+      mode: "public transport",
+      service: "TfL public transport",
+      instruction: `Use the fastest public-transport route from ${station.name} toward ${anchor.station}`,
+    },
+    {
+      mode: "interchange",
+      instruction: "Allow for the interchange pattern shown by TfL for your travel time",
+    },
+    {
+      mode: "walk",
+      instruction: `Final walk from the destination stop to ${destination}`,
+    },
+  ];
+}
+
+function routePrimary(
+  station: Neighbourhood["mainStations"][number] | null,
+  destination: string,
+  anchor: RouteAnchor | null,
+  legs: CommuteRouteLeg[],
+): string {
+  const direct = legs.find((leg) => leg.line);
+  if (station && anchor && direct) {
+    return `${station.name} to ${anchor.station} (${direct.service})`;
+  }
+  if (station && anchor) {
+    return `${station.name} toward ${anchor.station}`;
+  }
+  if (station) {
+    return `${station.name} toward ${destination}`;
+  }
+  return `Estimated public transport toward ${destination}`;
 }
 
 function backupRouteOption(
   neighbourhood: Neighbourhood,
-  query: UserQuery,
   station: Neighbourhood["mainStations"][number] | null,
+  destination: string,
   anchor: RouteAnchor | null,
-  primaryLine: string | null,
 ): CommuteRouteOption | null {
-  const destination = query.destination?.label ?? "your destination";
-  if (!station || !anchor) {
-    return {
-      label: "Backup route",
-      legs: [
-        {
-          mode: "public transport",
-          instruction: `Use TfL journey planning for a second public transport route toward ${destination}`,
-        },
-      ],
-    };
-  }
-
   const alternativeStation =
-    neighbourhood.mainStations.find((candidate) => candidate.name !== station.name) ??
-    station;
-  const alternativeLines = alternativeStation.lines.map(canonicalLine);
-  const alternativeLine =
-    alternativeLines.find((line) => line !== primaryLine && line !== "National Rail") ??
-    alternativeLines.find((line) => line !== primaryLine) ??
-    null;
+    station == null
+      ? null
+      : neighbourhood.mainStations.find((candidate) => candidate.name !== station.name) ?? null;
+  const bus = ACCESS_BUS_LEGS[neighbourhood.id];
 
-  if (!alternativeLine) return null;
+  if (!alternativeStation && !bus) return null;
 
-  const accessLeg = accessLegFor(
-    neighbourhood,
-    alternativeStation.name,
-    alternativeLines,
-  );
-  const directLine = anchor.lines.includes(alternativeLine) ? alternativeLine : null;
-  if (directLine) {
-    return {
-      label: "Backup route",
-      legs: [
-        accessLeg,
-        {
-          mode: modeForLine(directLine),
-          service: lineServiceLabel(directLine),
-          instruction: `Take ${lineServiceLabel(directLine)} to ${anchor.station}`,
-        },
-        {
-          mode: "walk",
-          instruction: `Final walk from ${anchor.station} to ${destination}`,
-        },
-      ],
-    };
-  }
+  const accessLeg = alternativeStation
+    ? accessLegFor(
+        neighbourhood,
+        alternativeStation.name,
+        alternativeStation.lines.map(canonicalLine),
+      )
+    : {
+        mode: "bus" as const,
+        service: `Bus ${bus!.routes.join(", ")}`,
+        instruction: `Use bus ${bus!.routes.join(", ")} toward ${bus!.target}`,
+      };
 
-  const destinationLine = bestDestinationLine(anchor.lines, alternativeLine);
-  const interchange = interchangeFor(
-    alternativeLine,
-    destinationLine,
-    anchor.id,
-  );
   return {
     label: "Backup route",
     legs: [
       accessLeg,
       {
-        mode: modeForLine(alternativeLine),
-        service: lineServiceLabel(alternativeLine),
-        instruction: `Take ${lineServiceLabel(alternativeLine)} from ${alternativeStation.name} to ${interchange}`,
-      },
-      {
-        mode: "interchange",
-        instruction: `Change at ${interchange}`,
-      },
-      {
-        mode: modeForLine(destinationLine),
-        service: lineServiceLabel(destinationLine),
-        instruction: `Take ${lineServiceLabel(destinationLine)} to ${anchor.station}`,
+        mode: "public transport",
+        service: "TfL public transport",
+        instruction: anchor
+          ? `Check TfL for an alternative public-transport route toward ${anchor.station}`
+          : `Check TfL for an alternative public-transport route toward ${destination}`,
       },
     ],
   };
@@ -407,9 +465,20 @@ function routeWarnings(
   station: Neighbourhood["mainStations"][number] | null,
   anchor: RouteAnchor | null,
   legs: CommuteRouteLeg[],
+  source: CommuteEstimateSource | null | undefined,
 ): string[] {
   const warnings: string[] = [];
   const stationLines = station?.lines.map(canonicalLine) ?? [];
+
+  if (source === "staticMatrix") {
+    warnings.push("Reviewed commute estimate; verify current service before viewings.");
+  } else if (source === "distanceHeuristic") {
+    warnings.push("Distance-based estimate; exact routing is not guaranteed.");
+  } else if (source === "tflJourneyPlanner") {
+    warnings.push("Duration from TfL; route structure is simplified here.");
+  } else {
+    warnings.push("Typical route structure; exact legs depend on travel time.");
+  }
 
   if (legs.some((leg) => leg.mode === "bus")) {
     warnings.push("Bus-first start; allow extra time at peak.");
@@ -421,13 +490,13 @@ function routeWarnings(
     warnings.push("Rail or Overground dependent; check service gaps before viewing.");
   }
   if (anchor == null && query.destination) {
-    warnings.push("Custom destination: route text follows local station metadata.");
+    warnings.push("Custom destination: route text uses local station metadata.");
   }
   if (neighbourhood.mainStations.length === 1 && stationLines.length <= 1) {
     warnings.push("Limited line choice from the main station.");
   }
 
-  return warnings.slice(0, 3);
+  return warnings.slice(0, 4);
 }
 
 export function boroughCoverage(
@@ -443,6 +512,40 @@ export function boroughCoverage(
     covered: LONDON_BOROUGHS.filter((borough) => covered.has(borough)),
     missing: LONDON_BOROUGHS.filter((borough) => !covered.has(borough)),
   };
+}
+
+export function routeSummaryUsesOnlySupportedServices(
+  summary: CommuteRouteSummary,
+  neighbourhood: Neighbourhood,
+  destination: Destination | null,
+): boolean {
+  const anchor = routeAnchorFor(destination);
+  const neighbourhoodLines = new Set(
+    neighbourhood.mainStations.flatMap((station) =>
+      station.lines.map(canonicalLine),
+    ),
+  );
+
+  for (const option of summary.routeOptions) {
+    for (const leg of option.legs) {
+      if (!leg.line) continue;
+      if (!DIRECT_RENDERABLE_LINES.has(leg.line)) return false;
+      if (!neighbourhoodLines.has(leg.line)) return false;
+      if (anchor && !anchor.lines.includes(leg.line)) return false;
+      if (
+        anchor &&
+        !isVerifiedDirectService(
+          originStationNameForLine(neighbourhood, leg.line),
+          anchor.id,
+          leg.line,
+        )
+      ) {
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 function routeAnchorFor(destination: Destination | null): RouteAnchor | null {
@@ -483,10 +586,40 @@ function accessLegFor(
   };
 }
 
+function isVerifiedDirectService(
+  stationName: string,
+  destinationId: string,
+  line: string,
+): boolean {
+  return VERIFIED_DIRECT_SERVICE_KEYS.has(verifiedDirectServiceKey(stationName, destinationId, line));
+}
+
+function verifiedDirectServiceKey(
+  stationName: string,
+  destinationId: string,
+  line: string,
+): string {
+  return `${stationName.replace(" (bus)", "")}|${destinationId}|${line}`;
+}
+
+function originStationNameForLine(
+  neighbourhood: Neighbourhood,
+  line: string,
+): string {
+  const station = neighbourhood.mainStations.find((candidate) =>
+    candidate.lines.map(canonicalLine).includes(line),
+  );
+  return station?.name ?? "";
+}
+
 function canonicalLine(line: string): string {
   const lower = line.toLowerCase();
   if (lower.includes("hammersmith")) return "Hammersmith & City";
-  if (lower.includes("national rail") || lower.includes("thameslink") || lower.includes("great northern")) {
+  if (
+    lower.includes("national rail") ||
+    lower.includes("thameslink") ||
+    lower.includes("great northern")
+  ) {
     return "National Rail";
   }
   if (lower.includes("elizabeth")) return "Elizabeth";
@@ -494,23 +627,6 @@ function canonicalLine(line: string): string {
   if (lower.includes("dlr")) return "DLR";
   if (lower.includes("tram")) return "Tramlink";
   return line;
-}
-
-function bestOriginLine(lines: string[]): string {
-  return (
-    lines.find((line) => line !== "National Rail") ??
-    lines[0] ??
-    "public transport"
-  );
-}
-
-function bestDestinationLine(destinationLines: string[], originLine: string): string {
-  if (destinationLines.includes(originLine)) return originLine;
-  return (
-    destinationLines.find((line) => line !== "National Rail") ??
-    destinationLines[0] ??
-    "public transport"
-  );
 }
 
 function lineServiceLabel(line: string): string {
@@ -547,134 +663,6 @@ function modeForLine(line: string): CommuteRouteLeg["mode"] {
     default:
       return "tube";
   }
-}
-
-function interchangeFor(
-  originLine: string,
-  destinationLine: string,
-  destinationId: string,
-): string {
-  const key = `${originLine}|${destinationLine}`;
-  const direct: Record<string, string> = {
-    "Bakerloo|Central": "Oxford Circus",
-    "Bakerloo|Circle": "Baker Street",
-    "Bakerloo|District": "Embankment",
-    "Bakerloo|Elizabeth": "Paddington",
-    "Bakerloo|Jubilee": "Baker Street",
-    "Bakerloo|Northern": "Charing Cross",
-    "Bakerloo|Victoria": "Oxford Circus",
-    "Central|Bakerloo": "Oxford Circus",
-    "Central|Circle": "Liverpool Street",
-    "Central|District": "Notting Hill Gate",
-    "Central|Elizabeth": "Tottenham Court Road",
-    "Central|Jubilee": "Bond Street",
-    "Central|Northern": "Bank",
-    "Central|Victoria": "Oxford Circus",
-    "Circle|Bakerloo": "Baker Street",
-    "Circle|Central": "Liverpool Street",
-    "Circle|District": "Victoria",
-    "Circle|Elizabeth": "Paddington",
-    "Circle|Jubilee": "Westminster",
-    "Circle|Northern": "Moorgate",
-    "Circle|Victoria": "Victoria",
-    "District|Bakerloo": "Embankment",
-    "District|Central": "Notting Hill Gate",
-    "District|Circle": "Victoria",
-    "District|Elizabeth": "Whitechapel",
-    "District|Jubilee": "Westminster",
-    "District|Northern": "Embankment",
-    "District|Victoria": "Victoria",
-    "Elizabeth|Bakerloo": "Paddington",
-    "Elizabeth|Central": "Tottenham Court Road",
-    "Elizabeth|Circle": "Paddington",
-    "Elizabeth|District": "Whitechapel",
-    "Elizabeth|DLR": "Canary Wharf",
-    "Elizabeth|Jubilee": "Bond Street",
-    "Elizabeth|Northern": "Tottenham Court Road",
-    "Elizabeth|Victoria": "Tottenham Court Road",
-    "Hammersmith & City|Bakerloo": "Baker Street",
-    "Hammersmith & City|Central": "Liverpool Street",
-    "Hammersmith & City|Circle": "Baker Street",
-    "Hammersmith & City|District": "Aldgate East",
-    "Hammersmith & City|Elizabeth": "Whitechapel",
-    "Hammersmith & City|Jubilee": "Baker Street",
-    "Hammersmith & City|Metropolitan": "Baker Street",
-    "Hammersmith & City|Northern": "Moorgate",
-    "Jubilee|Bakerloo": "Baker Street",
-    "Jubilee|Central": "Bond Street",
-    "Jubilee|District": "Westminster",
-    "Jubilee|DLR": "Canary Wharf",
-    "Jubilee|Elizabeth": "Bond Street",
-    "Jubilee|Northern": "London Bridge",
-    "Jubilee|Piccadilly": "Green Park",
-    "Jubilee|Victoria": "Green Park",
-    "Metropolitan|Bakerloo": "Baker Street",
-    "Metropolitan|Central": "Liverpool Street",
-    "Metropolitan|Circle": "Baker Street",
-    "Metropolitan|Elizabeth": "Liverpool Street",
-    "Metropolitan|Jubilee": "Baker Street",
-    "Metropolitan|Northern": "Moorgate",
-    "Northern|Bakerloo": "Charing Cross",
-    "Northern|Central": "Bank",
-    "Northern|Circle": "Moorgate",
-    "Northern|District": "Embankment",
-    "Northern|Elizabeth": "Tottenham Court Road",
-    "Northern|Jubilee": "London Bridge",
-    "Northern|Piccadilly": "Leicester Square",
-    "Northern|Victoria": "Euston",
-    "Overground|Central": "Stratford",
-    "Overground|District": "Whitechapel",
-    "Overground|Elizabeth": "Whitechapel",
-    "Overground|Jubilee": "Canada Water",
-    "Overground|Northern": "Highbury & Islington",
-    "Overground|Victoria": "Highbury & Islington",
-    "Piccadilly|Central": "Holborn",
-    "Piccadilly|District": "Earl's Court",
-    "Piccadilly|Elizabeth": "Farringdon",
-    "Piccadilly|Jubilee": "Green Park",
-    "Piccadilly|Northern": "Leicester Square",
-    "Piccadilly|Victoria": "King's Cross St Pancras",
-    "Victoria|Bakerloo": "Oxford Circus",
-    "Victoria|Central": "Oxford Circus",
-    "Victoria|Circle": "Victoria",
-    "Victoria|District": "Victoria",
-    "Victoria|Elizabeth": "Tottenham Court Road",
-    "Victoria|Jubilee": "Green Park",
-    "Victoria|Northern": "Euston",
-    "Waterloo & City|Jubilee": "Waterloo",
-    "Waterloo & City|Northern": "Waterloo",
-  };
-
-  if (direct[key]) return direct[key];
-  if (originLine === "National Rail") return nationalRailInterchange(destinationId, destinationLine);
-  if (destinationLine === "National Rail") return railTerminalForOrigin(originLine);
-  return anchorFallbackInterchange(destinationId, destinationLine);
-}
-
-function nationalRailInterchange(destinationId: string, destinationLine: string): string {
-  if (destinationId === "london-bridge" || destinationLine === "Jubilee") return "London Bridge";
-  if (destinationId === "victoria" || destinationLine === "Victoria") return "Victoria";
-  if (destinationId === "waterloo" || destinationLine === "Bakerloo") return "Waterloo";
-  if (destinationId === "liverpool-st" || destinationLine === "Central") return "Liverpool Street";
-  if (destinationId === "paddington" || destinationLine === "Elizabeth") return "Paddington";
-  return "London Bridge";
-}
-
-function railTerminalForOrigin(originLine: string): string {
-  if (originLine === "Bakerloo") return "Marylebone";
-  if (originLine === "Central" || originLine === "Elizabeth") return "Liverpool Street";
-  if (originLine === "Jubilee" || originLine === "Northern") return "London Bridge";
-  if (originLine === "Victoria" || originLine === "District") return "Victoria";
-  return "London Bridge";
-}
-
-function anchorFallbackInterchange(destinationId: string, destinationLine: string): string {
-  if (destinationLine === "Elizabeth") return "Tottenham Court Road";
-  if (destinationLine === "Jubilee") return "London Bridge";
-  if (destinationLine === "Northern") return "Bank";
-  if (destinationLine === "Central") return "Oxford Circus";
-  if (destinationLine === "Victoria") return "Green Park";
-  return DESTINATION_ROUTE_ANCHORS[destinationId]?.station ?? "King's Cross St Pancras";
 }
 
 function haversineKm(

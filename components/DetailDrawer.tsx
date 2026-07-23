@@ -8,16 +8,19 @@
 
 import { useMemo } from "react";
 import { useStore } from "@/lib/store";
-import { NEIGHBOURHOODS_BY_ID } from "@/lib/data/neighbourhoods";
+import { NEIGHBOURHOODS, NEIGHBOURHOODS_BY_ID } from "@/lib/data/neighbourhoods";
 import { LIFESTYLE_KEYS, LIFESTYLE_LABELS } from "@/lib/types";
 import { gbp } from "@/lib/affordability";
 import { commuteRouteSummary } from "@/lib/commute-details";
+import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
+import { recommendationExplanation } from "@/lib/decision";
 import { formatApproxMinutes } from "@/lib/format";
 import { strengthInsights, tradeoffInsights } from "@/lib/insights";
 import { rentProfileFor } from "@/lib/rent";
 import {
   matchScoreHex,
   scoreNeighbourhood,
+  scoreAll,
   shortlistReason,
   suitsWho,
 } from "@/lib/scoring";
@@ -30,6 +33,7 @@ export default function DetailDrawer() {
   const toggleShortlist = useStore((s) => s.toggleShortlist);
   const query = useStore((s) => s.query);
   const commute = useStore((s) => s.commute);
+  const commuteSources = useStore((s) => s.commuteSources);
 
   const data = useMemo(() => {
     if (!selectedId) return null;
@@ -37,6 +41,10 @@ export default function DetailDrawer() {
     if (!n) return null;
     return scoreNeighbourhood(n, commute[n.id] ?? null, query);
   }, [selectedId, commute, query]);
+  const allScored = useMemo(
+    () => scoreAll(NEIGHBOURHOODS, commute, query),
+    [commute, query],
+  );
 
   if (!data) return null;
 
@@ -49,8 +57,9 @@ export default function DetailDrawer() {
   const rentProfile = rentProfileFor(n);
   const strengths = strengthInsights(data, query);
   const tradeoffs = tradeoffInsights(data, query);
-  const route = commuteRouteSummary(n, query);
+  const route = commuteRouteSummary(n, query, commuteSources[n.id]);
   const isCompared = shortlistedIds.includes(n.id);
+  const explanation = recommendationExplanation(data, allScored, query);
 
   return (
     <div className="absolute inset-x-0 bottom-0 z-10 max-h-[76%] overflow-y-auto rounded-t-2xl border-t border-slate-800 bg-slate-950/95 px-4 py-4 shadow-2xl backdrop-blur md:max-h-[70%] md:px-6 md:py-5">
@@ -73,7 +82,13 @@ export default function DetailDrawer() {
             <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
               <button
                 type="button"
-                onClick={() => toggleShortlist(n.id)}
+                onClick={() => {
+                  toggleShortlist(n.id);
+                  trackEvent(ANALYTICS_EVENTS.neighbourhoodShortlisted, {
+                    area: n.id,
+                    action: isCompared ? "remove" : "add",
+                  });
+                }}
                 className={[
                   "rounded-full border px-2 py-0.5 font-medium",
                   isCompared
@@ -157,9 +172,32 @@ export default function DetailDrawer() {
         />
       </div>
 
+      <Section title="Decision read">
+        <div className="grid gap-3 rounded-md border border-slate-800 bg-slate-900/60 p-3 md:grid-cols-3">
+          <DecisionNote
+            label="Best feature"
+            value={explanation.bestFeature}
+            tone="good"
+          />
+          <DecisionNote
+            label="What you give up"
+            value={explanation.tradeoff}
+            tone="watch"
+          />
+          <DecisionNote
+            label="Better if..."
+            value={explanation.betterIf ?? "This is already one of the cleaner fits for the current priorities."}
+            tone="neutral"
+          />
+        </div>
+      </Section>
+
       <Section title="Transport">
         <div className="mb-3 rounded-md border border-slate-800 bg-slate-900/60 p-3">
           <div className="text-sm font-medium text-slate-100">{route.primary}</div>
+          <div className="mt-1 text-[11px] text-slate-500">
+            {route.durationSourceLabel}: {route.methodology}
+          </div>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             {route.routeOptions.map((option) => (
               <div
@@ -254,6 +292,34 @@ export default function DetailDrawer() {
       <div className="mt-3 text-[10px] uppercase tracking-wider text-slate-600">
         Sources: TfL journey data, ONS rent baseline, listing samples, and curated area review
       </div>
+    </div>
+  );
+}
+
+function DecisionNote({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "good" | "watch" | "neutral";
+}) {
+  return (
+    <div>
+      <div
+        className={[
+          "mb-1 text-[10px] uppercase tracking-wider",
+          tone === "good"
+            ? "text-emerald-300"
+            : tone === "watch"
+            ? "text-amber-300"
+            : "text-slate-500",
+        ].join(" ")}
+      >
+        {label}
+      </div>
+      <p className="text-xs leading-relaxed text-slate-300">{value}</p>
     </div>
   );
 }

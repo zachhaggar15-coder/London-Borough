@@ -10,12 +10,12 @@ import {
 export const metadata: Metadata = {
   title: "Best London areas by commute destination",
   description:
-    "Find the best London neighbourhoods for commuting to any major office location. Ranked by commute time, with rent and transport options.",
+    "Find London neighbourhoods for commuting to major office locations. Ranked by estimated typical commute time, with rent and transport options.",
   alternates: { canonical: `${SITE_URL}/commute` },
   openGraph: {
     title: "Best London areas by commute destination",
     description:
-      "Find the best London neighbourhoods for commuting to any major office location.",
+      "Find London neighbourhoods by estimated commute time to major office locations.",
     url: `${SITE_URL}/commute`,
     type: "website",
   },
@@ -44,8 +44,14 @@ export default function CommuteIndexPage() {
             Best London areas by commute destination
           </h1>
           <p className="text-lg text-slate-300 max-w-2xl">
-            Neighbourhoods ranked by commute time to each major London
-            destination — with rent prices and transport options.
+            Neighbourhoods ranked by estimated typical commute time to each
+            major London destination, with rent prices and transport options.{" "}
+            <Link
+              href="/methodology"
+              className="text-emerald-300 hover:text-emerald-200"
+            >
+              Methodology
+            </Link>
           </p>
         </header>
 
@@ -60,7 +66,7 @@ export default function CommuteIndexPage() {
                 Best areas for commuting to {d.label}
               </h2>
               <p className="text-sm text-slate-400">
-                All neighbourhoods ranked by commute time →
+                All neighbourhoods ranked by commute estimate →
               </p>
             </Link>
           ))}
@@ -97,7 +103,7 @@ export default function CommuteIndexPage() {
           </h2>
           <p className="text-slate-300 mb-6">
             Use the discovery tool to enter any London address or postcode and
-            get commute times to all 95+ tracked neighbourhoods.
+            get commute estimates to all 95+ tracked neighbourhoods.
           </p>
           <Link
             href="/"

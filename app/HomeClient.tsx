@@ -4,23 +4,32 @@ import { useEffect } from "react";
 import { useStore } from "@/lib/store";
 import ControlPanel from "@/components/ControlPanel";
 import NeighbourhoodList from "@/components/NeighbourhoodList";
+import ResultsSummaryPanel from "@/components/ResultsSummaryPanel";
 import ShortlistPanel from "@/components/ShortlistPanel";
 import DetailDrawer from "@/components/DetailDrawer";
 import Map from "@/components/Map";
 import { NEIGHBOURHOODS } from "@/lib/data/neighbourhoods";
+import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
+import type { CommuteEstimate } from "@/lib/types";
 
 export default function HomeClient() {
   const destination = useStore((s) => s.query.destination);
   const maxCommuteMinutes = useStore((s) => s.query.maxCommuteMinutes);
   const commute = useStore((s) => s.commute);
   const setCommute = useStore((s) => s.setCommute);
+  const setCommuteSources = useStore((s) => s.setCommuteSources);
   const setLoadingCommute = useStore((s) => s.setLoadingCommute);
   const setIsochrone = useStore((s) => s.setIsochrone);
   const setLoadingIsochrone = useStore((s) => s.setLoadingIsochrone);
 
   useEffect(() => {
+    trackEvent(ANALYTICS_EVENTS.finderStarted);
+  }, []);
+
+  useEffect(() => {
     if (!destination) {
       setCommute({});
+      setCommuteSources({});
       return;
     }
     let cancelled = false;
@@ -34,13 +43,31 @@ export default function HomeClient() {
         if (!r.ok) throw new Error(`Commute API ${r.status}`);
         return r.json();
       })
-      .then((data: { commute: Record<string, number> }) => {
+      .then((data: {
+        commute: Record<string, number>;
+        estimates?: Record<string, CommuteEstimate>;
+      }) => {
         if (cancelled) return;
         setCommute(data.commute ?? {});
+        setCommuteSources(
+          Object.fromEntries(
+            Object.entries(data.estimates ?? {}).map(([id, estimate]) => [
+              id,
+              estimate.source,
+            ]),
+          ),
+        );
+        trackEvent(ANALYTICS_EVENTS.finderCompleted, {
+          destination: destination.id,
+          result_count: Object.keys(data.commute ?? {}).length,
+        });
       })
       .catch((err) => {
         console.error("Commute fetch failed", err);
-        if (!cancelled) setCommute({});
+        if (!cancelled) {
+          setCommute({});
+          setCommuteSources({});
+        }
       })
       .finally(() => {
         if (!cancelled) setLoadingCommute(false);
@@ -48,7 +75,7 @@ export default function HomeClient() {
     return () => {
       cancelled = true;
     };
-  }, [destination, setCommute, setLoadingCommute]);
+  }, [destination, setCommute, setCommuteSources, setLoadingCommute]);
 
   useEffect(() => {
     if (!destination) {
@@ -106,6 +133,7 @@ export default function HomeClient() {
         </header>
         <div className="flex-1 overflow-y-auto">
           <ControlPanel />
+          <ResultsSummaryPanel />
           <NeighbourhoodList />
           <ShortlistPanel />
         </div>
