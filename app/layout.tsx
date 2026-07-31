@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
-import { GOOGLE_ADSENSE_SCRIPT_URL } from "@/lib/monetisation";
+import {
+  GOOGLE_ADSENSE_CLIENT_ID,
+  GOOGLE_ADSENSE_SCRIPT_URL,
+} from "@/lib/monetisation";
 import { SITE_URL } from "@/lib/seo-data";
 import SiteFooter from "@/components/SiteFooter";
 
@@ -55,6 +58,9 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/favicon.ico",
+  },
+  other: {
+    "google-adsense-account": GOOGLE_ADSENSE_CLIENT_ID,
   },
 };
 
