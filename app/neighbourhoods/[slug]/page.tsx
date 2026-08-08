@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   getAllNeighbourhoodSlugs,
+  getCommutePairPageData,
   getNeighbourhoodPageData,
   boroughSlug,
   londonRentMedians,
@@ -61,7 +62,6 @@ export default async function NeighbourhoodPage({ params }: Props) {
     commuteTimes,
     bestDestination,
     topPersonalities,
-    similarNeighbourhoods,
     similarAreaGroups,
     relatedComparisonSlugs,
   } = data;
@@ -622,17 +622,20 @@ export default async function NeighbourhoodPage({ params }: Props) {
             </section>
           )}
 
-          {/* Commuting from this area */}
+          {/* Commuting from this area — only links to the small curated set
+              of indexable commute-pair pages, never the uncurated long tail */}
           {relatedComparisonSlugs.length > 0 && (
             <section className="mb-12">
               <h2 className="text-xl font-semibold mb-4">
                 Commuting from {n.name}
               </h2>
               <div className="flex flex-wrap gap-3">
-                {relatedComparisonSlugs.map((compSlug, i) => {
-                  const other = similarNeighbourhoods[i];
-                  if (!other) return null;
+                {relatedComparisonSlugs.map((compSlug) => {
                   const pairSlug = compSlug.replace("-vs-", "-to-");
+                  const pairData = getCommutePairPageData(pairSlug);
+                  if (!pairData) return null;
+                  const other =
+                    pairData.a.id === n.id ? pairData.b : pairData.a;
                   return (
                     <Link
                       key={pairSlug}

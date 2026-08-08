@@ -1,20 +1,38 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import {
   boroughSlug,
+  commutePairSlugFor,
   getCommutePairPageData,
-  getCommutePairStaticParams,
+  getIndexableCommutePairSlugs,
+  isCommutePairSlug,
+  isIndexableCommutePairSlug,
   SITE_URL,
 } from "@/lib/seo-data";
 import type { Neighbourhood } from "@/lib/types";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export const dynamicParams = false;
-
+// Only the small curated set of commute pairs is prerendered and indexable —
+// mirrors /compare/[slug]. The full pairwise matrix (~2,400+ combinations)
+// was previously all statically generated and sitemapped, which is exactly
+// the "scaled/auto-generated content" pattern AdSense flags as low-value.
 export async function generateStaticParams() {
-  return getCommutePairStaticParams().map((slug) => ({ slug }));
+  return getIndexableCommutePairSlugs().map((slug) => ({ slug }));
+}
+
+// Any other valid pair still resolves on demand (so old/linked URLs don't
+// hard-404), but is marked noindex and left out of the sitemap below.
+export const dynamicParams = true;
+
+/** Resolve a slug to its canonical curated form, or null if it isn't a
+ *  valid pair at all. */
+function canonicalCommutePairSlug(slug: string): string | null {
+  const data = getCommutePairPageData(slug);
+  if (!data) return null;
+  const canonical = commutePairSlugFor(data.a.id, data.b.id);
+  return isCommutePairSlug(canonical) ? canonical : null;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -23,17 +41,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!data) return {};
 
   const { a, b, minutes } = data;
+  const canonicalSlug = canonicalCommutePairSlug(slug) ?? slug;
+  const isIndexable = isIndexableCommutePairSlug(canonicalSlug);
   const title = `${a.name} to ${b.name} commute: time & route (2026)`;
   const description = `How long is the commute from ${a.name} to ${b.name}? Roughly ${minutes} minutes by public transport. Compare zones, lines, rent and nearby areas.`;
 
   return {
     title,
     description,
-    alternates: { canonical: `${SITE_URL}/commute/route/${slug}` },
+    alternates: { canonical: `${SITE_URL}/commute/route/${canonicalSlug}` },
+    robots: isIndexable
+      ? { index: true, follow: true }
+      : {
+          index: false,
+          follow: true,
+          googleBot: { index: false, follow: true },
+        },
     openGraph: {
       title,
       description,
-      url: `${SITE_URL}/commute/route/${slug}`,
+      url: `${SITE_URL}/commute/route/${canonicalSlug}`,
       type: "article",
     },
   };
@@ -62,6 +89,12 @@ export default async function CommutePairPage({ params }: Props) {
   const { slug } = await params;
   const data = getCommutePairPageData(slug);
   if (!data) notFound();
+
+  // Canonicalise ordering: a non-existent pair 404s; a reversed ordering of a
+  // valid pair 308-redirects to the canonical URL (matches /compare/[slug]).
+  const canonicalSlug = canonicalCommutePairSlug(slug);
+  if (!canonicalSlug) notFound();
+  if (canonicalSlug !== slug) permanentRedirect(`/commute/route/${canonicalSlug}`);
 
   const { a, b, minutes, distanceKm, sharedLines, compareSlug, relatedPairSlugs } =
     data;

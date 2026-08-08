@@ -79,7 +79,7 @@ export function getIndexableRoutes(): IndexableRoute[] {
       priority: 0.6,
       changefreq: "monthly" as const,
     })),
-    ...getCommutePairStaticParams().map((slug) => ({
+    ...getIndexableCommutePairSlugs().map((slug) => ({
       path: `/commute/route/${slug}`,
       priority: 0.5,
       changefreq: "monthly" as const,
@@ -998,6 +998,38 @@ export function getCommutePairStaticParams(): string[] {
   return getCompareStaticParams().map((slug) => slug.replace("-vs-", "-to-"));
 }
 
+export function commutePairSlugFor(aId: string, bId: string): string {
+  return comparisonSlugFor(aId, bId).replace("-vs-", "-to-");
+}
+
+let commutePairSlugSet: Set<string> | null = null;
+let indexableCommutePairSlugsCache: string[] | null = null;
+
+/** True if `slug` is one of the algorithmically-valid commute-pair slugs
+ *  (same-borough or similar-rent pair) — not necessarily indexed/prerendered. */
+export function isCommutePairSlug(slug: string): boolean {
+  if (!commutePairSlugSet) {
+    commutePairSlugSet = new Set(getCommutePairStaticParams());
+  }
+  return commutePairSlugSet.has(slug);
+}
+
+/** The small, editorially-curated subset of commute pairs that are actually
+ *  prerendered, sitemapped and indexable — mirrors getIndexableCompareSlugs()
+ *  so the commute-route cluster doesn't repeat the compare-page scaled-content
+ *  problem (thousands of thin, near-duplicate pairwise pages). */
+export function getIndexableCommutePairSlugs(): string[] {
+  if (indexableCommutePairSlugsCache) return indexableCommutePairSlugsCache;
+  indexableCommutePairSlugsCache = getIndexableCompareSlugs().map((slug) =>
+    slug.replace("-vs-", "-to-"),
+  );
+  return indexableCommutePairSlugsCache;
+}
+
+export function isIndexableCommutePairSlug(slug: string): boolean {
+  return getIndexableCommutePairSlugs().includes(slug);
+}
+
 export function getCommutePairPageData(slug: string): CommutePairPageData | null {
   const toIndex = slug.lastIndexOf("-to-");
   if (toIndex === -1) return null;
@@ -1020,7 +1052,7 @@ export function getCommutePairPageData(slug: string): CommutePairPageData | null
   ].filter((l) => aLines.has(l));
 
   const compareSlug = comparisonSlugFor(a.id, b.id);
-  const relatedPairSlugs = relatedComparisons(a.id, 6)
+  const relatedPairSlugs = relatedComparisons(a.id, 6, { indexableOnly: true })
     .filter((s) => s !== compareSlug)
     .slice(0, 4)
     .map((s) => s.replace("-vs-", "-to-"));
@@ -1150,9 +1182,12 @@ export function getNeighbourhoodPageData(slug: string): NeighbourhoodPageData | 
     topPersonalities,
     similarNeighbourhoods: similar,
     similarAreaGroups,
-    relatedComparisonSlugs: similar.map((n) =>
-      comparisonSlugFor(neighbourhood.id, n.id),
-    ),
+    // Only the curated, indexable pairs — feeds the "Commuting from" links so
+    // neighbourhood pages don't mass-link into the thin, uncurated commute-pair
+    // long tail (the same scaled-content pattern already fixed on /compare).
+    relatedComparisonSlugs: relatedComparisons(neighbourhood.id, 4, {
+      indexableOnly: true,
+    }),
   };
 }
 
