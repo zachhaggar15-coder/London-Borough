@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
-import {
-  GOOGLE_ADSENSE_CLIENT_ID,
-  GOOGLE_ADSENSE_SCRIPT_URL,
-} from "@/lib/monetisation";
+import { GOOGLE_ADSENSE_CLIENT_ID } from "@/lib/monetisation";
 import { SITE_URL } from "@/lib/seo-data";
 import SiteFooter from "@/components/SiteFooter";
+import CookieConsent from "@/components/CookieConsent";
+import { CONTACT_EMAIL, SITE_NAME } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -67,11 +66,19 @@ export const metadata: Metadata = {
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "Where in London",
+  name: SITE_NAME,
   url: SITE_URL,
   description:
     "An independent, data-driven guide to choosing a London neighbourhood by commute, rent and lifestyle.",
   logo: `${SITE_URL}/opengraph-image`,
+  email: CONTACT_EMAIL,
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "customer support",
+    email: CONTACT_EMAIL,
+    availableLanguage: "English",
+  },
+  areaServed: { "@type": "City", name: "London" },
 };
 
 export default function RootLayout({
@@ -81,13 +88,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <script
-          async
-          src={GOOGLE_ADSENSE_SCRIPT_URL}
-          crossOrigin="anonymous"
-        />
-      </head>
       <body className="bg-slate-950 text-slate-100 font-sans antialiased">
         <script
           type="application/ld+json"
@@ -97,6 +97,14 @@ export default function RootLayout({
         />
         {children}
         <SiteFooter />
+        {/*
+          The AdSense tag is intentionally not rendered here. CookieConsent
+          injects it only after the visitor accepts advertising cookies, so
+          declining means no advertising script and no ad cookies at all.
+          AdSense site verification uses the google-adsense-account meta tag
+          above, which is unaffected by the consent state.
+        */}
+        <CookieConsent />
         <Analytics />
       </body>
     </html>

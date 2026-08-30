@@ -50,6 +50,34 @@ export default function BoroughsIndexPage() {
           </p>
         </header>
 
+        <section className="mb-10 max-w-3xl space-y-4 text-slate-300">
+          <p>
+            London&rsquo;s 32 boroughs are administrative units, not
+            neighbourhoods, and the difference matters when you are choosing
+            where to live. A borough sets your council tax band, your bin
+            collections, your school catchments and your local planning policy —
+            but it tells you remarkably little about what a given street feels
+            like. Southwark runs from Borough Market to the edge of Dulwich.
+            Haringey contains both Tottenham and Highgate.
+          </p>
+          <p>
+            So use these pages for the borough-level facts — the average rent
+            across the areas we track in it, the zones it spans, the lines that
+            serve it — and then click through to the individual neighbourhood
+            guides, which is where the decision actually gets made. The averages
+            below are means across our tracked areas within each borough, so a
+            borough containing one very expensive pocket will read higher than
+            most of its streets.
+          </p>
+          <p>
+            One practical note: council tax varies materially between boroughs
+            for equivalent properties, and it is a real monthly cost that rent
+            comparisons routinely ignore. Check the band on any specific address
+            with the borough directly before you commit.
+          </p>
+        </section>
+
+        <h2 className="mb-4 text-xl font-semibold">All 32 boroughs</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {boroughs.map((b) => {
             if (!b) return null;
@@ -59,7 +87,7 @@ export default function BoroughsIndexPage() {
                 href={`/boroughs/${b.slug}`}
                 className="rounded-lg bg-slate-900 border border-slate-800 p-5 hover:border-slate-600 transition-colors"
               >
-                <h2 className="font-semibold text-white mb-1">{b.name}</h2>
+                <h3 className="font-semibold text-white mb-1">{b.name}</h3>
                 <p className="text-xs text-slate-400 mb-3">
                   Zone{b.zoneRange.length > 1 ? "s" : ""}{" "}
                   {b.zoneRange.join("–")} ·{" "}

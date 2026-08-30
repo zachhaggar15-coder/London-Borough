@@ -37,6 +37,13 @@ export default function LondonRentIndexPage() {
     twoBed: n.rent.twoBedMedianGbp,
   }));
 
+  // Distribution stats for the commentary above the table.
+  const byOneBed = [...rows].sort((a, b) => a.oneBed - b.oneBed);
+  const cheapest = byOneBed[0];
+  const priciest = byOneBed[byOneBed.length - 1];
+  const q1 = byOneBed[Math.floor(byOneBed.length * 0.25)].oneBed;
+  const q3 = byOneBed[Math.floor(byOneBed.length * 0.75)].oneBed;
+
   const citation = `Where in London, “London Rent Index” (median asking rents, reviewed ${RENT_MARKET_REVIEW_AS_OF}). ${SITE_URL}/london-rent-index`;
 
   const breadcrumbSchema = {
@@ -118,7 +125,49 @@ export default function LondonRentIndexPage() {
             </div>
           </section>
 
+          <section className="mb-10 max-w-3xl space-y-4 text-slate-300">
+            <h2 className="text-xl font-semibold text-slate-100">
+              What the spread actually shows
+            </h2>
+            <p>
+              Across the {count} areas tracked here, one-bed asking rents run
+              from £{cheapest.oneBed.toLocaleString()}/month in{" "}
+              {cheapest.name} to £{priciest.oneBed.toLocaleString()} in{" "}
+              {priciest.name} — a factor of{" "}
+              {(priciest.oneBed / cheapest.oneBed).toFixed(1)}× between the two
+              ends of the same city, against a median of £
+              {oneBed.toLocaleString()}. Half of all areas sit between £
+              {q1.toLocaleString()} and £{q3.toLocaleString()}, which is the
+              band most searches realistically land in.
+            </p>
+            <p>
+              The premium is bought mainly with travel time rather than with
+              space or quality: the priciest entries are overwhelmingly Zone 1
+              and inner Zone 2, and the cheapest cluster in Zones 3 and 4 at the
+              outer edges. Stepping one zone out is typically worth a few
+              hundred pounds a month, which is why the{" "}
+              <Link
+                href="/commute"
+                className="text-emerald-400 underline underline-offset-2 hover:text-emerald-300"
+              >
+                commute guides
+              </Link>{" "}
+              are the more useful lens once you have a budget.
+            </p>
+            <p>
+              A two-bed does not cost twice a one-bed — the median two-bed here
+              is £{twoBed.toLocaleString()} against £{oneBed.toLocaleString()}{" "}
+              for a one-bed, so splitting a two-bed with someone is
+              substantially cheaper per person than each renting alone. That
+              gap, more than any choice of area, is the largest single lever on
+              what London costs you.
+            </p>
+          </section>
+
           <section className="mb-10">
+            <h2 className="mb-4 text-xl font-semibold">
+              Full index: all {count} areas
+            </h2>
             <RentIndexTable rows={rows} />
           </section>
 

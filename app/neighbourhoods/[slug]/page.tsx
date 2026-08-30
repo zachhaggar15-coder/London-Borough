@@ -8,6 +8,7 @@ import {
   boroughSlug,
   londonRentMedians,
   oneBedRentPercentile,
+  roomRentFor,
   SITE_URL,
 } from "@/lib/seo-data";
 import { LIFESTYLE_LABELS, type Neighbourhood } from "@/lib/types";
@@ -97,6 +98,10 @@ export default async function NeighbourhoodPage({ params }: Props) {
   const whoItSuits = topPersonalities[0] ?? "a wide range of renters";
   const whatIsItLikeAnswer = `${n.name} has ${vibeDescriptor}, scoring ${n.lifestyle.nightlife}/10 for nightlife and ${n.lifestyle.greenSpace}/10 for green space. It's particularly well-suited to ${whoItSuits}, and sits in ${zoneStr} of ${n.borough}.`;
 
+  // Typical room-in-a-share cost, so the page answers the sharer's budget
+  // question alongside the one- and two-bed figures.
+  const roomRent = roomRentFor(n);
+
   // "Is it expensive?" — rent vs the London-wide median across tracked areas.
   const { oneBed: londonMedianOneBed, count: trackedCount } = londonRentMedians();
   const rentVsMedian = n.rent.oneBedMedianGbp - londonMedianOneBed;
@@ -159,7 +164,7 @@ export default async function NeighbourhoodPage({ params }: Props) {
   // the visible copy and the JSON-LD never drift apart (Google drops FAQ
   // schema whose answer text isn't visible on the page).
   const bankCommute = commuteTimes.find((c) => c.destinationId === "bank");
-  const rentAnswer = `The average 1-bedroom flat in ${n.name} costs around £${n.rent.oneBedMedianGbp.toLocaleString()} per month. A 2-bedroom flat costs around £${n.rent.twoBedMedianGbp.toLocaleString()} per month (market review estimate).`;
+  const rentAnswer = `The average 1-bedroom flat in ${n.name} costs around £${n.rent.oneBedMedianGbp.toLocaleString()} per month and a 2-bedroom around £${n.rent.twoBedMedianGbp.toLocaleString()} per month. If you are sharing, a room in a shared flat runs about £${roomRent.toLocaleString()} per month (market review estimates).`;
   const commuteAnswer = bestDestination
     ? `The fastest commute from ${n.name} is to ${bestDestination.destinationLabel} at approximately ${bestDestination.minutes} minutes by public transport.${bankCommute ? ` The commute to Bank/City is around ${bankCommute.minutes} minutes.` : ""}`
     : `${n.name} is in ${zoneStr} and is served by ${n.mainStations[0]?.name ?? "local public transport"}.`;
@@ -278,8 +283,12 @@ export default async function NeighbourhoodPage({ params }: Props) {
           </header>
 
           {/* Quick stats */}
-          <section className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-12">
+          <section className="grid grid-cols-2 gap-4 sm:grid-cols-5 mb-12">
             {[
+              {
+                label: "Est. room in a share",
+                value: `£${roomRent.toLocaleString()}/mo`,
+              },
               {
                 label: "Est. 1-bed rent",
                 value: `£${n.rent.oneBedMedianGbp.toLocaleString()}/mo`,
@@ -622,27 +631,32 @@ export default async function NeighbourhoodPage({ params }: Props) {
             </section>
           )}
 
-          {/* Commuting from this area — only links to the small curated set
-              of indexable commute-pair pages, never the uncurated long tail */}
+          {/* Travel from this area to the curated comparison pairs. Points at
+              /compare, which now carries the journey-time content that used to
+              live on the separate (and near-duplicate) /commute/route pages. */}
           {relatedComparisonSlugs.length > 0 && (
             <section className="mb-12">
               <h2 className="text-xl font-semibold mb-4">
-                Commuting from {n.name}
+                Getting from {n.name} to nearby areas
               </h2>
               <div className="flex flex-wrap gap-3">
                 {relatedComparisonSlugs.map((compSlug) => {
-                  const pairSlug = compSlug.replace("-vs-", "-to-");
-                  const pairData = getCommutePairPageData(pairSlug);
+                  const pairData = getCommutePairPageData(
+                    compSlug.replace("-vs-", "-to-"),
+                  );
                   if (!pairData) return null;
                   const other =
                     pairData.a.id === n.id ? pairData.b : pairData.a;
                   return (
                     <Link
-                      key={pairSlug}
-                      href={`/commute/route/${pairSlug}`}
+                      key={compSlug}
+                      href={`/compare/${compSlug}`}
                       className="rounded-lg bg-slate-900 border border-slate-800 px-4 py-2 text-sm hover:border-slate-600 transition-colors"
                     >
                       {n.name} to {other.name}
+                      <span className="ml-2 text-slate-400 tabular-nums">
+                        ~{pairData.minutes} min
+                      </span>
                     </Link>
                   );
                 })}
@@ -650,19 +664,8 @@ export default async function NeighbourhoodPage({ params }: Props) {
             </section>
           )}
 
-          {/* Rent guide + borough links */}
+          {/* Borough link */}
           <section className="mb-12 grid gap-3 sm:grid-cols-2">
-            <Link
-              href={`/rent-guide/${n.id}`}
-              className="flex items-center justify-between rounded-lg bg-slate-900 border border-slate-800 px-5 py-4 hover:border-slate-600 transition-colors"
-            >
-              <div>
-                <p className="font-medium">What&apos;s rent worth in {n.name}?</p>
-                <p className="text-sm text-slate-400">
-                  Room, 1-bed &amp; 2-bed rent guide →
-                </p>
-              </div>
-            </Link>
             <Link
               href={`/boroughs/${bSlug}`}
               className="flex items-center justify-between rounded-lg bg-slate-900 border border-slate-800 px-5 py-4 hover:border-slate-600 transition-colors"

@@ -45,7 +45,21 @@ export default async function SalaryPage({ params }: Props) {
   if (!SALARY_LEVELS.includes(salary as (typeof SALARY_LEVELS)[number])) notFound();
 
   const data = getSalaryPageData(salary);
-  const { takeHomeMonthly, budget33, budget35, comfortable, stretch } = data;
+  const {
+    takeHomeMonthly,
+    budget33,
+    budget35,
+    comfortable,
+    stretch,
+    roomShare,
+    roomShareWithinBudget,
+    cheapestOneBed,
+  } = data;
+
+  // On lower salaries a whole one-bed is out of reach everywhere we track, so
+  // the page leads with room-shares rather than rendering an empty guide.
+  const leadWithRooms = comfortable.length === 0;
+  const cheapestRoom = roomShare[0] ?? null;
   const salaryDecisionGroups = [
     {
       label: "Keep rent conservative",
@@ -100,38 +114,57 @@ export default async function SalaryPage({ params }: Props) {
     ],
   };
 
+  // Single source for the FAQ so the visible copy and the JSON-LD stay in sync.
+  const faqItems: { question: string; answer: string }[] = [
+    {
+      question: `What is the take-home pay for a ${formattedSalary} salary?`,
+      answer: `On a ${formattedSalary} gross salary you take home approximately £${takeHomeMonthly.toLocaleString()} per month after income tax and National Insurance (2026/27 rates).`,
+    },
+    {
+      question: `How much rent can I afford on ${formattedSalary}?`,
+      answer: `Most financial guidance suggests spending no more than 33–35% of take-home pay on rent. On ${formattedSalary} that is approximately £${budget33.toLocaleString()}–£${budget35.toLocaleString()} per month.`,
+    },
+    {
+      question: `Can I afford to live alone in London on ${formattedSalary}?`,
+      answer:
+        comfortable.length > 0
+          ? `Yes, with careful budgeting. On ${formattedSalary} you have a rent budget of around £${budget35.toLocaleString()}/month, which gives you access to ${comfortable.length} tracked London neighbourhoods for a 1-bed flat — particularly in Zones 3–4.`
+          : cheapestOneBed
+          ? `Not within the 35% guideline. The cheapest one-bed across the areas we track is ${cheapestOneBed.name} at £${cheapestOneBed.oneBedRent.toLocaleString()}/month, which is ${cheapestOneBed.rentAsPct}% of your £${takeHomeMonthly.toLocaleString()} monthly take-home. On ${formattedSalary} a room in a shared flat is the realistic option.`
+          : `On ${formattedSalary} a year, renting a 1-bed flat alone in London is very tight. House sharing significantly increases your options and quality of life.`,
+    },
+  ];
+
+  if (cheapestRoom) {
+    faqItems.push({
+      question: `Where is the cheapest place to rent a room in London on ${formattedSalary}?`,
+      answer: `Of the areas we track, the cheapest rooms in shared flats are in ${roomShare
+        .slice(0, 3)
+        .map((r) => `${r.name} (£${r.roomRent.toLocaleString()}/month)`)
+        .join(
+          ", ",
+        )}. On ${formattedSalary} the cheapest of those takes ${cheapestRoom.roomAsPct}% of your take-home. Sharing with more housemates lowers this further, and room rents often include council tax where a one-bed does not.`,
+    });
+  }
+
+  faqItems.push({
+    question: `Should I house share or rent alone on ${formattedSalary}?`,
+    answer:
+      budget35 >= 1700
+        ? `On ${formattedSalary} you have realistic options for renting alone in many Zone 2–3 areas of London. House sharing opens up more of Zone 1 and premium Zone 2, and frees up several hundred pounds a month if saving matters more than space.`
+        : cheapestRoom
+        ? `House share. On ${formattedSalary} a one-bed would take at least ${cheapestOneBed ? cheapestOneBed.rentAsPct : 50}% of your take-home, while a room starts around £${cheapestRoom.roomRent.toLocaleString()}/month in ${cheapestRoom.name}. Sharing also usually bundles council tax and bills, which a one-bed does not.`
+        : `On ${formattedSalary}, house sharing will significantly expand your options and leave more of your salary for savings and quality of life.`,
+  });
+
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: `What is the take-home pay for a ${formattedSalary} salary in London?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `On a ${formattedSalary} gross salary you take home approximately £${takeHomeMonthly.toLocaleString()} per month after income tax and National Insurance.`,
-        },
-      },
-      {
-        "@type": "Question",
-        name: `What rent can I afford on a ${formattedSalary} salary in London?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `On ${formattedSalary} a year, most financial advice suggests spending no more than 33–35% of take-home pay on rent. That works out to approximately £${budget33.toLocaleString()}–£${budget35.toLocaleString()} per month on a 1-bed flat.`,
-        },
-      },
-      {
-        "@type": "Question",
-        name: `Can I afford to live alone in London on ${formattedSalary}?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            comfortable.length > 0
-              ? `Yes, with careful budgeting. On ${formattedSalary} you have a rent budget of around £${budget35.toLocaleString()}/month, which gives you access to ${comfortable.length} tracked London neighbourhoods for a 1-bed flat — particularly in Zones 3–4.`
-              : `On ${formattedSalary} a year, renting a 1-bed flat alone in London is very tight. House sharing significantly increases your options and quality of life.`,
-        },
-      },
-    ],
+    mainEntity: faqItems.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: { "@type": "Answer", text: item.answer },
+    })),
   };
 
   const otherSalaries = SALARY_LEVELS.filter((s) => s !== salary).slice(0, 5);
@@ -212,9 +245,109 @@ export default async function SalaryPage({ params }: Props) {
                 ? `At £${budget35.toLocaleString()}/month you can comfortably rent a 1-bed flat in many Zone 2–3 areas. You'll need to look at areas like ${comfortable.slice(0, 3).map((n) => n.name).join(", ")} for decent options.`
                 : budget35 >= 1400
                 ? `At £${budget35.toLocaleString()}/month your 1-bed options are mostly in Zones 3–4. ${comfortable.slice(0, 2).map((n) => n.name).join(" and ")} are good starting points.`
+                : cheapestOneBed
+                ? `At £${budget35.toLocaleString()}/month, renting a 1-bed flat alone is out of reach across every area we track — the cheapest is ${cheapestOneBed.name} at £${cheapestOneBed.oneBedRent.toLocaleString()}/month, which would take ${cheapestOneBed.rentAsPct}% of your take-home. A room in a shared flat is the realistic route, and the areas below are where that costs least.`
                 : `At £${budget35.toLocaleString()}/month, renting a 1-bed flat alone in London is challenging. House sharing is the realistic option for most areas.`}
             </p>
           </section>
+
+          {/* Room-share options — the substantive answer whenever a whole
+              one-bed is unaffordable, so no salary page is left with nothing. */}
+          {leadWithRooms && cheapestRoom && (
+            <section className="mb-12">
+              <h2 className="text-xl font-semibold mb-2">
+                Where a room in a shared flat costs least
+              </h2>
+              <p className="text-sm text-slate-400 mb-6">
+                {roomShareWithinBudget.length > 0
+                  ? `${roomShareWithinBudget.length} of the areas we track have room rents inside your £${budget35.toLocaleString()}/month guideline. The cheapest are listed first.`
+                  : `No area we track has room rents inside the 35% guideline on this salary — the cheapest room is £${cheapestRoom.roomRent.toLocaleString()}/month in ${cheapestRoom.name}, or ${cheapestRoom.roomAsPct}% of your take-home. These are the eight cheapest, so you can see the real gap rather than an empty list.`}
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-left text-slate-400">
+                      <th className="pb-3 font-medium">Neighbourhood</th>
+                      <th className="pb-3 font-medium">Borough</th>
+                      <th className="pb-3 font-medium text-right">Room rent</th>
+                      <th className="pb-3 font-medium text-right">
+                        % of take-home
+                      </th>
+                      <th className="pb-3 font-medium hidden sm:table-cell">
+                        Transport
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {roomShare.map((n) => (
+                      <tr
+                        key={n.id}
+                        className="border-b border-slate-800/50 transition-colors hover:bg-slate-900/50"
+                      >
+                        <td className="py-3 font-medium">
+                          <Link
+                            href={`/neighbourhoods/${n.id}`}
+                            className="hover:text-emerald-400 transition-colors"
+                          >
+                            {n.name}
+                          </Link>
+                        </td>
+                        <td className="py-3 text-slate-400">{n.borough}</td>
+                        <td className="py-3 text-right tabular-nums">
+                          £{n.roomRent.toLocaleString()}
+                        </td>
+                        <td className="py-3 text-right tabular-nums">
+                          <span
+                            className={
+                              n.roomAsPct <= 35
+                                ? "text-emerald-400"
+                                : n.roomAsPct <= 45
+                                ? "text-amber-400"
+                                : "text-rose-400"
+                            }
+                          >
+                            {n.roomAsPct}%
+                          </span>
+                        </td>
+                        <td className="py-3 text-slate-400 hidden sm:table-cell">
+                          Zone {Math.min(...n.zones)}
+                          {n.lines.length > 0 ? ` · ${n.lines[0]}` : ""}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-6 space-y-3 text-sm text-slate-300">
+                <p>
+                  <strong className="text-slate-100">
+                    How to read these numbers.
+                  </strong>{" "}
+                  The 35% guideline is a rule of thumb, not a rule. Plenty of
+                  people in London pay 40–50% of take-home on rent; it works,
+                  but it leaves very little room for bills, travel and savings,
+                  and it is worth going in with your eyes open rather than
+                  discovering it in month three.
+                </p>
+                <p>
+                  <strong className="text-slate-100">
+                    What actually moves the number.
+                  </strong>{" "}
+                  On this salary the biggest lever is not the area — it is the
+                  number of housemates. A room in a four-bed share typically
+                  runs well below the figures above, which reflect a typical
+                  two-to-three bed flat. Council tax is often included in
+                  room-share rents but not in a one-bed, which is worth a real
+                  £100–£150 a month in the comparison.
+                </p>
+                <p>
+                  Zone 3–4 areas on a single fast line frequently beat a Zone 2
+                  address on total monthly cost once travel is priced in, so
+                  widen the search before ruling London out.
+                </p>
+              </div>
+            </section>
+          )}
 
           {salaryDecisionGroups.length > 0 && (
             <section className="mb-12">
@@ -247,7 +380,7 @@ export default async function SalaryPage({ params }: Props) {
                             </span>
                           </div>
                           <p className="mt-1 text-xs text-slate-400">
-                            GBP {area.oneBedRent.toLocaleString()}/mo 1-bed
+                            £{area.oneBedRent.toLocaleString()}/mo 1-bed
                           </p>
                         </Link>
                       ))}
@@ -365,37 +498,14 @@ export default async function SalaryPage({ params }: Props) {
               Frequently asked questions
             </h2>
             <div className="space-y-6">
-              <div>
-                <h3 className="font-medium text-white mb-2">
-                  What is the take-home pay for a {formattedSalary} salary?
-                </h3>
-                <p className="text-slate-300">
-                  On a {formattedSalary} gross salary, you take home
-                  approximately £{takeHomeMonthly.toLocaleString()} per month
-                  after income tax and National Insurance (2026/27 rates).
-                </p>
-              </div>
-              <div>
-                <h3 className="font-medium text-white mb-2">
-                  How much rent can I afford on {formattedSalary}?
-                </h3>
-                <p className="text-slate-300">
-                  Most financial guidance suggests spending no more than 33–35%
-                  of take-home pay on rent. On {formattedSalary} that&apos;s
-                  approximately £{budget33.toLocaleString()}–£
-                  {budget35.toLocaleString()}/month for a 1-bed flat.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-medium text-white mb-2">
-                  Should I house share or rent alone on {formattedSalary}?
-                </h3>
-                <p className="text-slate-300">
-                  {budget35 >= 1700
-                    ? `On ${formattedSalary} you have realistic options for renting alone in many Zone 2–3 areas of London. House sharing opens up more of Zone 1 and premium Zone 2.`
-                    : `On ${formattedSalary}, house sharing will significantly expand your options. Expect to pay £800–£1,100/month for a room in a shared house in Zone 2, which leaves more of your salary for savings and quality of life.`}
-                </p>
-              </div>
+              {faqItems.map((item) => (
+                <div key={item.question}>
+                  <h3 className="font-medium text-white mb-2">
+                    {item.question}
+                  </h3>
+                  <p className="text-slate-300">{item.answer}</p>
+                </div>
+              ))}
             </div>
           </section>
 

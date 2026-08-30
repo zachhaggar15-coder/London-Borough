@@ -3,8 +3,10 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import {
   boroughSlug,
+  commutePairSlugFor,
   comparisonSlugFor,
   getComparePageData,
+  getCommutePairPageData,
   getIndexableCompareSlugs,
   isCompareSlug,
   isIndexableCompareSlug,
@@ -121,6 +123,10 @@ export default async function ComparePage({ params }: Props) {
     nightlifeWinner,
     overallRecommendation,
   } = data;
+
+  // Journey time between the two areas, folded in from the retired
+  // /commute/route cluster.
+  const pairTravel = getCommutePairPageData(commutePairSlugFor(a.id, b.id));
 
   const related = relatedComparisons(a.id, 8, { indexableOnly: true })
     .filter((s) => s !== slug)
@@ -477,6 +483,36 @@ export default async function ComparePage({ params }: Props) {
                     b.lifestyle.connectivity,
                   )}/10).`}
             </p>
+
+            {/* Travelling between the two — merged in from the retired
+                /commute/route pages so this stays the single page for the
+                pair rather than a near-duplicate of one. */}
+            {pairTravel && (
+              <div className="mt-5 rounded-lg border border-slate-800 bg-slate-900 p-5">
+                <h3 className="mb-2 font-semibold text-white">
+                  Getting between {a.name} and {b.name}
+                </h3>
+                <p className="text-slate-300">
+                  The two are about {pairTravel.distanceKm.toFixed(1)} km apart,
+                  roughly{" "}
+                  <strong className="text-white">
+                    {pairTravel.minutes} minutes
+                  </strong>{" "}
+                  by public transport.{" "}
+                  {pairTravel.sharedLines.length > 0
+                    ? `They share the ${listWords(pairTravel.sharedLines)} ${
+                        pairTravel.sharedLines.length > 1 ? "lines" : "line"
+                      }, so you can usually make the trip without changing.`
+                    : `They are not on a shared line, so the quickest route usually involves at least one change.`}{" "}
+                  Worth knowing if you are choosing between them but have ties —
+                  a partner, friends, a gym — anchored in the other.
+                </p>
+                <p className="mt-2 text-xs text-slate-500">
+                  Straight-line estimate at an average transit speed; real
+                  journeys with interchanges may take longer.
+                </p>
+              </div>
+            )}
           </section>
 
           {/* Borough guide links */}

@@ -55,6 +55,34 @@ export default function CommuteIndexPage() {
           </p>
         </header>
 
+        <section className="mb-10 max-w-3xl space-y-4 text-slate-300">
+          <p>
+            Commute is usually the constraint that decides everything else. Rent
+            falls as you move out, but the saving is only real if the journey
+            stays tolerable — and tolerable is less about distance than about
+            whether you have a direct line. An area eight miles out on a fast
+            service into your destination routinely beats one five miles out
+            that needs two changes.
+          </p>
+          <p>
+            Each destination guide below ranks every area we track by estimated
+            door-to-door time to that specific place, so you can see where the
+            genuine time-versus-rent trade sits rather than guessing from a
+            tube map. Times are modelled estimates for a typical weekday — they
+            do not account for engineering works, disruption or peak crowding,
+            and you should sanity-check any shortlist against a real journey
+            planner at the hour you would actually travel.
+          </p>
+          <p>
+            Two things worth weighing that a single number hides: a
+            forty-minute journey you can sit down on is a different proposition
+            from a twenty-five-minute one standing on a packed platform, and a
+            single-line commute is far more robust when that line goes down
+            than a route that already depends on two interchanges.
+          </p>
+        </section>
+
+        <h2 className="mb-4 text-xl font-semibold">Guides by destination</h2>
         <div className="grid sm:grid-cols-2 gap-4">
           {DESTINATIONS.map((d) => (
             <Link
@@ -62,9 +90,9 @@ export default function CommuteIndexPage() {
               href={`/commute/${d.id}`}
               className="rounded-lg bg-slate-900 border border-slate-800 p-5 hover:border-slate-600 transition-colors"
             >
-              <h2 className="font-semibold text-white mb-1">
+              <h3 className="font-semibold text-white mb-1">
                 Best areas for commuting to {d.label}
-              </h2>
+              </h3>
               <p className="text-sm text-slate-400">
                 All neighbourhoods ranked by commute estimate →
               </p>
@@ -75,10 +103,11 @@ export default function CommuteIndexPage() {
         {featuredRoutes.length > 0 && (
           <section className="mt-16">
             <h2 className="text-2xl font-bold tracking-tight mb-2">
-              Point-to-point commute guides
+              Travelling between two areas
             </h2>
             <p className="text-slate-400 mb-8">
-              Estimated travel time and route between two London areas.
+              Estimated travel time between two London areas, alongside a full
+              comparison of what it is like to live in each.
             </p>
             <div className="flex flex-wrap gap-3">
               {featuredRoutes.map((route) => {
@@ -86,10 +115,13 @@ export default function CommuteIndexPage() {
                 return (
                   <Link
                     key={route.slug}
-                    href={`/commute/route/${route.slug}`}
+                    href={`/compare/${route.compareSlug}`}
                     className="rounded-lg bg-slate-900 border border-slate-800 px-4 py-2 text-sm hover:border-slate-600 transition-colors"
                   >
                     {route.a.name} to {route.b.name}
+                    <span className="ml-2 text-slate-400 tabular-nums">
+                      ~{route.minutes} min
+                    </span>
                   </Link>
                 );
               })}

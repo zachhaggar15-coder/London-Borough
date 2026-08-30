@@ -36,6 +36,19 @@ export function absoluteUrl(path: string): string {
   return `${SITE_URL}${path}`;
 }
 
+/**
+ * Typical monthly cost of a room in a shared flat for an area: a hand-set
+ * override where we have one, otherwise the postcode-region average.
+ * Shared by the salary guides and the neighbourhood pages so a single
+ * definition drives every room figure on the site.
+ */
+export function roomRentFor(n: Neighbourhood): number {
+  return (
+    ROOM_AREA_OVERRIDES_GBP[n.id] ??
+    ROOM_REGION_AVERAGE_GBP[rentRegionForArea(n.id, n.centroid)]
+  );
+}
+
 export function getIndexableRoutes(): IndexableRoute[] {
   return [
     { path: "/", priority: 1.0, changefreq: "weekly" },
@@ -45,10 +58,13 @@ export function getIndexableRoutes(): IndexableRoute[] {
     { path: "/compare", priority: 0.75, changefreq: "weekly" },
     { path: "/couples", priority: 0.8, changefreq: "weekly" },
     { path: "/lifestyle", priority: 0.8, changefreq: "weekly" },
-    { path: "/rent-guide", priority: 0.7, changefreq: "weekly" },
     { path: "/london-rent-index", priority: 0.7, changefreq: "monthly" },
     { path: "/methodology", priority: 0.75, changefreq: "monthly" },
     { path: "/salary", priority: 0.7, changefreq: "weekly" },
+    { path: "/about", priority: 0.6, changefreq: "yearly" },
+    { path: "/contact", priority: 0.6, changefreq: "yearly" },
+    { path: "/privacy", priority: 0.3, changefreq: "yearly" },
+    { path: "/terms", priority: 0.3, changefreq: "yearly" },
     ...getAllNeighbourhoodSlugs().map((slug) => ({
       path: `/neighbourhoods/${slug}`,
       priority: 0.9,
@@ -76,16 +92,6 @@ export function getIndexableRoutes(): IndexableRoute[] {
     })),
     ...getIndexableCompareSlugs().map((slug) => ({
       path: `/compare/${slug}`,
-      priority: 0.6,
-      changefreq: "monthly" as const,
-    })),
-    ...getIndexableCommutePairSlugs().map((slug) => ({
-      path: `/commute/route/${slug}`,
-      priority: 0.5,
-      changefreq: "monthly" as const,
-    })),
-    ...getAllNeighbourhoodSlugs().map((slug) => ({
-      path: `/rent-guide/${slug}`,
       priority: 0.6,
       changefreq: "monthly" as const,
     })),
@@ -463,6 +469,18 @@ export type AffordableArea = {
   summary: string;
 };
 
+/** An area costed as a room in a shared flat rather than a whole one-bed. */
+export type RoomShareArea = {
+  id: string;
+  name: string;
+  borough: string;
+  roomRent: number;
+  roomAsPct: number;
+  zones: number[];
+  lines: string[];
+  summary: string;
+};
+
 export type SalaryPageData = {
   salary: number;
   takeHomeMonthly: number;
@@ -470,6 +488,12 @@ export type SalaryPageData = {
   budget35: number;
   comfortable: AffordableArea[];
   stretch: AffordableArea[];
+  /** Cheapest room-share options, always populated, ascending by rent. */
+  roomShare: RoomShareArea[];
+  /** Rooms that fit inside the 35% guideline. May be empty on low salaries. */
+  roomShareWithinBudget: RoomShareArea[];
+  /** The single cheapest one-bed anywhere, for honest "what it'd take" framing. */
+  cheapestOneBed: AffordableArea | null;
 };
 
 export function getSalaryPageData(salary: number): SalaryPageData {
@@ -479,9 +503,12 @@ export function getSalaryPageData(salary: number): SalaryPageData {
 
   const comfortable: AffordableArea[] = [];
   const stretch: AffordableArea[] = [];
+  const allOneBed: AffordableArea[] = [];
+  const roomShare: RoomShareArea[] = [];
 
   for (const n of NEIGHBOURHOODS) {
     const rent = n.rent.oneBedMedianGbp;
+    const lines = n.mainStations.flatMap((s) => s.lines).slice(0, 3);
     const item: AffordableArea = {
       id: n.id,
       name: n.name,
@@ -489,15 +516,30 @@ export function getSalaryPageData(salary: number): SalaryPageData {
       oneBedRent: rent,
       rentAsPct: Math.round((rent / takeHome) * 100),
       zones: n.transportZones,
-      lines: n.mainStations.flatMap((s) => s.lines).slice(0, 3),
+      lines,
       summary: n.summary,
     };
+    allOneBed.push(item);
     if (rent <= budget35) comfortable.push(item);
     else if (rent <= Math.round(takeHome * 0.42)) stretch.push(item);
+
+    const room = roomRentFor(n);
+    roomShare.push({
+      id: n.id,
+      name: n.name,
+      borough: n.borough,
+      roomRent: room,
+      roomAsPct: Math.round((room / takeHome) * 100),
+      zones: n.transportZones,
+      lines,
+      summary: n.summary,
+    });
   }
 
   comfortable.sort((a, b) => a.oneBedRent - b.oneBedRent);
   stretch.sort((a, b) => a.oneBedRent - b.oneBedRent);
+  allOneBed.sort((a, b) => a.oneBedRent - b.oneBedRent);
+  roomShare.sort((a, b) => a.roomRent - b.roomRent);
 
   return {
     salary,
@@ -506,6 +548,9 @@ export function getSalaryPageData(salary: number): SalaryPageData {
     budget35,
     comfortable,
     stretch: stretch.slice(0, 12),
+    roomShare: roomShare.slice(0, 8),
+    roomShareWithinBudget: roomShare.filter((r) => r.roomRent <= budget35),
+    cheapestOneBed: allOneBed[0] ?? null,
   };
 }
 
@@ -994,40 +1039,8 @@ export type CommutePairPageData = {
   relatedPairSlugs: string[];
 };
 
-export function getCommutePairStaticParams(): string[] {
-  return getCompareStaticParams().map((slug) => slug.replace("-vs-", "-to-"));
-}
-
 export function commutePairSlugFor(aId: string, bId: string): string {
   return comparisonSlugFor(aId, bId).replace("-vs-", "-to-");
-}
-
-let commutePairSlugSet: Set<string> | null = null;
-let indexableCommutePairSlugsCache: string[] | null = null;
-
-/** True if `slug` is one of the algorithmically-valid commute-pair slugs
- *  (same-borough or similar-rent pair) — not necessarily indexed/prerendered. */
-export function isCommutePairSlug(slug: string): boolean {
-  if (!commutePairSlugSet) {
-    commutePairSlugSet = new Set(getCommutePairStaticParams());
-  }
-  return commutePairSlugSet.has(slug);
-}
-
-/** The small, editorially-curated subset of commute pairs that are actually
- *  prerendered, sitemapped and indexable — mirrors getIndexableCompareSlugs()
- *  so the commute-route cluster doesn't repeat the compare-page scaled-content
- *  problem (thousands of thin, near-duplicate pairwise pages). */
-export function getIndexableCommutePairSlugs(): string[] {
-  if (indexableCommutePairSlugsCache) return indexableCommutePairSlugsCache;
-  indexableCommutePairSlugsCache = getIndexableCompareSlugs().map((slug) =>
-    slug.replace("-vs-", "-to-"),
-  );
-  return indexableCommutePairSlugsCache;
-}
-
-export function isIndexableCommutePairSlug(slug: string): boolean {
-  return getIndexableCommutePairSlugs().includes(slug);
 }
 
 export function getCommutePairPageData(slug: string): CommutePairPageData | null {
@@ -1188,48 +1201,5 @@ export function getNeighbourhoodPageData(slug: string): NeighbourhoodPageData | 
     relatedComparisonSlugs: relatedComparisons(neighbourhood.id, 4, {
       indexableOnly: true,
     }),
-  };
-}
-
-// ──────────────────────────────────────────────────────────────────
-// Rent-guide pages  →  /rent-guide/[slug]   (slug: neighbourhood id)
-//
-// Informational answer to "what's my {area} flat worth to rent?" — purely
-// data-driven from the rent-market baseline. No lead capture / no implied
-// service. Reuses neighbourhood + borough helpers so nothing is duplicated.
-// ──────────────────────────────────────────────────────────────────
-
-export type RentGuidePageData = {
-  neighbourhood: Neighbourhood;
-  roomGbp: number;
-  oneBedGbp: number;
-  twoBedGbp: number;
-  boroughName: string;
-  boroughAvgOneBed: number;
-  region: string;
-  similarNeighbourhoods: Neighbourhood[];
-  relatedComparisonSlugs: string[];
-};
-
-export function getRentGuidePageData(slug: string): RentGuidePageData | null {
-  const nData = getNeighbourhoodPageData(slug);
-  if (!nData) return null;
-
-  const n = nData.neighbourhood;
-  const region = rentRegionForArea(n.id, n.centroid);
-  const roomGbp = ROOM_AREA_OVERRIDES_GBP[n.id] ?? ROOM_REGION_AVERAGE_GBP[region];
-  const boroughName = n.borough.split("/")[0].trim();
-  const boroughData = getBoroughPageData(boroughSlug(boroughName));
-
-  return {
-    neighbourhood: n,
-    roomGbp,
-    oneBedGbp: n.rent.oneBedMedianGbp,
-    twoBedGbp: n.rent.twoBedMedianGbp,
-    boroughName,
-    boroughAvgOneBed: boroughData?.avgOneBedRent ?? n.rent.oneBedMedianGbp,
-    region,
-    similarNeighbourhoods: nData.similarNeighbourhoods,
-    relatedComparisonSlugs: nData.relatedComparisonSlugs,
   };
 }
