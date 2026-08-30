@@ -47,11 +47,6 @@ export default function HomePage() {
     url: SITE_URL,
     description:
       "London neighbourhood discovery for people moving to or relocating within London.",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${SITE_URL}/?q={search_term_string}`,
-      "query-input": "required name=search_term_string",
-    },
   };
 
   const faqSchema = {

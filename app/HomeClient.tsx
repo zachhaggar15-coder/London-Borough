@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { useStore } from "@/lib/store";
 import ControlPanel from "@/components/ControlPanel";
 import NeighbourhoodList from "@/components/NeighbourhoodList";
@@ -124,12 +125,41 @@ export default function HomeClient() {
     <main className="flex h-full w-full flex-col md:flex-row">
       <aside className="order-2 flex h-[45%] w-full min-w-0 flex-col border-t border-slate-800 bg-slate-950 md:order-1 md:h-full md:w-[380px] md:min-w-[380px] md:border-r md:border-t-0">
         <header className="border-b border-slate-800 px-5 py-4">
-          <div className="text-lg font-semibold tracking-tight">
-            Where in London
-          </div>
-          <div className="text-xs text-slate-400">
-            Neighbourhood discovery for people moving to London
-          </div>
+          <h1 className="text-lg font-semibold tracking-tight">
+            Find where to live in London
+          </h1>
+          <p className="mt-1 text-xs text-slate-400">
+            Compare neighbourhoods by commute, rent and everyday life.
+          </p>
+          <nav
+            aria-label="Explore Where in London"
+            className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs"
+          >
+            <Link
+              href="/neighbourhoods"
+              className="text-slate-300 transition-colors hover:text-white"
+            >
+              Area guides
+            </Link>
+            <Link
+              href="/compare"
+              className="text-slate-300 transition-colors hover:text-white"
+            >
+              Compare
+            </Link>
+            <Link
+              href="/london-rent-index"
+              className="text-slate-300 transition-colors hover:text-white"
+            >
+              Rent index
+            </Link>
+            <Link
+              href="/methodology"
+              className="text-slate-300 transition-colors hover:text-white"
+            >
+              How the data works
+            </Link>
+          </nav>
         </header>
         <div className="flex-1 overflow-y-auto">
           <ControlPanel />

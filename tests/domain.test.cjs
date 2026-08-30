@@ -105,7 +105,6 @@ const {
   getAllNeighbourhoodSlugs,
   getCompareIndexSections,
   getCompareStaticParams,
-  getCommutePairStaticParams,
   getFeaturedCompareSlugs,
   getIndexableCompareSlugs,
   getIndexableRoutes,
@@ -570,10 +569,13 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
     "/compare",
     "/couples",
     "/lifestyle",
-    "/rent-guide",
     "/london-rent-index",
     "/methodology",
     "/salary",
+    "/about",
+    "/contact",
+    "/privacy",
+    "/terms",
   ];
   const expectedCount =
     topLevelRoutes.length +
@@ -582,9 +584,7 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
     getAllCommuteSlugs().length +
     SALARY_LEVELS.length +
     LIFESTYLE_PAGES.length +
-    getIndexableCompareSlugs().length +
-    getCommutePairStaticParams().length +
-    getAllNeighbourhoodSlugs().length;
+    getIndexableCompareSlugs().length;
 
   assert.equal(routes.length, expectedCount);
   assert.equal(new Set(paths).size, paths.length);
@@ -596,16 +596,8 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
       .filter((slug) => !isIndexableCompareSlug(slug))
       .every((slug) => !paths.includes(`/compare/${slug}`)),
   );
-  assert.ok(
-    getCommutePairStaticParams().every((slug) =>
-      paths.includes(`/commute/route/${slug}`),
-    ),
-  );
-  assert.ok(
-    getAllNeighbourhoodSlugs().every((slug) =>
-      paths.includes(`/rent-guide/${slug}`),
-    ),
-  );
+  assert.ok(paths.every((path) => !path.startsWith("/commute/route/")));
+  assert.ok(paths.every((path) => !path.startsWith("/rent-guide")));
   assert.ok(paths.every((path) => path === "/" || !path.endsWith("/")));
   assert.ok(paths.every((path) => absoluteUrl(path).startsWith(SITE_URL)));
   assert.ok(routes.every((route) => route.priority > 0 && route.priority <= 1));

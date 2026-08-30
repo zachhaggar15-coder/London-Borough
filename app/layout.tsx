@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     canonical: SITE_URL,
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: "/icon.svg",
   },
   other: {
     "google-adsense-account": GOOGLE_ADSENSE_CLIENT_ID,

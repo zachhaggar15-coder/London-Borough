@@ -6,7 +6,7 @@
  * ROUTING_PROVIDER env var.
  *
  * Two providers ship:
- *   - TflProvider (default) — hits the free public TfL Journey Planner
+ *   - TflProvider (opt-in) — hits the free public TfL Journey Planner
  *     API for durations. Falls back per-origin to a sourced estimate if
  *     TfL can't route a particular pair.
  *   - StaticEstimateProvider — source-backed static matrix + distance heuristic
@@ -277,16 +277,17 @@ class TflProvider implements RoutingProvider {
 /* ────────────────────────────────────────────────────────────────────
  * Provider factory
  *
- * Default is `tfl` (free public API, no signup). Set ROUTING_PROVIDER=static
- * to force the offline heuristic — useful for tests or running without
- * a network.
+ * Default is `static`. It returns immediately, remains honest about the
+ * estimate source, and does not make every visitor fan out into dozens of
+ * public TfL requests. Set ROUTING_PROVIDER=tfl only on a deployment whose
+ * traffic and caching strategy can stay within TfL's limits.
  * ──────────────────────────────────────────────────────────────────── */
 
 let _provider: RoutingProvider | null = null;
 
 export function getRoutingProvider(): RoutingProvider {
   if (_provider) return _provider;
-  const choice = process.env.ROUTING_PROVIDER ?? "tfl";
+  const choice = process.env.ROUTING_PROVIDER ?? "static";
   switch (choice) {
     case "tfl":
       _provider = new TflProvider();
@@ -295,10 +296,19 @@ export function getRoutingProvider(): RoutingProvider {
       _provider = new StaticEstimateProvider();
       break;
     default:
-      console.warn(`Unknown ROUTING_PROVIDER "${choice}", falling back to tfl.`);
-      _provider = new TflProvider();
+      console.warn(`Unknown ROUTING_PROVIDER "${choice}", falling back to static.`);
+      _provider = new StaticEstimateProvider();
   }
   return _provider;
+}
+
+/**
+ * A network-free provider for dense background sampling. Even deployments
+ * that explicitly opt into TfL use this for the isochrone grid so one visitor
+ * cannot trigger hundreds of public Journey Planner calls.
+ */
+export function getStaticRoutingProvider(): RoutingProvider {
+  return new StaticEstimateProvider();
 }
 
 /**

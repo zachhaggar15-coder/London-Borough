@@ -94,8 +94,10 @@ export default function PrivacyPage() {
             <ul className="space-y-2 text-slate-300 list-disc pl-5">
               <li>There are no user accounts, and you are never asked to register.</li>
               <li>
-                Nothing you type into the neighbourhood finder is sent to or
-                stored on a server tied to you.
+                Salary and lifestyle choices stay in your browser. A place or
+                postcode search is sent to the location provider described
+                below, and only its resulting coordinates are sent to this
+                site&rsquo;s commute service.
               </li>
               <li>
                 Your shortlist is saved in your own browser, not in a database.
@@ -149,12 +151,11 @@ export default function PrivacyPage() {
               </p>
               <p>
                 If you accept, Google and its partners may use cookies and
-                similar technologies to serve ads, measure their performance, and
-                limit how often you see the same ad. Google&rsquo;s use of
-                advertising cookies enables it and its partners to serve ads
-                based on your visit to this and other sites. This may involve
-                processing an online identifier and your approximate location
-                derived from your IP address.
+                similar technologies to serve contextual, non-personalised ads,
+                measure their performance, and limit how often you see the same
+                ad. Ad selection can use the page you are viewing and a coarse
+                location derived from your IP address, but this site asks Google
+                not to base ads on your past activity on other websites.
               </p>
               <p>
                 You can opt out of personalised advertising at any time through{" "}
@@ -251,18 +252,56 @@ export default function PrivacyPage() {
           </section>
 
           <section className="mb-10">
+            <h2 className="mb-3 text-xl font-semibold">Location search</h2>
+            <div className="space-y-4 text-slate-300">
+              <p>
+                When you search for a London place, station, street or postcode,
+                the text you enter is sent directly from your browser to a
+                location lookup service. UK postcodes are looked up through{" "}
+                <a
+                  href="https://postcodes.io/"
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className={extLink}
+                >
+                  Postcodes.io
+                </a>
+                ; other searches use the OpenStreetMap Foundation&rsquo;s{" "}
+                <a
+                  href="https://operations.osmfoundation.org/policies/nominatim/"
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className={extLink}
+                >
+                  Nominatim service
+                </a>
+                . The provider receives the search text and ordinary connection
+                information such as your IP address. Do not enter confidential
+                information into the location box.
+              </p>
+              <p>
+                After a place is selected, this site&rsquo;s own commute and map
+                services receive its latitude and longitude so they can calculate
+                results. The original search text is not stored by this site, and
+                the coordinates are cached only as part of general route results,
+                not against an account or user profile.
+              </p>
+            </div>
+          </section>
+
+          <section className="mb-10">
             <h2 className="mb-3 text-xl font-semibold">
               What is never collected
             </h2>
             <p className="text-slate-300">
               There is no account system, so no names, passwords or email
               addresses are collected by the site itself. The salary, commute and
-              lifestyle inputs you enter into the neighbourhood finder are
-              processed in your browser to produce your results and are not
-              stored against you. If you use the contact form, it composes a
-              message in your own email application — the form does not send
-              anything to this site, and only what you actually choose to send
-              reaches the inbox above.
+              lifestyle inputs you enter into the neighbourhood finder are not
+              stored against you. Location search and coordinate processing are
+              described above. If you use the contact form, it composes a message
+              in your own email application — the form does not send anything to
+              this site, and only what you actually choose to send reaches the
+              inbox above.
             </p>
           </section>
 

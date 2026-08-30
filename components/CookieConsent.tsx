@@ -12,6 +12,10 @@ export const OPEN_COOKIE_SETTINGS_EVENT = "wil:open-cookie-settings";
 
 type Choice = "accepted" | "declined";
 
+type AdSenseQueue = unknown[] & {
+  requestNonPersonalizedAds?: number;
+};
+
 // ──────────────────────────────────────────────────────────────────
 // The stored choice lives in localStorage, which is an external store as far
 // as React is concerned — so it is read through useSyncExternalStore rather
@@ -62,6 +66,15 @@ function storeChoice(choice: Choice): void {
  */
 function loadAdSense(): void {
   if (document.getElementById(ADSENSE_SCRIPT_ID)) return;
+
+  // This in-site consent control is deliberately limited to contextual,
+  // non-personalised ads. Personalised ads for UK/EEA visitors require a
+  // Google-certified TCF CMP configured in AdSense; this queue flag prevents
+  // the custom banner from being mistaken for that certified signal.
+  const adsWindow = window as Window & { adsbygoogle?: AdSenseQueue };
+  const queue = (adsWindow.adsbygoogle ??= []);
+  queue.requestNonPersonalizedAds = 1;
+
   const s = document.createElement("script");
   s.id = ADSENSE_SCRIPT_ID;
   s.async = true;
@@ -109,9 +122,10 @@ export default function CookieConsent() {
           </h2>
           <p className="text-sm text-slate-300">
             This site is free and funded by advertising. With your permission,
-            Google would set cookies to show and measure ads. Analytics here are
-            cookieless, and declining keeps the advertising scripts from loading
-            at all — the site works exactly the same either way. See the{" "}
+            Google would set cookies to show and measure contextual ads. These
+            ads are not based on your activity on other sites. Analytics here
+            are cookieless, and declining keeps the advertising scripts from
+            loading at all — the site works exactly the same either way. See the{" "}
             <Link
               href="/privacy"
               className="text-emerald-400 underline underline-offset-2 hover:text-emerald-300"

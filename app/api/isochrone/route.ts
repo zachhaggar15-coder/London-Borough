@@ -7,10 +7,9 @@
  * Responsibilities:
  *   1. Receive the user-provided reachable list (neighbourhoods with
  *      TfL times) from the client.
- *   2. Also fetch TfL times for the static ~280-point London sample
- *      grid (cached aggressively via the TfL pair cache so this only
- *      pays the full cost on the very first hit for a given
- *      destination).
+ *   2. Add network-free travel estimates for the static ~280-point London
+ *      sample grid. The denser points shape the polygon without turning a
+ *      single page view into hundreds of calls to TfL.
  *   3. Combine both into the reachable set, then build the polygon
  *      via the union-of-buffers + marching-squares algorithm in
  *      lib/isochrone.ts.
@@ -28,7 +27,7 @@ import {
 } from "@/lib/isochrone";
 import type { LatLng } from "@/lib/types";
 import { TtlCache, coordKey } from "@/lib/cache";
-import { getRoutingProvider, type RoutingOrigin } from "@/lib/commute";
+import { getStaticRoutingProvider, type RoutingOrigin } from "@/lib/commute";
 import { londonSampleGrid } from "@/lib/sample-grid";
 import {
   isCommuteMinuteCap,
@@ -67,9 +66,10 @@ const GRID_MISS_RATE_LIMIT = {
 };
 
 /**
- * Fetch TfL times for the static sample grid. Cached at the routing-
- * provider's pair-cache level — so the second call for the same
- * destination resolves instantly.
+ * Estimate travel times for the static sample grid without external network
+ * calls. Neighbourhood points supplied by /api/commute still carry whichever
+ * provider the deployment selected, so an opt-in TfL deployment retains live
+ * signal without multiplying it across hundreds of synthetic grid origins.
  */
 async function gridSampleReachables(
   destination: LatLng,
@@ -79,7 +79,7 @@ async function gridSampleReachables(
     id: `grid-${i}`,
     centroid: p,
   }));
-  const matrix = await getRoutingProvider().commuteMatrixFrom(
+  const matrix = await getStaticRoutingProvider().commuteMatrixFrom(
     origins,
     destination,
   );
