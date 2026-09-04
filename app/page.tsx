@@ -19,6 +19,7 @@ import {
   SITE_URL,
 } from "@/lib/seo-data";
 import { DESTINATIONS } from "@/lib/data/destinations";
+import { guidesByRecency } from "@/lib/data/guides";
 
 export const metadata: Metadata = {
   title: "Where in London — find your neighbourhood",
@@ -34,6 +35,7 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
+  const neighbourhoodCount = getAllNeighbourhoodSlugs().length;
   const boroughSlugs = getAllBoroughSlugs().slice(0, 12);
   const popularNeighbourhoods = getAllNeighbourhoodSlugs().slice(0, 12);
   const popularComparisons = getFeaturedCompareSlugs(6)
@@ -99,8 +101,49 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
 
+      {/* ── Server-rendered hero ─────────────────────────────────────────
+          The tool below is client-only, so without this the page had no
+          server-rendered H1 and no answer above the fold — a searcher landing
+          on "where to live in London" got an empty map asking for input. The
+          hero stays deliberately compact so the map is still the dominant
+          element, per the product rule in STRATEGY.md. */}
+      <section className="border-b border-slate-800 bg-slate-950 px-6 pb-8 pt-12">
+        <div className="mx-auto max-w-5xl">
+          <h1 className="mb-4 max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
+            Where to live in London
+          </h1>
+          <p className="mb-6 max-w-2xl text-lg leading-relaxed text-slate-300">
+            London has no single best area — it has areas that fit your
+            commute, your budget and how you want to spend a Saturday. This
+            tool narrows {neighbourhoodCount} neighbourhoods down to a
+            shortlist worth actually visiting, using estimated public-transport
+            times, reviewed market rents and ten lifestyle measures.
+          </p>
+          <div className="flex flex-wrap gap-3 text-sm">
+            <Link
+              href="/neighbourhoods"
+              className="rounded-lg border border-slate-700 px-4 py-2 transition-colors hover:border-slate-500"
+            >
+              Browse all {neighbourhoodCount} areas
+            </Link>
+            <Link
+              href="/guides/how-much-do-i-need-to-earn-to-live-in-london"
+              className="rounded-lg border border-slate-700 px-4 py-2 transition-colors hover:border-slate-500"
+            >
+              What salary do you need?
+            </Link>
+            <Link
+              href="/london-rent-index"
+              className="rounded-lg border border-slate-700 px-4 py-2 transition-colors hover:border-slate-500"
+            >
+              Rent by area
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── Interactive tool ─────────────────────────────────────────── */}
-      <div className="h-screen w-screen overflow-hidden">
+      <div className="h-[85vh] min-h-[560px] w-full overflow-hidden">
         <HomeClient />
       </div>
 
@@ -140,6 +183,37 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* Guides */}
+        <section className="border-t border-slate-800 mx-auto max-w-5xl px-6 py-16">
+          <h2 className="text-2xl font-bold tracking-tight mb-2">
+            Before you pick an area
+          </h2>
+          <p className="text-slate-400 mb-8">
+            What London costs, how renting works under the 2026 rules, and what
+            to sort out in which order.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {guidesByRecency()
+              .slice(0, 6)
+              .map((guide) => (
+                <Link
+                  key={guide.slug}
+                  href={`/guides/${guide.slug}`}
+                  className="rounded-lg border border-slate-800 bg-slate-900 px-4 py-3 transition-colors hover:border-slate-600"
+                >
+                  <p className="text-sm font-medium">{guide.h1}</p>
+                  <p className="mt-1 text-xs text-slate-400">{guide.summary}</p>
+                </Link>
+              ))}
+          </div>
+          <Link
+            href="/guides"
+            className="mt-6 inline-block text-sm text-emerald-400 transition-colors hover:text-emerald-300"
+          >
+            All guides →
+          </Link>
         </section>
 
         {/* Popular commutes */}

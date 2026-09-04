@@ -14,3 +14,12 @@ export const PUBLISHER_DESCRIPTION =
 
 /** Last substantive review of the Privacy Policy and Terms. */
 export const POLICY_LAST_UPDATED = "2026-08-30";
+
+/**
+ * The year used in year-stamped page titles ("… (2026 guide)").
+ *
+ * Derived from the build date and defined once, because eight lifestyle
+ * titles previously hardcoded the year independently and drifted a full
+ * year out of date. Any deploy refreshes every title that uses it.
+ */
+export const CONTENT_YEAR = new Date().getFullYear();

@@ -43,6 +43,10 @@ export default async function LifestylePage({ params }: Props) {
   const top10 = ranked.slice(0, 10);
   const rest = ranked.slice(10, 30);
   const isGbp = page.unit === "gbp";
+  const useTwoBed = page.rentColumn === "twoBed";
+  const rentOf = (n: { rent: { oneBedMedianGbp: number; twoBedMedianGbp: number } }) =>
+    useTwoBed ? n.rent.twoBedMedianGbp : n.rent.oneBedMedianGbp;
+  const rentHeading = useTwoBed ? "2-bed rent" : "1-bed rent";
   const fmtScore = (v: number) =>
     isGbp ? `£${v.toLocaleString()}` : String(v);
   const scoreLabel = isGbp ? "1-bed/mo" : "score";
@@ -141,8 +145,8 @@ export default async function LifestylePage({ params }: Props) {
                             {!isGbp && (
                               <>
                                 {" "}
-                                · £{n.rent.oneBedMedianGbp.toLocaleString()}/mo
-                                1-bed
+                                · £{rentOf(n).toLocaleString()}/mo{" "}
+                                {useTwoBed ? "2-bed" : "1-bed"}
                               </>
                             )}
                           </p>
@@ -202,11 +206,11 @@ export default async function LifestylePage({ params }: Props) {
                       <th className="pb-3 font-medium">Neighbourhood</th>
                       <th className="pb-3 font-medium">Borough</th>
                       <th className="pb-3 font-medium text-right">
-                        {isGbp ? "1-bed rent" : "Score"}
+                        {isGbp ? rentHeading : "Score"}
                       </th>
                       {!isGbp && (
                         <th className="pb-3 font-medium text-right">
-                          1-bed rent
+                          {rentHeading}
                         </th>
                       )}
                     </tr>
@@ -231,8 +235,7 @@ export default async function LifestylePage({ params }: Props) {
                         </td>
                         {!isGbp && (
                           <td className="py-2.5 text-right tabular-nums">
-                            £
-                            {entry.neighbourhood.rent.oneBedMedianGbp.toLocaleString()}
+                            £{rentOf(entry.neighbourhood).toLocaleString()}
                           </td>
                         )}
                       </tr>

@@ -18,6 +18,7 @@ import {
   RENT_MARKET_REVIEW_AS_OF,
   RENT_MARKET_SOURCES,
 } from "@/lib/data/rent-market";
+import { CONTENT_YEAR } from "@/lib/site-config";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -48,8 +49,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Point canonical/OG at the canonical URL even when reached via a reversed slug.
   const canonicalSlug = canonicalCompareSlug(slug) ?? slug;
   const isIndexable = isIndexableCompareSlug(canonicalSlug);
-  const title = `${a.name} vs ${b.name} (2026): rent, transport & lifestyle`;
-  const description = `${a.name} vs ${b.name} (2026): one-bed rents £${a.rent.oneBedMedianGbp.toLocaleString()} vs £${b.rent.oneBedMedianGbp.toLocaleString()}/mo, plus transport, green space, nightlife and safety compared — and who each area suits.`;
+  const title = `${a.name} vs ${b.name} (${CONTENT_YEAR}): rent, transport & lifestyle`;
+  const description = `${a.name} vs ${b.name} (${CONTENT_YEAR}): one-bed rents £${a.rent.oneBedMedianGbp.toLocaleString()} vs £${b.rent.oneBedMedianGbp.toLocaleString()}/mo, plus transport, green space, nightlife and safety compared — and who each area suits.`;
 
   return {
     title,

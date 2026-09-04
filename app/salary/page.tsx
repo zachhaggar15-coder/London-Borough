@@ -173,13 +173,14 @@ export default function SalaryIndexPage() {
             Take-home applies the England and Wales personal allowance of
             £12,570, the 20% basic rate up to £50,270 and the 40% higher rate
             above it, plus Class 1 National Insurance at 8% and 2% across the
-            same thresholds. The guides stop at £100,000, below the point where
-            the personal allowance starts tapering and the 45% additional rate
-            begins, so neither is modelled. It assumes a standard tax code and
-            no student loan repayments, pension contributions or salary
-            sacrifice — all of which reduce take-home in practice, so treat
-            these as a ceiling rather than a payslip. Scottish rates differ and
-            are not modelled. Full detail is on the{" "}
+            same thresholds. Above £100,000 the personal allowance tapers away
+            by £1 for every £2 earned, and the 45% additional rate starts at
+            £125,140 — both are modelled, which is why take-home rises so
+            slowly between £100,000 and £125,140. It assumes a standard tax
+            code and no student loan repayments, pension contributions or
+            salary sacrifice — all of which reduce take-home in practice, so
+            treat these as a ceiling rather than a payslip. Scottish rates
+            differ and are not modelled. Full detail is on the{" "}
             <Link
               href="/methodology"
               className="text-emerald-400 underline underline-offset-2 hover:text-emerald-300"

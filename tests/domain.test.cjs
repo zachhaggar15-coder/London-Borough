@@ -111,11 +111,20 @@ const {
   isIndexableCompareSlug,
   LIFESTYLE_PAGES,
   SALARY_LEVELS,
+  ukTakeHomeMonthly,
 } = jiti("../lib/seo-data.ts");
 const {
   MONETISATION_PROVIDERS,
   activeProvidersForSlot,
 } = jiti("../lib/monetisation.ts");
+const { GUIDES } = jiti("../lib/data/guides.ts");
+const {
+  bandAmounts,
+  boroughsByBandD,
+  councilTaxForBorough,
+} = jiti("../lib/council-tax.ts");
+const { BAND_D_BY_BOROUGH } = jiti("../lib/data/council-tax.ts");
+const { LONDON_BOROUGHS } = jiti("../lib/commute-details.ts");
 
 const query = {
   destination: { id: "test", label: "Test", centroid: { lat: 51.5, lng: -0.1 } },
@@ -569,6 +578,7 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
     "/compare",
     "/couples",
     "/lifestyle",
+    "/guides",
     "/london-rent-index",
     "/methodology",
     "/salary",
@@ -584,7 +594,8 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
     getAllCommuteSlugs().length +
     SALARY_LEVELS.length +
     LIFESTYLE_PAGES.length +
-    getIndexableCompareSlugs().length;
+    getIndexableCompareSlugs().length +
+    GUIDES.length;
 
   assert.equal(routes.length, expectedCount);
   assert.equal(new Set(paths).size, paths.length);
@@ -598,6 +609,24 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
   );
   assert.ok(paths.every((path) => !path.startsWith("/commute/route/")));
   assert.ok(paths.every((path) => !path.startsWith("/rent-guide")));
+  assert.ok(GUIDES.every((guide) => paths.includes(`/guides/${guide.slug}`)));
+
+  // Every entry must carry a real content-review date. Stamping the build
+  // date on all of them — which this sitemap used to do — makes lastmod
+  // meaningless, so guard against it regressing.
+  const today = new Date().toISOString().split("T")[0];
+  assert.ok(
+    routes.every((route) => /^\d{4}-\d{2}-\d{2}$/.test(route.lastmod)),
+    "every route needs an ISO lastmod",
+  );
+  assert.ok(
+    new Set(routes.map((route) => route.lastmod)).size > 1,
+    "lastmod must vary by cluster, not be one build-wide date",
+  );
+  assert.ok(
+    !routes.every((route) => route.lastmod === today),
+    "lastmod must not just be today's date for every route",
+  );
   assert.ok(paths.every((path) => path === "/" || !path.endsWith("/")));
   assert.ok(paths.every((path) => absoluteUrl(path).startsWith(SITE_URL)));
   assert.ok(routes.every((route) => route.priority > 0 && route.priority <= 1));
@@ -680,4 +709,122 @@ test("sampled London isochrone never emits invalid polygon coordinates", () => {
         lat <= 51.75,
     ),
   );
+});
+
+test("council tax data covers every borough and derives bands correctly", () => {
+  // Every borough the site has a page for must have a figure, or the page
+  // silently drops its council tax section.
+  for (const borough of LONDON_BOROUGHS) {
+    assert.ok(
+      typeof BAND_D_BY_BOROUGH[borough] === "number",
+      `missing council tax for ${borough}`,
+    );
+  }
+  assert.equal(Object.keys(BAND_D_BY_BOROUGH).length, LONDON_BOROUGHS.length);
+
+  // Sanity-check the range. These are real published figures, so a value
+  // outside this window means a transcription error rather than a rate change.
+  for (const [borough, bandD] of Object.entries(BAND_D_BY_BOROUGH)) {
+    assert.ok(
+      bandD > 900 && bandD < 3200,
+      `${borough} Band D of ${bandD} is outside the plausible London range`,
+    );
+  }
+
+  const ranked = boroughsByBandD();
+  assert.equal(ranked.length, LONDON_BOROUGHS.length);
+  assert.equal(ranked[0].borough, "Wandsworth");
+  assert.equal(ranked[ranked.length - 1].borough, "Kingston upon Thames");
+  for (let i = 1; i < ranked.length; i++) {
+    assert.ok(ranked[i].bandDGbp >= ranked[i - 1].bandDGbp);
+  }
+
+  // Statutory ratios: Band D is the reference, A is 6/9 of it and H is 18/9.
+  const bands = bandAmounts(1800);
+  assert.equal(bands.length, 8);
+  assert.equal(bands.find((b) => b.band === "D").annualGbp, 1800);
+  assert.equal(bands.find((b) => b.band === "A").annualGbp, Math.round(1800 * (6 / 9)));
+  assert.equal(bands.find((b) => b.band === "H").annualGbp, Math.round(1800 * (18 / 9)));
+  for (let i = 1; i < bands.length; i++) {
+    assert.ok(bands[i].annualGbp > bands[i - 1].annualGbp);
+  }
+
+  // The GLA precept is part of every total, so the borough element must be
+  // a positive remainder rather than the whole bill.
+  const camden = councilTaxForBorough("Camden");
+  assert.ok(camden.boroughElementGbp > 0);
+  assert.ok(camden.boroughElementGbp < camden.bandDGbp);
+  assert.equal(camden.totalRanked, LONDON_BOROUGHS.length);
+  assert.equal(councilTaxForBorough("Nowhere"), null);
+});
+
+test("take-home model handles the personal allowance taper and 45% band", () => {
+  // Below the taper, the allowance is untouched.
+  assert.equal(ukTakeHomeMonthly(50000), 3293);
+
+  // Across the taper band the effective marginal rate is roughly 60%, so an
+  // extra £20k of gross adds far less than the 40% band alone would imply.
+  const at100k = ukTakeHomeMonthly(100000);
+  const at120k = ukTakeHomeMonthly(120000);
+  const marginalNet = ((at120k - at100k) * 12) / 20000;
+  assert.ok(
+    marginalNet > 0.35 && marginalNet < 0.42,
+    `taper marginal net rate of ${marginalNet} should sit near 0.38`,
+  );
+
+  // Take-home must rise monotonically across every published salary level.
+  for (let i = 1; i < SALARY_LEVELS.length; i++) {
+    assert.ok(
+      ukTakeHomeMonthly(SALARY_LEVELS[i]) >
+        ukTakeHomeMonthly(SALARY_LEVELS[i - 1]),
+      `take-home fell between ${SALARY_LEVELS[i - 1]} and ${SALARY_LEVELS[i]}`,
+    );
+  }
+});
+
+test("guides are substantial, uniquely slugged and internally consistent", () => {
+  const slugs = GUIDES.map((g) => g.slug);
+  assert.equal(new Set(slugs).size, slugs.length, "guide slugs must be unique");
+
+  const guideSlugSet = new Set(slugs);
+  for (const guide of GUIDES) {
+    // A thin guide is exactly what got the site flagged before. Hold a floor.
+    const words = [
+      ...guide.intro,
+      ...guide.sections.flatMap((s) => [
+        s.heading,
+        ...s.paragraphs,
+        ...(s.list ? s.list.items : []),
+        s.callout ?? "",
+      ]),
+      ...guide.faqs.flatMap((f) => [f.question, f.answer]),
+    ]
+      .join(" ")
+      .split(/\s+/)
+      .filter(Boolean).length;
+
+    assert.ok(
+      words >= 800,
+      `${guide.slug} has only ${words} words; guides must be substantial`,
+    );
+    assert.ok(guide.sections.length >= 4, `${guide.slug} needs more sections`);
+    assert.ok(guide.faqs.length >= 3, `${guide.slug} needs more FAQs`);
+    assert.ok(guide.metaTitle.length <= 65, `${guide.slug} title too long`);
+    assert.ok(
+      guide.metaDescription.length >= 70 &&
+        guide.metaDescription.length <= 160,
+      `${guide.slug} description length ${guide.metaDescription.length}`,
+    );
+    assert.ok(/^\d{4}-\d{2}-\d{2}$/.test(guide.updated));
+
+    // Internal links must point somewhere real.
+    for (const link of guide.related) {
+      if (link.href.startsWith("/guides/")) {
+        assert.ok(
+          guideSlugSet.has(link.href.replace("/guides/", "")),
+          `${guide.slug} links to missing guide ${link.href}`,
+        );
+      }
+    }
+  }
 });

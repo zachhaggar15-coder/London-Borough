@@ -8,6 +8,7 @@ import {
   boroughSlug,
   londonRentMedians,
   oneBedRentPercentile,
+  lifestyleStanding,
   roomRentFor,
   SITE_URL,
 } from "@/lib/seo-data";
@@ -18,6 +19,9 @@ import {
 } from "@/lib/data/rent-market";
 import type { SimilarArea } from "@/lib/similarity";
 import { provenanceLabel } from "@/lib/provenance";
+import { CONTENT_YEAR } from "@/lib/site-config";
+import { councilTaxForBorough, formatPounds } from "@/lib/council-tax";
+import { COUNCIL_TAX_YEAR } from "@/lib/data/council-tax";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -37,7 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     n.transportZones.length > 1
       ? `Zones ${n.transportZones.join("–")}`
       : `Zone ${n.transportZones[0]}`;
-  const title = `Living in ${n.name}: rent & is it worth it? (2026)`;
+  const title = `Living in ${n.name}: rent & is it worth it? (${CONTENT_YEAR})`;
   const description = `Living in ${n.name}? One-bed rent averages £${n.rent.oneBedMedianGbp.toLocaleString()}/month, ${zoneStr}. Is ${n.name} a nice place to live? See transport, lifestyle scores and the verdict.`;
 
   return {
@@ -173,8 +177,39 @@ export default async function NeighbourhoodPage({ params }: Props) {
       ? `${n.name} is in ${n.borough}, ${zoneStr}. It's particularly well-suited to ${topPersonalities[0]}. ${n.tradeoffs[0] ? `The main trade-off is: ${n.tradeoffs[0].toLowerCase()}.` : ""}`
       : `${n.name} is a ${n.borough} neighbourhood in ${zoneStr}. ${n.summary}`;
 
+  // Safety is one of the highest-volume questions asked about any London
+  // area. We answer it from our own composite lifestyle score and say so
+  // plainly — this is a curated review score, not police recorded-crime
+  // data, and the copy must not imply otherwise.
+  const safetyStanding = lifestyleStanding("safety", n.lifestyle.safety);
+  const safetyBand =
+    n.lifestyle.safety >= 8
+      ? "which is among the areas that review most consistently well on this"
+      : n.lifestyle.safety >= 7
+        ? "which is a little above the middle of that range"
+        : n.lifestyle.safety >= 6
+          ? "which is around the middle of that range"
+          : "which is at the lower end of that range";
+  const safetyCaveat = n.tradeoffs.find((t) =>
+    /night|edgy|safe|crime/i.test(t),
+  );
+  const safetyAnswer = `${n.name} scores ${n.lifestyle.safety} out of 10 on our safety measure. Across the ${safetyStanding.total} London areas we track that measure runs from ${safetyStanding.min} to ${safetyStanding.max}, ${safetyBand}: ${safetyStanding.higher} of the areas we cover score higher. That score is a curated review of how an area is generally regarded, not police recorded-crime data, so treat it as a starting point rather than a verdict. ${safetyCaveat ? `The caveat most often raised about ${n.name} is: ${safetyCaveat.toLowerCase()}.` : `Like anywhere in London it varies street by street, and feels different at 11pm than at 11am.`} For official figures, check the Metropolitan Police crime map for the specific postcode, and walk the route from the station to any flat you are considering after dark before you sign.`;
+
+  const boroughTax = councilTaxForBorough(n.borough.split("/")[0].trim());
+  const councilTaxAnswer = boroughTax
+    ? `${n.name} is in ${boroughTax.borough}, where council tax is ${formatPounds(boroughTax.bandDGbp)} a year at Band D for ${COUNCIL_TAX_YEAR} — about £${boroughTax.bands[3].monthlyOverTenGbp} a month over the usual 10 instalments. That ranks ${boroughTax.rank} of ${boroughTax.totalRanked} London boroughs from cheapest to most expensive. A room in a house share here usually includes it; a flat on your own tenancy will not. Living alone, you can claim a 25% single-person discount.`
+    : null;
+
   const extraFaqItems: { question: string; answer: string }[] = [
     { question: `What is the average rent in ${n.name}?`, answer: rentAnswer },
+    ...(councilTaxAnswer
+      ? [
+          {
+            question: `How much is council tax in ${n.name}?`,
+            answer: councilTaxAnswer,
+          },
+        ]
+      : []),
     ...(bestDestination
       ? [
           {
@@ -212,6 +247,11 @@ export default async function NeighbourhoodPage({ params }: Props) {
         "@type": "Question",
         name: `Is ${n.name} posh?`,
         acceptedAnswer: { "@type": "Answer", text: poshAnswer },
+      },
+      {
+        "@type": "Question",
+        name: `Is ${n.name} safe?`,
+        acceptedAnswer: { "@type": "Answer", text: safetyAnswer },
       },
       ...extraFaqItems.map((item) => ({
         "@type": "Question",
@@ -354,6 +394,10 @@ export default async function NeighbourhoodPage({ params }: Props) {
             <div>
               <h2 className="text-xl font-semibold mb-3">Is {n.name} posh?</h2>
               <p className="text-slate-300">{poshAnswer}</p>
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold mb-3">Is {n.name} safe?</h2>
+              <p className="text-slate-300">{safetyAnswer}</p>
             </div>
           </section>
 

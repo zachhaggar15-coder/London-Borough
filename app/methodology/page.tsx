@@ -5,6 +5,11 @@ import { NEIGHBOURHOODS } from "@/lib/data/neighbourhoods";
 import { LONDON_BOROUGHS } from "@/lib/commute-details";
 import { LONDON_TRANSIT_KMH } from "@/lib/isochrone";
 import { LIFESTYLE_LABELS } from "@/lib/types";
+import {
+  COUNCIL_TAX_AS_OF,
+  COUNCIL_TAX_YEAR,
+  GLA_PRECEPT_BAND_D,
+} from "@/lib/data/council-tax";
 import { londonRentMedians, SITE_URL } from "@/lib/seo-data";
 import {
   RENT_MARKET_REVIEW_AS_OF,
@@ -145,17 +150,60 @@ export default function MethodologyPage() {
 
             <MethodSection title="Salary and affordability">
               <p>
-                Salary pages estimate England take-home pay from the personal
-                allowance, income-tax bands and employee National Insurance
-                rates, then show rent budgets at 33% and 35% of take-home pay.
-                The calculation does not include pension contributions, student
-                loans, benefits, council tax, utilities or the personal
-                allowance taper above GBP 100,000.
+                Salary pages estimate England and Wales take-home pay from the
+                personal allowance, income-tax bands and employee National
+                Insurance rates, then show rent budgets at 33% and 35% of
+                take-home pay. The model includes the personal allowance taper
+                between GBP 100,000 and GBP 125,140 and the 45% additional
+                rate, so the effective marginal rate of roughly 60% across the
+                taper band is reflected in the higher salary pages. It does not
+                include pension contributions, student loans, benefits, salary
+                sacrifice, council tax or utilities, and Scottish rates are not
+                modelled — so treat the figures as a ceiling rather than a
+                payslip.
               </p>
               <p>
                 In the matching tool, an explicit monthly rent budget overrides
                 salary-derived affordability. If a salary is used, the default
                 rent budget is 35% of estimated monthly take-home pay.
+              </p>
+            </MethodSection>
+
+            <MethodSection title="Council tax figures">
+              <p>
+                Borough pages and the council tax guide show the total Band D
+                charge for {COUNCIL_TAX_YEAR}, which is the borough&apos;s own
+                element plus the Greater London Authority precept of GBP{" "}
+                {GLA_PRECEPT_BAND_D.toFixed(2)}. Figures exclude any parish or
+                special-expenses element, which applies to only a small number
+                of London areas.
+              </p>
+              <p>
+                Every borough figure was cross-checked against two independent
+                published London-wide comparison tables, which agreed on all 33
+                authorities. These remain secondary sources, so anyone
+                budgeting against a specific figure should confirm it with the
+                borough directly. Last reviewed {COUNCIL_TAX_AS_OF}.
+              </p>
+              <p>
+                Only Band D is stored. Bands A to H are derived from it using
+                the statutory ratios set out in the Local Government Finance
+                Act 1992, which are fixed nationally, so every band on the site
+                stays consistent with the Band D figure it came from. Monthly
+                amounts assume the ten instalments most councils bill by
+                default rather than twelve.
+              </p>
+            </MethodSection>
+
+            <MethodSection title="Safety scores">
+              <p>
+                The safety figure shown on each neighbourhood page is part of
+                the same 0 to 10 lifestyle review described below. It reflects
+                how an area is generally regarded, not police recorded-crime
+                data, and we say so on every page that shows it. It is a
+                starting point for a conversation with someone who knows the
+                area, not a substitute for the Metropolitan Police crime map or
+                for walking the route yourself.
               </p>
             </MethodSection>
 

@@ -6,6 +6,7 @@ import {
   getCommutePageData,
   SITE_URL,
 } from "@/lib/seo-data";
+import { CONTENT_YEAR } from "@/lib/site-config";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -20,8 +21,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const data = getCommutePageData(slug);
   if (!data) return {};
 
-  const title = `Best areas to live for commuting to ${data.destinationLabel}`;
-  const description = `The best London neighbourhoods for commuting to ${data.destinationLabel}. Ranked by commute time, with rent prices and transport options.`;
+  // Lead the title with a concrete number. "Best areas for commuting to X"
+  // says nothing the query didn't; "12 areas under 30 minutes" does.
+  const under30 = data.topPicks.filter((p) => p.minutes <= 30).length;
+  const cheapest = [...data.topPicks].sort(
+    (a, b) => a.oneBedRent - b.oneBedRent,
+  )[0];
+  const fastest = [...data.topPicks].sort((a, b) => a.minutes - b.minutes)[0];
+
+  const title =
+    under30 >= 3
+      ? `${under30} areas under 30 minutes from ${data.destinationLabel} (${CONTENT_YEAR})`
+      : `Best areas to live for commuting to ${data.destinationLabel} (${CONTENT_YEAR})`;
+
+  const description = cheapest && fastest
+    ? `Where to live for a ${data.destinationLabel} commute: ${fastest.name} is fastest at about ${fastest.minutes} minutes, and ${cheapest.name} the cheapest at £${cheapest.oneBedRent.toLocaleString()}/month for a one-bed. ${data.topPicks.length} areas ranked by commute time, rent and transport.`
+    : `The best London neighbourhoods for commuting to ${data.destinationLabel}. Ranked by commute time, with rent prices and transport options.`;
 
   return {
     title,

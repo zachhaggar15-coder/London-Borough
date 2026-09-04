@@ -8,7 +8,27 @@ import NeighbourhoodList from "@/components/NeighbourhoodList";
 import ResultsSummaryPanel from "@/components/ResultsSummaryPanel";
 import ShortlistPanel from "@/components/ShortlistPanel";
 import DetailDrawer from "@/components/DetailDrawer";
-import Map from "@/components/Map";
+import dynamic from "next/dynamic";
+
+/**
+ * MapLibre GL is by far the heaviest thing on this page. Loading it eagerly
+ * made it the LCP element on mobile and pushed the whole bundle past the
+ * point where the page felt responsive. Deferring it keeps the controls and
+ * the server-rendered hero as the first paint, and the map arrives a beat
+ * later into a reserved box, so nothing shifts.
+ */
+const Map = dynamic(() => import("@/components/Map"), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="flex h-full w-full items-center justify-center bg-slate-900"
+      role="status"
+      aria-label="Loading map"
+    >
+      <span className="text-sm text-slate-500">Loading map…</span>
+    </div>
+  ),
+});
 import { NEIGHBOURHOODS } from "@/lib/data/neighbourhoods";
 import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
 import type { CommuteEstimate } from "@/lib/types";
@@ -125,9 +145,9 @@ export default function HomeClient() {
     <main className="flex h-full w-full flex-col md:flex-row">
       <aside className="order-2 flex h-[45%] w-full min-w-0 flex-col border-t border-slate-800 bg-slate-950 md:order-1 md:h-full md:w-[380px] md:min-w-[380px] md:border-r md:border-t-0">
         <header className="border-b border-slate-800 px-5 py-4">
-          <h1 className="text-lg font-semibold tracking-tight">
+          <p className="text-lg font-semibold tracking-tight">
             Find where to live in London
-          </h1>
+          </p>
           <p className="mt-1 text-xs text-slate-400">
             Compare neighbourhoods by commute, rent and everyday life.
           </p>

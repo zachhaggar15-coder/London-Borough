@@ -7,6 +7,13 @@ import {
   SITE_URL,
 } from "@/lib/seo-data";
 import { LIFESTYLE_LABELS } from "@/lib/types";
+import {
+  bandDStanding,
+  councilTaxForBorough,
+  formatPounds,
+} from "@/lib/council-tax";
+import { COUNCIL_TAX_YEAR } from "@/lib/data/council-tax";
+import { CONTENT_YEAR } from "@/lib/site-config";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -21,8 +28,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const data = getBoroughPageData(slug);
   if (!data) return {};
 
-  const title = `Living in ${data.name} — rents, transport & neighbourhood guide`;
-  const description = `${data.name} average 1-bed rent £${data.avgOneBedRent.toLocaleString()}/month. Transport zones ${data.zoneRange.join("–")}. Neighbourhoods, commute access, lifestyle profile and who it suits.`;
+  const tax = councilTaxForBorough(data.name);
+  const title = `Living in ${data.name} (${CONTENT_YEAR}): rent, council tax & transport`;
+  const description = tax
+    ? `${data.name}: 1-bed rents average £${data.avgOneBedRent.toLocaleString()}/month and council tax is £${Math.round(tax.bandDGbp).toLocaleString()} a year at Band D — ${tax.rank} of ${tax.totalRanked} London boroughs. Zones ${data.zoneRange.join("–")}, neighbourhoods and who it suits.`
+    : `${data.name} average 1-bed rent £${data.avgOneBedRent.toLocaleString()}/month. Transport zones ${data.zoneRange.join("–")}. Neighbourhoods, commute access, lifestyle profile and who it suits.`;
 
   return {
     title,
@@ -56,6 +66,9 @@ export default async function BoroughPage({ params }: Props) {
     zoneRange,
     nearbyBoroughs,
   } = data;
+
+  const councilTax = councilTaxForBorough(name);
+  const councilTaxStanding = bandDStanding(name);
 
   const topLifestyleCategories = (
     Object.entries(avgLifestyle) as [keyof typeof LIFESTYLE_LABELS, number][]
@@ -93,6 +106,18 @@ export default async function BoroughPage({ params }: Props) {
           text: `${name} covers transport ${zoneRange.length > 1 ? "zones" : "zone"} ${zoneRange.join(" to ")}.`,
         },
       },
+      ...(councilTax
+        ? [
+            {
+              "@type": "Question",
+              name: `How much is council tax in ${name}?`,
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: `Council tax in ${name} is ${formatPounds(councilTax.bandDGbp)} a year at Band D for ${COUNCIL_TAX_YEAR}, including the ${formatPounds(councilTax.glaPreceptGbp)} Greater London Authority precept. That makes it ${councilTaxStanding}, ranking ${councilTax.rank} of ${councilTax.totalRanked} boroughs from cheapest to most expensive. Band A is £${councilTax.bands[0].annualGbp.toLocaleString()} and Band H is £${councilTax.bands[7].annualGbp.toLocaleString()}.`,
+              },
+            },
+          ]
+        : []),
       {
         "@type": "Question",
         name: `What are the best neighbourhoods in ${name}?`,
@@ -203,6 +228,84 @@ export default async function BoroughPage({ params }: Props) {
               ))}
             </div>
           </section>
+
+          {/* Council tax */}
+          {councilTax && (
+            <section className="mb-12">
+              <h2 className="text-xl font-semibold mb-4">
+                Council tax in {name}
+              </h2>
+              <p className="text-slate-300 mb-4">
+                A Band D property in {name} pays{" "}
+                <strong className="text-white">
+                  {formatPounds(councilTax.bandDGbp)}
+                </strong>{" "}
+                a year for {COUNCIL_TAX_YEAR} — {councilTaxStanding}, ranking{" "}
+                {councilTax.rank} of {councilTax.totalRanked} London boroughs
+                from cheapest to most expensive. That figure includes the{" "}
+                {formatPounds(councilTax.glaPreceptGbp)}{" "}
+                Greater London Authority precept, which is the same everywhere
+                in London and
+                funds the Mayor&apos;s office, TfL, the Metropolitan Police
+                and the London Fire Brigade. {name}&apos;s own element is{" "}
+                {formatPounds(councilTax.boroughElementGbp)}.
+              </p>
+
+              <div className="overflow-x-auto rounded-lg border border-slate-800">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-left text-slate-400">
+                      <th className="px-4 py-3 font-medium">Band</th>
+                      <th className="px-4 py-3 font-medium">1991 value</th>
+                      <th className="px-4 py-3 font-medium text-right">
+                        Per year
+                      </th>
+                      <th className="px-4 py-3 font-medium text-right">
+                        Per month
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {councilTax.bands.map((b) => (
+                      <tr
+                        key={b.band}
+                        className={
+                          b.band === "D"
+                            ? "border-b border-slate-800/50 bg-slate-900/60"
+                            : "border-b border-slate-800/50"
+                        }
+                      >
+                        <td className="px-4 py-2.5 font-semibold">{b.band}</td>
+                        <td className="px-4 py-2.5 text-slate-400">
+                          {b.valueRange}
+                        </td>
+                        <td className="px-4 py-2.5 text-right tabular-nums">
+                          £{b.annualGbp.toLocaleString()}
+                        </td>
+                        <td className="px-4 py-2.5 text-right tabular-nums text-slate-300">
+                          £{b.monthlyOverTenGbp.toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <p className="mt-3 text-xs text-slate-500">
+                Monthly figures assume the 10 instalments most councils bill by
+                default. Bands are based on 1991 property values. If you live
+                alone you can claim a 25% single-person discount, and full-time
+                students are exempt.{" "}
+                <Link
+                  href="/guides/london-council-tax-explained"
+                  className="underline underline-offset-2 hover:text-slate-300"
+                >
+                  How council tax works in London
+                </Link>
+                .
+              </p>
+            </section>
+          )}
 
           {/* Lifestyle profile */}
           <section className="mb-12">

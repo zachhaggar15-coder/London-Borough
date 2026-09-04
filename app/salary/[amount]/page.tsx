@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  getAllNeighbourhoodSlugs,
   SALARY_LEVELS,
   getSalaryPageData,
   SITE_URL,
@@ -59,6 +60,12 @@ export default async function SalaryPage({ params }: Props) {
   // On lower salaries a whole one-bed is out of reach everywhere we track, so
   // the page leads with room-shares rather than rendering an empty guide.
   const leadWithRooms = comfortable.length === 0;
+  // The priciest areas the budget now reaches — the actual new information on
+  // a high salary page, where the cheapest areas are not interesting.
+  const priciestInReach = [...comfortable]
+    .sort((a, b) => b.oneBedRent - a.oneBedRent)
+    .slice(0, 3);
+  const trackedAreaCount = getAllNeighbourhoodSlugs().length;
   const cheapestRoom = roomShare[0] ?? null;
   const salaryDecisionGroups = [
     {
@@ -239,10 +246,12 @@ export default async function SalaryPage({ params }: Props) {
               What £{budget35.toLocaleString()}/month buys in London
             </h2>
             <p className="text-slate-300 leading-relaxed">
-              {budget35 >= 2200
-                ? `At £${budget35.toLocaleString()}/month you have access to most of inner London — Zones 1 and 2. You can afford 1-bed flats in competitive areas like ${comfortable.slice(0, 2).map((n) => n.name).join(" and ")} without stretching.`
-                : budget35 >= 1700
-                ? `At £${budget35.toLocaleString()}/month you can comfortably rent a 1-bed flat in many Zone 2–3 areas. You'll need to look at areas like ${comfortable.slice(0, 3).map((n) => n.name).join(", ")} for decent options.`
+              {budget35 >= 2400 && priciestInReach.length > 0
+                ? `At £${budget35.toLocaleString()}/month affordability has stopped being the constraint: a one-bed fits inside 35% of your take-home in ${comfortable.length} of the ${trackedAreaCount} areas we track, including the most expensive — ${priciestInReach.map((n) => n.name).join(", ")}. From here the question is which part of London you actually want to live in, not what you can reach.`
+                : budget35 >= 2200 && priciestInReach.length > 0
+                ? `At £${budget35.toLocaleString()}/month a one-bed fits inside 35% of your take-home in ${comfortable.length} of the ${trackedAreaCount} areas we track, which covers most of inner London. The priciest areas now in reach are ${priciestInReach.map((n) => n.name).join(", ")} — beyond those you would be stretching past the guideline.`
+                : budget35 >= 1700 && priciestInReach.length > 0
+                ? `At £${budget35.toLocaleString()}/month you can rent a one-bed across ${comfortable.length} of the ${trackedAreaCount} areas we track, mostly in Zones 2 to 3. ${priciestInReach.map((n) => n.name).join(", ")} sit at the top of what fits, and the cheaper end gives you room to save.`
                 : budget35 >= 1400
                 ? `At £${budget35.toLocaleString()}/month your 1-bed options are mostly in Zones 3–4. ${comfortable.slice(0, 2).map((n) => n.name).join(" and ")} are good starting points.`
                 : cheapestOneBed

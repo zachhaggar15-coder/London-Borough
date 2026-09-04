@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { absoluteUrl, getIndexableRoutes } from "@/lib/seo-data";
 
-export const dynamic = "force-dynamic";
+// Deterministic: every entry carries a real content-review date, so the
+// sitemap can be statically generated and refreshed on deploy.
+export const revalidate = 86400;
 
 function sitemapEntry(
   path: string,
@@ -20,9 +22,8 @@ function sitemapEntry(
 }
 
 export async function GET() {
-  const lastmod = new Date().toISOString().split("T")[0];
   const entries = getIndexableRoutes().map((entry) =>
-    sitemapEntry(entry.path, entry.priority, entry.changefreq, lastmod),
+    sitemapEntry(entry.path, entry.priority, entry.changefreq, entry.lastmod),
   );
   const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${entries.join("")}</urlset>`;
 

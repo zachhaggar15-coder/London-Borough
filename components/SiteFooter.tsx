@@ -3,6 +3,7 @@ import CookieSettingsLink from "@/components/CookieSettingsLink";
 import { CONTACT_EMAIL, SITE_NAME } from "@/lib/site-config";
 
 const HUB_LINKS = [
+  { href: "/guides", label: "Guides" },
   { href: "/neighbourhoods", label: "Neighbourhoods" },
   { href: "/compare", label: "Compare" },
   { href: "/commute", label: "Commute" },
@@ -12,6 +13,8 @@ const HUB_LINKS = [
 ];
 
 const MORE_LINKS = [
+  { href: "/guides/how-much-do-i-need-to-earn-to-live-in-london", label: "What salary do you need?" },
+  { href: "/guides/london-council-tax-explained", label: "Council tax by borough" },
   { href: "/lifestyle/expensive", label: "Cheapest & priciest areas" },
   { href: "/lifestyle/best-for-food", label: "Best for food" },
   { href: "/london-rent-index", label: "London rent index" },

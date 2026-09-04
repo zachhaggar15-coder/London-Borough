@@ -15,6 +15,10 @@ import {
   rentRegionForArea,
 } from "@/lib/data/rent-market";
 import { similarAreasFor, type SimilarAreaGroups } from "@/lib/similarity";
+import { CONTENT_YEAR, POLICY_LAST_UPDATED } from "@/lib/site-config";
+import { RENT_MARKET_REVIEW_AS_OF } from "@/lib/data/rent-market";
+import { COUNCIL_TAX_AS_OF } from "@/lib/data/council-tax";
+import { GUIDES, guidesLastUpdated } from "@/lib/data/guides";
 import type {
   CommuteEstimateSource,
   Neighbourhood,
@@ -29,7 +33,34 @@ export type IndexableRoute = {
   path: string;
   priority: number;
   changefreq: "daily" | "weekly" | "monthly" | "yearly";
+  /**
+   * ISO date this route's underlying content last actually changed.
+   *
+   * Deliberately NOT the build date. Stamping every URL with "today" on
+   * every request — which this sitemap used to do — teaches Google that
+   * our lastmod carries no information, and the signal is then ignored
+   * exactly when a real rent revision needs picking up.
+   */
+  lastmod: string;
 };
+
+/**
+ * Content review dates that drive sitemap lastmod. Each cluster points at
+ * the dated dataset or copy revision it is actually derived from.
+ */
+export const CONTENT_REVIEW_DATES = {
+  /** Rent figures — the whole rent-derived surface moves with this. */
+  rent: RENT_MARKET_REVIEW_AS_OF,
+  /** Council tax figures, which the borough pages render. */
+  councilTax: COUNCIL_TAX_AS_OF,
+  /** Privacy / terms / about copy. */
+  policy: POLICY_LAST_UPDATED,
+} as const;
+
+/** The later of two ISO dates. */
+function laterDate(a: string, b: string): string {
+  return a >= b ? a : b;
+}
 
 export function absoluteUrl(path: string): string {
   if (path === "/") return SITE_URL;
@@ -50,50 +81,68 @@ export function roomRentFor(n: Neighbourhood): number {
 }
 
 export function getIndexableRoutes(): IndexableRoute[] {
+  const { rent, councilTax, policy } = CONTENT_REVIEW_DATES;
+  // Borough pages render both rent and council tax, so they move with
+  // whichever dataset was reviewed most recently.
+  const borough = laterDate(rent, councilTax);
+
   return [
-    { path: "/", priority: 1.0, changefreq: "weekly" },
-    { path: "/neighbourhoods", priority: 0.9, changefreq: "weekly" },
-    { path: "/boroughs", priority: 0.8, changefreq: "weekly" },
-    { path: "/commute", priority: 0.8, changefreq: "weekly" },
-    { path: "/compare", priority: 0.75, changefreq: "weekly" },
-    { path: "/couples", priority: 0.8, changefreq: "weekly" },
-    { path: "/lifestyle", priority: 0.8, changefreq: "weekly" },
-    { path: "/london-rent-index", priority: 0.7, changefreq: "monthly" },
-    { path: "/methodology", priority: 0.75, changefreq: "monthly" },
-    { path: "/salary", priority: 0.7, changefreq: "weekly" },
-    { path: "/about", priority: 0.6, changefreq: "yearly" },
-    { path: "/contact", priority: 0.6, changefreq: "yearly" },
-    { path: "/privacy", priority: 0.3, changefreq: "yearly" },
-    { path: "/terms", priority: 0.3, changefreq: "yearly" },
+    { path: "/", priority: 1.0, changefreq: "weekly", lastmod: rent },
+    { path: "/neighbourhoods", priority: 0.9, changefreq: "weekly", lastmod: rent },
+    { path: "/boroughs", priority: 0.8, changefreq: "weekly", lastmod: borough },
+    { path: "/commute", priority: 0.8, changefreq: "weekly", lastmod: rent },
+    { path: "/compare", priority: 0.75, changefreq: "weekly", lastmod: rent },
+    { path: "/couples", priority: 0.8, changefreq: "weekly", lastmod: rent },
+    { path: "/lifestyle", priority: 0.8, changefreq: "weekly", lastmod: rent },
+    { path: "/guides", priority: 0.85, changefreq: "monthly", lastmod: guidesLastUpdated() },
+    { path: "/london-rent-index", priority: 0.7, changefreq: "monthly", lastmod: rent },
+    { path: "/methodology", priority: 0.75, changefreq: "monthly", lastmod: borough },
+    { path: "/salary", priority: 0.7, changefreq: "weekly", lastmod: rent },
+    { path: "/about", priority: 0.6, changefreq: "yearly", lastmod: policy },
+    { path: "/contact", priority: 0.6, changefreq: "yearly", lastmod: policy },
+    { path: "/privacy", priority: 0.3, changefreq: "yearly", lastmod: policy },
+    { path: "/terms", priority: 0.3, changefreq: "yearly", lastmod: policy },
     ...getAllNeighbourhoodSlugs().map((slug) => ({
       path: `/neighbourhoods/${slug}`,
       priority: 0.9,
       changefreq: "monthly" as const,
+      lastmod: borough,
     })),
     ...getAllBoroughSlugs().map((slug) => ({
       path: `/boroughs/${slug}`,
       priority: 0.8,
       changefreq: "monthly" as const,
+      lastmod: borough,
     })),
     ...getAllCommuteSlugs().map((slug) => ({
       path: `/commute/${slug}`,
       priority: 0.8,
       changefreq: "monthly" as const,
+      lastmod: rent,
     })),
     ...SALARY_LEVELS.map((amount) => ({
       path: `/salary/${amount}`,
       priority: 0.7,
       changefreq: "monthly" as const,
+      lastmod: rent,
     })),
     ...LIFESTYLE_PAGES.map((page) => ({
       path: `/lifestyle/${page.slug}`,
       priority: 0.7,
       changefreq: "monthly" as const,
+      lastmod: rent,
     })),
     ...getIndexableCompareSlugs().map((slug) => ({
       path: `/compare/${slug}`,
       priority: 0.6,
       changefreq: "monthly" as const,
+      lastmod: rent,
+    })),
+    ...GUIDES.map((guide) => ({
+      path: `/guides/${guide.slug}`,
+      priority: 0.8,
+      changefreq: "monthly" as const,
+      lastmod: guide.updated,
     })),
   ];
 }
@@ -431,28 +480,58 @@ function commuteValueTradeOff(
 // ──────────────────────────────────────────────────────────────────
 
 export const SALARY_LEVELS = [
-  25000, 30000, 35000, 40000, 45000, 50000, 60000, 70000, 80000, 100000,
+  25000, 30000, 35000, 40000, 45000, 50000, 55000, 60000, 65000, 70000, 80000,
+  90000, 100000, 120000, 150000,
 ] as const;
 export type SalaryLevel = (typeof SALARY_LEVELS)[number];
 
+// England & Wales income tax and Class 1 employee National Insurance.
+const PERSONAL_ALLOWANCE = 12570;
+const BASIC_CEILING = 50270;
+const ADDITIONAL_THRESHOLD = 125140;
+/** Personal allowance tapers by £1 for every £2 earned above this. */
+const TAPER_START = 100000;
+
+/**
+ * Monthly take-home pay from a gross annual salary.
+ *
+ * Models the personal allowance taper between £100,000 and £125,140 and the
+ * 45% additional rate, both of which matter now that SALARY_LEVELS runs to
+ * £150,000. Between £100k and £125,140 the taper produces an effective
+ * marginal rate of about 60%, which is the single most counter-intuitive
+ * part of the UK system and the reason a £120k salary buys much less extra
+ * rent than the headline suggests.
+ *
+ * Deliberately excludes pension contributions, student loan repayments,
+ * salary sacrifice and Scottish rates. The methodology page says so.
+ */
 export function ukTakeHomeMonthly(grossAnnual: number): number {
-  const pa = 12570;
-  const basicCeiling = 50270;
+  // Personal allowance taper: £1 lost for every £2 above £100,000.
+  const allowance =
+    grossAnnual <= TAPER_START
+      ? PERSONAL_ALLOWANCE
+      : Math.max(0, PERSONAL_ALLOWANCE - (grossAnnual - TAPER_START) / 2);
+
+  const taxable = Math.max(0, grossAnnual - allowance);
+
+  // Band ceilings are measured in taxable income above the allowance, so the
+  // taper correctly pushes more income into the higher bands as it bites.
+  const basicBand = Math.max(0, BASIC_CEILING - PERSONAL_ALLOWANCE);
+  const higherBand = Math.max(0, ADDITIONAL_THRESHOLD - BASIC_CEILING);
 
   let tax = 0;
-  if (grossAnnual > pa) {
-    tax += (Math.min(grossAnnual, basicCeiling) - pa) * 0.2;
-  }
-  if (grossAnnual > basicCeiling) {
-    tax += (grossAnnual - basicCeiling) * 0.4;
-  }
+  tax += Math.min(taxable, basicBand) * 0.2;
+  tax += Math.min(Math.max(taxable - basicBand, 0), higherBand) * 0.4;
+  tax += Math.max(taxable - basicBand - higherBand, 0) * 0.45;
 
+  // NI is unaffected by the allowance taper: 8% to the upper earnings
+  // limit, 2% above it.
   let ni = 0;
-  if (grossAnnual > 12570) {
-    ni += (Math.min(grossAnnual, basicCeiling) - 12570) * 0.08;
+  if (grossAnnual > PERSONAL_ALLOWANCE) {
+    ni += (Math.min(grossAnnual, BASIC_CEILING) - PERSONAL_ALLOWANCE) * 0.08;
   }
-  if (grossAnnual > basicCeiling) {
-    ni += (grossAnnual - basicCeiling) * 0.02;
+  if (grossAnnual > BASIC_CEILING) {
+    ni += (grossAnnual - BASIC_CEILING) * 0.02;
   }
 
   return Math.round((grossAnnual - tax - ni) / 12);
@@ -574,13 +653,19 @@ export type LifestylePageDef = {
   unit?: "score" | "gbp";
   /** Also show a "least" tail (used by the rent ranking for cheapest areas). */
   showLeast?: boolean;
+  /**
+   * Which rent figure to show alongside each area. Defaults to the one-bed,
+   * but the families ranking shows two-beds because that is the number that
+   * actually decides the question for its readers.
+   */
+  rentColumn?: "oneBed" | "twoBed";
 };
 
 export const LIFESTYLE_PAGES: LifestylePageDef[] = [
   {
     slug: "runners",
     h1: "Best London neighbourhoods for runners",
-    metaTitle: "Best London neighbourhoods for runners (2025 guide)",
+    metaTitle: `Best London neighbourhoods for runners (${CONTENT_YEAR} guide)`,
     metaDescription:
       "Green space, parks and runnable streets — the best areas in London for runners, ranked by access to open space and walkability.",
     intro:
@@ -591,7 +676,7 @@ export const LIFESTYLE_PAGES: LifestylePageDef[] = [
   {
     slug: "young-professionals",
     h1: "Best London neighbourhoods for young professionals",
-    metaTitle: "Best London neighbourhoods for young professionals (2025)",
+    metaTitle: `Best London neighbourhoods for young professionals (${CONTENT_YEAR})`,
     metaDescription:
       "Fast commutes, a professional crowd and a good social scene — the best London areas for young professionals, ranked.",
     intro:
@@ -607,7 +692,7 @@ export const LIFESTYLE_PAGES: LifestylePageDef[] = [
   {
     slug: "nightlife",
     h1: "Best London neighbourhoods for nightlife",
-    metaTitle: "Best London neighbourhoods for nightlife (2025 guide)",
+    metaTitle: `Best London neighbourhoods for nightlife (${CONTENT_YEAR} guide)`,
     metaDescription:
       "Bars, clubs, live music and late-night food — the best areas in London for nightlife, ranked by scene quality.",
     intro:
@@ -619,7 +704,7 @@ export const LIFESTYLE_PAGES: LifestylePageDef[] = [
   {
     slug: "foodies",
     h1: "Best London neighbourhoods for food lovers",
-    metaTitle: "Best London neighbourhoods for foodies (2025 guide)",
+    metaTitle: `Best London neighbourhoods for foodies (${CONTENT_YEAR} guide)`,
     metaDescription:
       "Independent restaurants, food markets, and café culture — the best areas in London for food lovers, ranked.",
     intro:
@@ -631,7 +716,7 @@ export const LIFESTYLE_PAGES: LifestylePageDef[] = [
   {
     slug: "fitness",
     h1: "Best London neighbourhoods for fitness",
-    metaTitle: "Best London neighbourhoods for fitness (2025 guide)",
+    metaTitle: `Best London neighbourhoods for fitness (${CONTENT_YEAR} guide)`,
     metaDescription:
       "Gyms, parks, green space and healthy infrastructure — the best areas in London for fitness-focused people.",
     intro:
@@ -642,7 +727,7 @@ export const LIFESTYLE_PAGES: LifestylePageDef[] = [
   {
     slug: "social",
     h1: "Best London neighbourhoods for a social life",
-    metaTitle: "Best London neighbourhoods for a social life (2025)",
+    metaTitle: `Best London neighbourhoods for a social life (${CONTENT_YEAR})`,
     metaDescription:
       "Cafés, bars, young professionals and things happening — the best London areas for people who value an active social life.",
     intro:
@@ -652,7 +737,7 @@ export const LIFESTYLE_PAGES: LifestylePageDef[] = [
   {
     slug: "chill",
     h1: "Best quiet London neighbourhoods",
-    metaTitle: "Best quiet London neighbourhoods to live in (2025 guide)",
+    metaTitle: `Best quiet London neighbourhoods to live in (${CONTENT_YEAR} guide)`,
     metaDescription:
       "Green, safe and genuinely calm — the best quiet areas in London to live, for people who want peace after a long day.",
     intro:
@@ -662,7 +747,7 @@ export const LIFESTYLE_PAGES: LifestylePageDef[] = [
   {
     slug: "balanced",
     h1: "Best all-round London neighbourhoods",
-    metaTitle: "Best all-round London neighbourhoods (2025 guide)",
+    metaTitle: `Best all-round London neighbourhoods (${CONTENT_YEAR} guide)`,
     metaDescription:
       "No extreme trade-offs — the most well-rounded places to live in London, scoring well across commute, green space, food, safety and social life.",
     intro:
@@ -670,9 +755,26 @@ export const LIFESTYLE_PAGES: LifestylePageDef[] = [
     scoreFn: PERSONALITY_SCORERS.balanced,
   },
   {
+    slug: "families",
+    h1: "Best London neighbourhoods for families",
+    metaTitle: `Best London neighbourhoods for families (${CONTENT_YEAR})`,
+    metaDescription:
+      "Green space, quieter streets and good transport — the best areas in London for families, ranked, with two-bed rents and the trade-offs for each.",
+    intro:
+      "Families want different things from London than the young professionals most area guides are written for: outdoor space within walking distance, streets that are calm enough to matter, and a commute that still works when you are doing it around a nursery run. These areas rank highest on green space, safety and walkability, while keeping transport usable. Two-bed rents are shown for each, because that is the number that actually decides it.",
+    scoreFn: (s) =>
+      (s.greenSpace * 0.3 +
+        s.safety * 0.28 +
+        s.walkability * 0.17 +
+        s.connectivity * 0.15 +
+        (10 - s.livelyVsQuiet) * 0.1) /
+      10,
+    rentColumn: "twoBed",
+  },
+  {
     slug: "best-for-food",
     h1: "Best areas for food in London",
-    metaTitle: "Best areas for food in London (2026 guide)",
+    metaTitle: `Best areas for food in London (${CONTENT_YEAR} guide)`,
     metaDescription:
       "The best London neighbourhoods for eating out, ranked by restaurant and market strength — from destination food scenes to great everyday café streets.",
     intro:
@@ -684,7 +786,7 @@ export const LIFESTYLE_PAGES: LifestylePageDef[] = [
   {
     slug: "expensive",
     h1: "Most and least expensive London neighbourhoods",
-    metaTitle: "Most & least expensive London neighbourhoods (2026)",
+    metaTitle: `Most & least expensive London neighbourhoods (${CONTENT_YEAR})`,
     metaDescription:
       "London neighbourhoods ranked by median one-bed rent — the most expensive areas and the cheapest, with the real monthly figures behind each.",
     intro:
@@ -749,6 +851,35 @@ export function londonRentMedians(): {
     (a, b) => a - b,
   );
   return { oneBed: median(one), twoBed: median(two), count: NEIGHBOURHOODS.length };
+}
+
+/**
+ * Where a lifestyle score sits among all tracked areas.
+ *
+ * Deliberately not a percentile. These are coarse 0–10 review scores and
+ * several dimensions only use part of the range — safety, for instance,
+ * spans 5 to 9 — so a percentile reports "above 0% of areas" for anything
+ * on the floor, which reads as a damning verdict on what is really a
+ * six-way tie. Counting ties explicitly is both honest and more useful.
+ */
+export function lifestyleStanding(
+  key: keyof LifestyleScores,
+  value: number,
+): {
+  min: number;
+  max: number;
+  sameOrLower: number;
+  higher: number;
+  total: number;
+} {
+  const all = NEIGHBOURHOODS.map((n) => n.lifestyle[key]);
+  return {
+    min: Math.min(...all),
+    max: Math.max(...all),
+    sameOrLower: all.filter((v) => v <= value).length,
+    higher: all.filter((v) => v > value).length,
+    total: all.length,
+  };
 }
 
 /** Percentile (0–100) of a one-bed rent among all tracked areas; higher = pricier. */
