@@ -19,12 +19,17 @@ import {
   TRAVEL_BAND_DESCRIPTIONS,
   TRAVEL_BAND_LABELS,
 } from "@/lib/manchester/travel-band";
+import { manchesterGuidesByRecency } from "@/lib/manchester/data/guides";
 import { AreaCard, DataNote, PageShell, Section } from "@/components/manchester/Pieces";
 
 const CITY = CITIES.manchester;
 
 export const metadata: Metadata = {
-  title: "Where to live in Greater Manchester",
+  // `absolute` because a layout's title template applies to its child
+  // segments and not to the page sitting alongside it. Without this the
+  // hub renders "Where to live in Greater Manchester | Where in London",
+  // which is the one title on the whole section that would say London.
+  title: { absolute: `Where to live in Greater Manchester | ${CITY.brand}` },
   description:
     "Find the right Greater Manchester neighbourhood by commute, rent and how you want to live. 57 areas across all ten boroughs, with reviewed rents and journey times.",
   alternates: { canonical: manchesterUrl("/") },
@@ -228,6 +233,24 @@ export default function ManchesterHomePage() {
           >
             All {areaCount} areas →
           </Link>
+        </Section>
+
+        <Section
+          title="Before you pick an area"
+          lead="What it costs, how renting works here, how the transport actually behaves, and what changes if you are moving up from London."
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            {manchesterGuidesByRecency().map((guide) => (
+              <Link
+                key={guide.slug}
+                href={manchesterPath(`/guides/${guide.slug}`)}
+                className="rounded-lg border border-slate-800 bg-slate-900 px-4 py-3 transition-colors hover:border-slate-600"
+              >
+                <p className="text-sm font-medium">{guide.h1}</p>
+                <p className="mt-1 text-xs text-slate-400">{guide.summary}</p>
+              </Link>
+            ))}
+          </div>
         </Section>
 
         <Section

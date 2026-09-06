@@ -12,6 +12,23 @@ const HUB_LINKS = [
   { href: "/boroughs", label: "Boroughs" },
 ];
 
+/**
+ * The Manchester hubs, kept as their own row rather than merged into the
+ * list above. Mixing "/neighbourhoods" and "/manchester/neighbourhoods"
+ * into one nav would give two adjacent links with identical labels and
+ * different destinations, which is confusing to read and worse to
+ * navigate with a screen reader.
+ */
+const MANCHESTER_LINKS = [
+  { href: "/manchester", label: "Manchester" },
+  { href: "/manchester/neighbourhoods", label: "Areas" },
+  { href: "/manchester/boroughs", label: "Boroughs" },
+  { href: "/manchester/commute", label: "Commute" },
+  { href: "/manchester/lifestyle", label: "Lifestyle" },
+  { href: "/manchester/guides", label: "Guides" },
+  { href: "/manchester/rent-index", label: "Rent index" },
+];
+
 const MORE_LINKS = [
   { href: "/guides/how-much-do-i-need-to-earn-to-live-in-london", label: "What salary do you need?" },
   { href: "/guides/london-council-tax-explained", label: "Council tax by borough" },
@@ -32,7 +49,8 @@ export default function SiteFooter() {
   return (
     <footer className="border-t border-slate-800 bg-slate-950 px-6 py-10">
       <div className="mx-auto flex max-w-5xl flex-col gap-4 text-sm text-slate-400">
-        <nav aria-label="Guides" className="flex flex-wrap gap-x-4 gap-y-2">
+        <nav aria-label="London guides" className="flex flex-wrap gap-x-4 gap-y-2">
+          <span className="text-slate-500">London:</span>
           {HUB_LINKS.map((link) => (
             <Link
               key={link.href}
@@ -45,7 +63,23 @@ export default function SiteFooter() {
         </nav>
 
         <nav
-          aria-label="More guides"
+          aria-label="Manchester guides"
+          className="flex flex-wrap gap-x-4 gap-y-2"
+        >
+          <span className="text-slate-500">Manchester:</span>
+          {MANCHESTER_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="transition-colors hover:text-white"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        <nav
+          aria-label="More London guides"
           className="flex flex-wrap gap-x-4 gap-y-2 text-slate-500"
         >
           {MORE_LINKS.map((link) => (

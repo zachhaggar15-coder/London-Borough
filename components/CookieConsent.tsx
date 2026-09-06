@@ -114,11 +114,16 @@ export default function CookieConsent() {
     >
       <div className="mx-auto flex max-w-5xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="max-w-2xl">
+          {/*
+            Deliberately unbranded. Consent is stored once and applies to
+            both the London and Manchester sections, so naming either one
+            here would misdescribe what the visitor is agreeing to.
+          */}
           <h2
             id="cookie-consent-title"
             className="mb-1 text-sm font-semibold text-slate-100"
           >
-            Cookies on Where in London
+            Cookies on this site
           </h2>
           <p className="text-sm text-slate-300">
             This site is free and funded by advertising. With your permission,

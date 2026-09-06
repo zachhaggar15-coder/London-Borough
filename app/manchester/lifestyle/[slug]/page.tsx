@@ -8,7 +8,6 @@ import {
   manchesterUrl,
   rankByLifestyle,
 } from "@/lib/manchester/seo-data";
-import { boroughSlug } from "@/lib/manchester/boroughs";
 import { TRAVEL_BAND_LABELS } from "@/lib/manchester/travel-band";
 import {
   Breadcrumbs,

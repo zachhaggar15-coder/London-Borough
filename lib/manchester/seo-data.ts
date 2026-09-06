@@ -23,6 +23,10 @@ import {
   ROOM_DISTRICT_AVERAGE_GBP,
 } from "@/lib/manchester/data/rent-market";
 import { MANCHESTER_COUNCIL_TAX_AS_OF, BAND_D_BY_BOROUGH } from "@/lib/manchester/data/council-tax";
+import {
+  MANCHESTER_GUIDES,
+  manchesterGuidesLastUpdated,
+} from "@/lib/manchester/data/guides";
 import { travelBandRank, type TravelBand } from "@/lib/manchester/travel-band";
 import { PERSONALITY_SCORERS } from "@/lib/personalities";
 import type { ManchesterNeighbourhood } from "@/lib/manchester/types";
@@ -33,12 +37,17 @@ const CITY = CITIES.manchester;
 /**
  * Whether Manchester URLs are advertised in sitemap.xml.
  *
- * Off until the section is complete. Submitting a hundred and fifty
- * half-populated URLs to a site that has twice been through an AdSense
- * "low value content" review is a way to fail that review a third time;
- * the pages are crawlable meanwhile, just not pushed.
+ * Held off through the build so the section could ship incrementally
+ * without pushing half-populated URLs at Google — this site has twice
+ * been through an AdSense "low value content" review, and a cluster of
+ * empty pages is how you fail one a third time.
+ *
+ * Now on: every cluster in the launch set is complete, every area has
+ * its own written profile, and the comparison cluster is capped at pairs
+ * that answer a real question rather than every combination that
+ * happens to typecheck.
  */
-export const MANCHESTER_IN_SITEMAP = false;
+export const MANCHESTER_IN_SITEMAP = true;
 
 export function manchesterPath(path: string): string {
   return path === "/" ? CITY.basePath : `${CITY.basePath}${path}`;
@@ -51,6 +60,7 @@ export function manchesterUrl(path: string): string {
 export const MANCHESTER_CONTENT_REVIEW_DATES = {
   rent: MANCHESTER_RENT_REVIEW_AS_OF,
   councilTax: MANCHESTER_COUNCIL_TAX_AS_OF,
+  guides: manchesterGuidesLastUpdated(),
 } as const;
 
 // ──────────────────────────────────────────────────────────────────
@@ -580,7 +590,7 @@ export type ManchesterRoute = {
 export function getManchesterIndexableRoutes(): ManchesterRoute[] {
   if (!MANCHESTER_IN_SITEMAP) return [];
 
-  const { rent, councilTax } = MANCHESTER_CONTENT_REVIEW_DATES;
+  const { rent, councilTax, guides } = MANCHESTER_CONTENT_REVIEW_DATES;
   const borough = rent >= councilTax ? rent : councilTax;
 
   return [
@@ -590,6 +600,7 @@ export function getManchesterIndexableRoutes(): ManchesterRoute[] {
     { path: manchesterPath("/commute"), priority: 0.8, changefreq: "weekly", lastmod: rent },
     { path: manchesterPath("/compare"), priority: 0.7, changefreq: "weekly", lastmod: rent },
     { path: manchesterPath("/lifestyle"), priority: 0.8, changefreq: "weekly", lastmod: rent },
+    { path: manchesterPath("/guides"), priority: 0.8, changefreq: "monthly", lastmod: guides },
     { path: manchesterPath("/rent-index"), priority: 0.7, changefreq: "monthly", lastmod: rent },
     { path: manchesterPath("/methodology"), priority: 0.6, changefreq: "monthly", lastmod: borough },
     ...getAllManchesterSlugs().map((slug) => ({
@@ -621,6 +632,12 @@ export function getManchesterIndexableRoutes(): ManchesterRoute[] {
       priority: 0.6,
       changefreq: "monthly" as const,
       lastmod: rent,
+    })),
+    ...MANCHESTER_GUIDES.map((guide) => ({
+      path: manchesterPath(`/guides/${guide.slug}`),
+      priority: 0.8,
+      changefreq: "monthly" as const,
+      lastmod: guide.updated,
     })),
   ];
 }
