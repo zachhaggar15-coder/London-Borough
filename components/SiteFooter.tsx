@@ -27,6 +27,7 @@ const MANCHESTER_LINKS = [
   { href: "/manchester/lifestyle", label: "Lifestyle" },
   { href: "/manchester/guides", label: "Guides" },
   { href: "/manchester/salary", label: "Salary" },
+  { href: "/manchester/couples", label: "Couples" },
   { href: "/manchester/rent-index", label: "Rent index" },
 ];
 

@@ -35,11 +35,10 @@ export default function ManchesterLifestyleIndexPage() {
       </h1>
       <p className="mt-4 max-w-3xl text-lg leading-relaxed text-slate-300">
         Eight cuts through the same ten lifestyle measures, each weighted for a
-        different priority. They are chosen for what Greater Manchester
-        actually offers rather than lifted from the London set: &ldquo;closest
-        to open country&rdquo; is a real question here and close to meaningless
-        in London, and &ldquo;can I live here without a car&rdquo; matters in a
-        way it does not somewhere with an underground network.
+        different priority. They are chosen for what this region actually
+        offers: with moorland on three sides, how close you are to open country
+        is a real question here, and with a radial network and no orbital
+        routes, so is whether you can live somewhere without a car.
       </p>
 
       <Section title="Pick a priority">

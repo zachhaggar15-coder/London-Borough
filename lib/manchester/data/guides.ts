@@ -1,17 +1,16 @@
 /**
  * Greater Manchester editorial guides.
  *
- * Same rules as the London set in lib/data/guides.ts: written, not
+ * Same rules as the guides in lib/data/guides.ts: written, not
  * templated; every checkable figure carries a source and a review date;
  * legal claims are England-only and say so; and if a guide would only
  * restate a neighbourhood page, it does not get written.
  *
- * The one addition for Manchester is a rule about comparison. A great
- * many people arriving here are arriving from London, and the honest
- * comparison is not "everything is cheaper" — rent is dramatically
- * cheaper, council tax is dearer, and the transport network is a
- * different shape rather than a smaller version of the same shape.
- * Where a guide makes that comparison it makes all three points.
+ * The one addition for Manchester: these guides stand on their own and
+ * do not reach for another city to explain this one. A reader here wants
+ * to know what Greater Manchester costs and how it works, not how it
+ * scores against somewhere they may never have lived. Explain the region
+ * on its own terms or not at all.
  */
 
 export type ManchesterGuideSection = {
@@ -75,7 +74,7 @@ export const MANCHESTER_GUIDES: ManchesterGuide[] = [
         paragraphs: [
           "The usual guidance is to keep rent under about a third of take-home. This site uses 35% as its default, which is roughly the point where finances stop feeling disciplined and start feeling tight.",
           "It is a ceiling, not a target. At 35% you can absorb a boiler failure, a dentist or a month between jobs. At 45% you are one unexpected bill away from a problem.",
-          "The reason this rule is worth taking seriously in Greater Manchester specifically is that it is achievable here. In London it functions as an aspiration most renters cannot meet; here, on a decent salary, it is a genuine constraint you can hold yourself to.",
+          "The reason this rule is worth taking seriously here is that it is achievable. On a decent Greater Manchester salary, 35% is a constraint you can hold yourself to rather than a target you miss every month, which is what makes it useful as a planning number at all.",
         ],
       },
       {
@@ -90,10 +89,10 @@ export const MANCHESTER_GUIDES: ManchesterGuide[] = [
       {
         heading: "What you need to live alone",
         paragraphs: [
-          "This is where the number moves, though less brutally than it does in London. A one-bed across the areas covered here ranges from about £550 in Wigan and Leigh to £1,250 in the city centre, with the median around £800.",
+          "This is where the number moves. A one-bed across the areas covered here ranges from about £550 in Wigan and Leigh to £1,250 in the city centre, with the median around £800.",
           "Unlike a room, you then pay council tax, energy, water, broadband and every standing charge yourself. Realistically that is £220 to £320 a month on top, and Greater Manchester council tax is not cheap — every borough charges above £2,150 at Band D, though most flats sit in bands A to C where the bill is meaningfully lower.",
           "So a £900 one-bed is really closer to £1,180 of committed monthly housing cost. At 35% of take-home that implies about £3,370 a month in the bank, which is roughly a £53,000 salary. Relax to 40% and it drops to about £45,000.",
-          "For the city centre, a £1,250 one-bed plus bills is around £1,550 committed, implying roughly £4,430 of take-home at 35% — a salary north of £73,000. Central Manchester is not cheap. It is cheaper than central London by a wide margin, which is a different claim.",
+          "For the city centre, a £1,250 one-bed plus bills is around £1,550 committed, implying roughly £4,430 of take-home at 35% — a salary north of £73,000. Living alone in the middle of the city is a genuinely expensive proposition, and the gap between that and a one-bed in Levenshulme is most of a second salary band.",
         ],
       },
       {
@@ -130,9 +129,9 @@ export const MANCHESTER_GUIDES: ManchesterGuide[] = [
           "Around £45,000 to £53,000 for a typical one-bed outside the centre, depending on whether you hold to 35% or 40% of take-home. For a city-centre one-bed at around £1,250 a month, closer to £73,000.",
       },
       {
-        question: "Is Manchester cheaper than London?",
+        question: "Is it cheaper to share or to live alone in Manchester?",
         answer:
-          "On rent, substantially — a one-bed in central Manchester costs roughly what an outer-zone London one-bed does. On council tax, no: every Greater Manchester borough charges more at Band D than several inner London boroughs. On transport, it depends entirely on whether you can live somewhere you can walk or bus from.",
+          "Sharing, by more than the rent difference suggests. A room typically includes bills and often council tax — worth £120 to £200 a month you are not separately paying — where a one-bed adds £220 to £320 on top of the rent. The gap between a £600 room and an £800 one-bed is closer to £520 a month in practice than the £200 on the headline figures.",
       },
     ],
     related: [
@@ -265,7 +264,7 @@ export const MANCHESTER_GUIDES: ManchesterGuide[] = [
     updated: PUBLISHED,
     readMinutes: 7,
     intro: [
-      "Council tax is the cost people most reliably forget when they budget a move, and in Greater Manchester it is the one that most often surprises them. The rent is dramatically lower than in London or the South East. The council tax is not lower at all — on a Band D comparison it is higher than a good deal of inner London.",
+      "Council tax is the cost people most reliably forget when they budget a move, and in Greater Manchester it is the one that most often surprises them. Every one of the ten boroughs charges over £2,150 at Band D, and the gap between the cheapest and the dearest runs to more than £460 a year.",
       "This guide explains where the number comes from, what the Greater Manchester element pays for, and the reliefs that go unclaimed.",
     ],
     sections: [
@@ -281,7 +280,7 @@ export const MANCHESTER_GUIDES: ManchesterGuide[] = [
         heading: "What the Greater Manchester element pays for",
         paragraphs: [
           "Every household in the ten boroughs pays a Mayoral precept on top of their council's own charge. For 2026/27 it is £439.25 at Band D, and it splits into two parts: £285.30 for the Mayoral Police and Crime Commissioner, and £153.95 for general functions, of which roughly £92.20 funds Greater Manchester Fire and Rescue and the rest covers the Mayor's other responsibilities including transport.",
-          "London handles the same idea differently, as a single Greater London Authority precept covering the Mayor, TfL, the Met and the fire service. The practical effect is the same — a region-wide charge on top of a borough charge — but the two are not directly comparable line by line, which is worth knowing if you are trying to work out whether you will be better or worse off after a move.",
+          "The precept is identical in all ten boroughs, so it is not what makes one dearer than another. Every pound of difference between Wigan and Stockport comes from the council’s own element and its adult social care precept, which is what makes comparing boroughs on the total a fair comparison.",
         ],
         dataBlock: "council-tax-boroughs",
       },
@@ -289,7 +288,7 @@ export const MANCHESTER_GUIDES: ManchesterGuide[] = [
         heading: "Why the bills are high",
         paragraphs: [
           "Council tax income depends on the tax base — the number and value-band mix of properties in an area. Boroughs with a large share of low-band housing raise less per household at any given rate, and have to set a higher rate to fund the same services.",
-          "That is most of the explanation for why the Greater Manchester figures sit where they do, and why the pattern is close to the inverse of London's. Westminster and Wandsworth can charge around £1,000 at Band D because they sit on enormous high-band tax bases. Oldham and Rochdale cannot.",
+          "That is most of the explanation for why the Greater Manchester figures sit where they do. Oldham and Rochdale have a housing stock weighted heavily towards the lower bands, so each household contributes less at any given rate and the rate has to be higher to fund the same services. Trafford, with far more high-band property, can charge less and raise more.",
           "The practical consequence for anyone moving: the borough with the cheapest rent is not necessarily the cheapest place to live once the bill arrives, and the gap between the highest and lowest of the ten runs to well over £400 a year at Band D.",
         ],
       },
@@ -328,9 +327,9 @@ export const MANCHESTER_GUIDES: ManchesterGuide[] = [
           "A region-wide charge every household in the ten boroughs pays on top of their council's own element. For 2026/27 it is £439.25 at Band D — £285.30 for policing and £153.95 for general functions including fire and rescue and transport.",
       },
       {
-        question: "Is council tax cheaper in Manchester than London?",
+        question: "Why is council tax higher in the cheaper boroughs?",
         answer:
-          "No. Every Greater Manchester borough charges more at Band D than Westminster, Wandsworth, Hammersmith & Fulham or Kensington & Chelsea. The rent saving on a move north is large and real; the council tax saving does not exist.",
+          "Because council tax income depends on the value-band mix of the housing stock, not on what rents cost today. Boroughs with mostly band A to C property raise less per household at any given rate, so the rate is set higher. It is why Oldham and Rochdale charge more at Band D than Trafford does.",
       },
       {
         question: "Do I pay council tax if I live in a house share?",
@@ -364,8 +363,8 @@ export const MANCHESTER_GUIDES: ManchesterGuide[] = [
     updated: PUBLISHED,
     readMinutes: 8,
     intro: [
-      "Greater Manchester's public transport is better than its reputation and worse than a newcomer from London expects, and the reason for both is the same: it is a radial network with almost no orbital capacity.",
-      "Getting into the middle from anywhere is straightforward. Getting from one suburb to another suburb is frequently slower by public transport than by bicycle, and sometimes slower than walking. Understanding that one fact is most of what you need to choose where to live.",
+      "Greater Manchester's public transport is better than its reputation in one direction and much worse in the other, and the reason for both is the same: it is a radial network with almost no orbital capacity.",
+      "Getting into the middle from anywhere is straightforward. Getting from one suburb to another is frequently slower by public transport than by bicycle. Understanding that one fact is most of what you need to choose where to live.",
     ],
     sections: [
       {
@@ -387,7 +386,7 @@ export const MANCHESTER_GUIDES: ManchesterGuide[] = [
       {
         heading: "The Bee Network and the £2 bus fare",
         paragraphs: [
-          "Greater Manchester brought its buses back under public control, the first English city region outside London to do so, and the network now runs as the Bee Network under a single brand, fare structure and ticketing system.",
+          "Greater Manchester brought its buses back under public control, and the network now runs as the Bee Network under a single brand, fare structure and ticketing system — one fare wherever you board, whoever operates the route.",
           "The practical result for a renter is a £2 cap on a single bus fare, held for a fourth year, and an all-day bus ticket at £5. That is a genuinely cheap way to move around, and it makes bus-only areas more viable than they would otherwise be.",
           "The Wilmslow Road corridor through Rusholme, Fallowfield and Withington is among the busiest bus routes in Europe, with a service frequent enough that you do not check a timetable. Several otherwise poorly connected places — Middleton, Denton, Leigh — depend on buses entirely.",
         ],
@@ -436,9 +435,9 @@ export const MANCHESTER_GUIDES: ManchesterGuide[] = [
           "A single is capped at £2 and an all-day bus ticket is £5, under the publicly controlled Bee Network. Those fares were confirmed frozen for 2026. Tram fares are separate and zonal across four Metrolink zones.",
       },
       {
-        question: "Is Metrolink the same as the London Underground?",
+        question: "Is Metrolink an underground?",
         answer:
-          "No. It is a tram network that runs on the street through the city centre, which makes journeys into town slower than the distance suggests. Its four zones also cover only the tram — heavy rail and buses price separately, which is why this site does not use Metrolink zones to describe how central an area is.",
+          "No. It is a tram: on its own alignment in the suburbs, but running on the street through the city centre, which makes journeys into town slower than the distance suggests. Its four zones also cover only the tram — heavy rail and buses price separately, which is why this site does not use Metrolink zones to describe how central an area is.",
       },
     ],
     related: [
@@ -452,109 +451,6 @@ export const MANCHESTER_GUIDES: ManchesterGuide[] = [
     ],
   },
 
-  // ────────────────────────────────────────────────────────────────
-  {
-    slug: "moving-to-manchester-from-london",
-    h1: "Moving to Manchester from London",
-    metaTitle: "Moving to Manchester from London: an honest comparison",
-    metaDescription:
-      "What actually changes when you move from London to Greater Manchester — rent, council tax, transport, salary and the things nobody warns you about.",
-    summary:
-      "What gets cheaper, what does not, and the differences that catch Londoners out.",
-    category: "Moving",
-    published: PUBLISHED,
-    updated: PUBLISHED,
-    readMinutes: 9,
-    intro: [
-      "The version of this comparison you usually get is that everything is half price. That is true of rent, roughly, and of almost nothing else.",
-      "This guide sets out what genuinely changes, using the same figures the rest of this site runs on, and is deliberately specific about the things that do not improve — because those are what people regret not knowing.",
-    ],
-    sections: [
-      {
-        heading: "Rent: the saving is real and large",
-        paragraphs: [
-          "This is the part that lives up to the billing. A one-bed in central Manchester runs around £1,250 a month. A one-bed in the Northern Quarter or Ancoats is similar. Those figures buy you an outer-zone flat in London, not a central one.",
-          "Move out of the middle and the gap widens sharply. Chorlton at £1,000 and Didsbury at £1,050 are the kind of desirable, well-connected suburbs that in London would be well north of £1,800. Levenshulme at £850 and Stretford at £850 have no real London equivalent at that price within half an hour of the centre.",
-          "The median one-bed across every area covered here is about £800 a month.",
-        ],
-        dataBlock: "rent-spread",
-      },
-      {
-        heading: "Council tax: the saving does not exist",
-        paragraphs: [
-          "Every one of the ten Greater Manchester boroughs charges more than £2,150 at Band D for 2026/27. Westminster charges around £1,050, Wandsworth around £1,028, Kensington & Chelsea around £1,667, Hammersmith & Fulham around £1,520.",
-          "So a Londoner moving from one of those boroughs to anywhere in Greater Manchester will see their council tax roughly double, and should expect a bill of several hundred pounds a year more than they are used to. It does not come close to offsetting the rent saving, but it is a real and permanent line in the budget that catches people out in year one.",
-          "The mitigating detail: most Greater Manchester housing sits in bands A to C rather than D, so the actual bill on a typical flat is lower than the Band D comparison implies.",
-        ],
-        dataBlock: "council-tax-boroughs",
-      },
-      {
-        heading: "Transport: a different shape, not a smaller version",
-        paragraphs: [
-          "The instinct to read Metrolink as a smaller Tube is the single most expensive mistake a Londoner makes here, and it usually shows up as choosing a flat on a tram line because the map looks reassuring.",
-          "Metrolink runs on the street through the city centre, so journeys into town take longer than the distance implies. Its four zones cover only the tram, so they tell you nothing about a place served by heavy rail. And there is effectively no orbital network at all: a suburb-to-suburb journey that would be a single Overground ride in London is, here, two trams and a walk across the middle.",
-          "The compensations are genuine. Bus fares are capped at £2 a single, an all-day bus ticket is £5, and the suburban rail network is fast — Levenshulme to Piccadilly is eight minutes, which no comparable London journey matches for the money.",
-        ],
-      },
-      {
-        heading: "Salary: expect a cut, and check the maths",
-        paragraphs: [
-          "Most roles pay less here. The gap varies enormously by sector — it is narrow in tech and much wider in law and finance — but a 10 to 20 per cent reduction on a like-for-like London role is a reasonable planning assumption, and London weighting disappears entirely.",
-          "The maths still usually works, because rent falls by far more than salary does. Someone on £55,000 in London paying £1,800 for a one-bed is committing about £21,600 a year to rent. The same person on £47,000 in Manchester paying £1,000 in Chorlton commits £12,000. They are meaningfully better off despite earning less.",
-          "Do the calculation with your own numbers rather than the averages, particularly if you are near a tax threshold, and count the council tax difference in.",
-        ],
-        dataBlock: "salary-ladder",
-      },
-      {
-        heading: "The things nobody warns you about",
-        paragraphs: [
-          "Four differences come up repeatedly from people who have made the move.",
-        ],
-        list: {
-          items: [
-            "Distances feel bigger than they are because orbital journeys are slow. Somewhere eight miles away can be genuinely awkward to reach, which is not how London trains you to think.",
-            "The city centre is small. You can walk across it in twenty minutes, which is a real pleasure and also means the range of what is on your doorstep is narrower than in any given London district.",
-            "The housing stock is older and colder. Victorian and interwar terraces dominate the inner suburbs, and heating a poorly insulated one costs meaningfully more than a modern flat. Check the EPC rating, which is on every listing by law.",
-            "The countryside is genuinely close. The Peak District is forty minutes from most of the eastern boroughs and the West Pennine Moors sit directly behind Bolton. This is the upside people underrate most.",
-          ],
-        },
-      },
-      {
-        heading: "Where Londoners tend to land",
-        paragraphs: [
-          "The pattern is fairly consistent. People who valued the walkability of a Hackney or a Peckham tend towards Ancoats, the Northern Quarter or Chorlton. People who came from a Zone 3 family suburb tend towards Sale, Urmston, Prestwich or Heaton Moor.",
-          "The move that most often disappoints is choosing a cheap outer-borough town for the rent saving alone. The saving over an inner suburb is a few hundred pounds a month; the cost is forty minutes each way, and the inner Manchester suburbs are already cheap by the standards you are arriving with.",
-        ],
-      },
-    ],
-    faqs: [
-      {
-        question: "Is Manchester cheaper than London?",
-        answer:
-          "On rent, substantially — roughly half for a comparable area, and the gap widens outside the centre. On council tax, no: every Greater Manchester borough charges more at Band D than several inner London boroughs. On buses it is cheaper; on trams it is comparable.",
-      },
-      {
-        question: "How much less will I earn in Manchester?",
-        answer:
-          "Plan for 10 to 20 per cent below a like-for-like London salary, with London weighting gone entirely. The gap is narrower in tech and wider in law and finance. Rent typically falls by considerably more than salary does, so most people come out ahead.",
-      },
-      {
-        question: "Where should I live in Manchester if I am moving from London?",
-        answer:
-          "If you valued walkable inner London, look at Ancoats, the Northern Quarter and Chorlton. If you are coming from a family suburb, look at Sale, Urmston, Prestwich or Heaton Moor. Avoid choosing an outer-borough town purely on rent — the inner suburbs are already cheap by London standards and the commute difference is large.",
-      },
-    ],
-    related: [
-      { href: "/manchester/neighbourhoods", label: "Every Greater Manchester area" },
-      { href: "/manchester/guides/getting-around-greater-manchester-without-a-car", label: "How the transport works" },
-      { href: "/neighbourhoods", label: "The London side of this site" },
-    ],
-    sources: [
-      "ONS Price Index of Private Rents, borough averages by bedroom count, July 2026",
-      "Published 2026/27 Band D council tax figures for Greater Manchester and London",
-      "Transport for Greater Manchester published fares, reviewed September 2026",
-    ],
-  },
 ];
 
 export function getManchesterGuide(slug: string): ManchesterGuide | null {

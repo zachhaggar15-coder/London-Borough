@@ -45,7 +45,7 @@ export default function ManchesterCommuteIndexPage() {
         and an orbital journey — Sale to Oldham, say — is frequently quicker by
         car than by any published public route. That makes where you work a
         much sharper constraint on where you can live than it is in a city with
-        an underground network, so start from the destination.
+        a dense rapid-transit network, so start from the destination.
       </p>
 
       <Section title="Ten places people commute to">
@@ -75,10 +75,9 @@ export default function ManchesterCommuteIndexPage() {
         walking to the stop, waiting, riding, and walking off at the other end.
         They are not timetable times — a tram that runs Sale to St Peter&apos;s
         Square in 22 minutes is quoted here at 35, because nobody lives at the
-        tram stop. There is no live journey planner behind these figures;{" "}
-        {CITIES.manchester.transitAuthority} publishes no open equivalent of
-        the one the London pages use, so Manchester runs on a reviewed matrix
-        throughout. See the{" "}
+        tram stop. There is no live journey planner behind these figures:{" "}
+        {CITIES.manchester.transitAuthority} publishes no open routing API, so
+        every figure here comes from the reviewed matrix. See the{" "}
         <Link
           href={manchesterPath("/methodology")}
           className="underline underline-offset-2 hover:text-slate-300"

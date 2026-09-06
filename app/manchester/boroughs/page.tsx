@@ -125,11 +125,11 @@ export default function ManchesterBoroughsPage() {
             checking before you sign.
           </p>
           <p>
-            Every one of the ten sits above £2,150 at Band D. That is worth
-            stating plainly for anyone moving up from London, where a third of
-            boroughs come in below that figure: the rent saving in Greater
-            Manchester is real and large, and the council tax saving does not
-            exist.
+            Every one of the ten sits above £2,150 at Band D, and the spread
+            between the cheapest and dearest is over £460 a year. Band D is
+            also a high reference point for the region: most housing here sits
+            in bands A to C, so the bill on a typical flat comes in
+            meaningfully below the headline figures above.
           </p>
         </div>
       </Section>

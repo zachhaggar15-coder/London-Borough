@@ -90,10 +90,10 @@ export default function ManchesterHomePage() {
       },
       {
         "@type": "Question",
-        name: "Is Manchester cheaper than London to rent in?",
+        name: "Which part of Greater Manchester has the fastest commute?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Substantially, on rent. A one-bed in central Manchester costs roughly what a one-bed in an outer London zone does, and the gap widens the further out you go. Council tax runs the other way: every Greater Manchester borough charges more at Band D than several inner London boroughs do.",
+          text: "The city centre, Ancoats and the Northern Quarter, where most people walk. Beyond the centre the quickest are the rail suburbs rather than the tram ones: Levenshulme reaches Piccadilly in about eight minutes and Heaton Moor in about ten, which no tram stop at a comparable distance matches.",
         },
       },
       {
@@ -162,11 +162,17 @@ export default function ManchesterHomePage() {
           >
             What your salary rents
           </Link>
+          <Link
+            href={manchesterPath("/couples")}
+            className="rounded-lg border border-slate-700 px-4 py-2 transition-colors hover:border-slate-500"
+          >
+            Two commutes
+          </Link>
         </div>
 
         <Section
           title="How far out is far out?"
-          lead="Greater Manchester has no equivalent of London's travel zones, so this site describes centrality directly."
+          lead="Centrality here is described directly — how far out you are, and what that costs you in journey time to the middle."
         >
           <dl className="space-y-4">
             {TRAVEL_BANDS.map((band) => (
@@ -184,8 +190,8 @@ export default function ManchesterHomePage() {
             Metrolink runs its own zones 1–4, but they cover only the tram.
             Heavy rail into Piccadilly and Victoria prices on a separate
             scheme and the bus network on a third, so a Metrolink zone
-            describes nothing at all for a place like Heaton Moor or Urmston.
-            Read more in the{" "}
+            describes nothing at all for a place like Heaton Moor or Urmston,
+            which have no tram stop. Read more in the{" "}
             <Link
               href={manchesterPath("/methodology")}
               className="underline underline-offset-2 hover:text-slate-300"
@@ -249,7 +255,7 @@ export default function ManchesterHomePage() {
 
         <Section
           title="Before you pick an area"
-          lead="What it costs, how renting works here, how the transport actually behaves, and what changes if you are moving up from London."
+          lead="What it costs, how renting works here, and how the transport actually behaves."
         >
           <div className="grid gap-3 sm:grid-cols-2">
             {manchesterGuidesByRecency().map((guide) => (
@@ -310,9 +316,9 @@ export default function ManchesterHomePage() {
           {ONS_RENT_REFERENCE_MONTH}, with a reviewed neighbourhood premium or
           discount applied on top. Journey times are reviewed door-to-door
           estimates, not timetable times, and there is no live journey planner
-          behind them — {CITY.transitAuthority} publishes no open equivalent of
-          the one London uses. Everything here is for narrowing a shortlist,
-          not for valuing a flat.
+          behind them — {CITY.transitAuthority} publishes
+          no open journey planner. Everything here is for narrowing a
+          shortlist, not for valuing a flat.
         </DataNote>
       </PageShell>
     </>

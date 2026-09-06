@@ -639,6 +639,7 @@ export function getManchesterIndexableRoutes(): ManchesterRoute[] {
       changefreq: "monthly" as const,
       lastmod: guide.updated,
     })),
+    { path: manchesterPath("/couples"), priority: 0.75, changefreq: "weekly", lastmod: rent },
     { path: manchesterPath("/salary"), priority: 0.7, changefreq: "weekly", lastmod: rent },
     ...MANCHESTER_SALARY_LEVELS.map((amount) => ({
       path: manchesterPath(`/salary/${amount}`),

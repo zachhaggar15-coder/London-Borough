@@ -15,7 +15,7 @@ import {
 export const metadata: Metadata = {
   title: "Greater Manchester guides",
   description:
-    "What Greater Manchester costs, how renting works, how the transport actually behaves, and what changes if you are moving up from London.",
+    "What Greater Manchester costs, how renting works here, how the transport actually behaves, and what to sort out in which order.",
   alternates: { canonical: manchesterUrl("/guides") },
 };
 
@@ -54,10 +54,9 @@ export default function ManchesterGuidesPage() {
         </h1>
         <p className="mt-4 max-w-3xl text-lg leading-relaxed text-slate-300">
           The rest of this section answers &ldquo;which area&rdquo;. These
-          answer the questions that come before that: what things cost, how
-          renting works, how the transport network actually behaves, and — for
-          the large number of people arriving from the South East — what
-          genuinely changes and what does not.
+          answer the questions that come before it: what things cost, how
+          renting works here, how the transport network actually behaves, and
+          what to sort out in which order.
         </p>
 
         <Section title={`${MANCHESTER_GUIDES.length} guides`}>

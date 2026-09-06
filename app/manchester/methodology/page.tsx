@@ -99,10 +99,11 @@ export default function ManchesterMethodologyPage() {
           </p>
           <p>
             Room-in-a-share rents work differently again. No official series
-            publishes them, so they come from listing samples keyed to postcode
-            district groups. Grouping matters here more than it does in London:
-            M1 and M18 are eight kilometres and roughly £300 a month apart, so
-            a single M-wide average would be worthless.
+            publishes them, so they come from listing samples keyed to explicit
+            postcode district groups rather than to the M prefix as a whole.
+            That prefix covers far too much ground to average: M1 in the city
+            centre and M18 in Gorton are eight kilometres and roughly £300 a
+            month apart, so a single M-wide figure would be worthless.
           </p>
           <p className="text-slate-400">
             Sources: {MANCHESTER_RENT_SOURCES.join("; ")}. Last reviewed{" "}
@@ -114,13 +115,13 @@ export default function ManchesterMethodologyPage() {
       <Section title="Commute times">
         <div className="max-w-3xl space-y-4 text-slate-300">
           <p>
-            The London pages can fall back on the TfL Journey Planner, a free
-            public API that will route any two points in the capital.{" "}
-            {CITIES.manchester.transitAuthority} publishes no comparable open
-            endpoint, so Manchester runs entirely on a reviewed static matrix:
-            one figure for every one of the {areaCount} areas against every one
-            of the {MANCHESTER_DESTINATIONS.length} destinations. Nothing on
-            these pages calls out to a live service, and nothing claims to.
+            {CITIES.manchester.transitAuthority} publishes no open routing
+            API, so there is no journey planner to query. Every time on these
+            pages comes from a reviewed static matrix instead: one figure for
+            each of the {areaCount} areas against each of the{" "}
+            {MANCHESTER_DESTINATIONS.length} destinations, {areaCount * MANCHESTER_DESTINATIONS.length}{" "}
+            in total. Nothing here calls out to a live service, and nothing
+            claims to.
           </p>
           <p>
             The figures are typical weekday-morning door-to-door times —
@@ -133,13 +134,12 @@ export default function ManchesterMethodologyPage() {
             Where a figure is missing the site falls back to straight-line
             distance at an assumed {GM_TRANSIT_KMH} km/h and labels the result
             a distance estimate rather than a reviewed one. That speed is
-            deliberately lower than the London equivalent. Greater
-            Manchester&apos;s network is radial to a degree London&apos;s is
-            not: there is no orbital rail, the tram runs on street through the
-            centre, and a journey like Sale to Oldham is frequently quicker by
-            car than by any published public route. A London-like assumption
-            would produce confidently wrong numbers for exactly the journeys
-            people most need warning about.
+            deliberately conservative, because straight-line distance flatters
+            this network badly. There is no orbital rail, the tram runs on
+            street through the city centre, and a journey like Sale to Oldham
+            is frequently quicker by car than by any published public route. A
+            more optimistic assumption would produce confidently wrong numbers
+            for exactly the journeys people most need warning about.
           </p>
           <p>
             Treat a five-minute difference between two areas as noise.
@@ -150,13 +150,11 @@ export default function ManchesterMethodologyPage() {
       <Section title="Travel bands, and why not Metrolink zones">
         <div className="max-w-3xl space-y-4 text-slate-300">
           <p>
-            London&apos;s whole sense of how central a place is rides on travel
-            zones 1–6, a single fare geography covering tube, rail, Overground
-            and DLR alike. Greater Manchester has no equivalent. Metrolink runs
+            There is no single fare geography here to borrow. Metrolink runs
             zones 1–4, but they cover only the tram; heavy rail into Piccadilly
             and Victoria prices on a separate scheme, and the bus network on a
-            third. Quoting a Metrolink zone for Heaton Moor, which has no tram
-            at all, would be worse than useless.
+            third. Quoting a Metrolink zone for Heaton Moor or Urmston, neither
+            of which has a tram stop, would be worse than useless.
           </p>
           <p>
             So centrality is described directly, in the terms someone moving
@@ -188,9 +186,8 @@ export default function ManchesterMethodologyPage() {
             {GM_MAYORAL_PRECEPT_BREAKDOWN.general.toLocaleString()} for general
             functions, of which about £
             {GM_FIRE_ELEMENT_BAND_D.toLocaleString()} funds fire and rescue.
-            London handles the same idea as one combined GLA precept, which is
-            why the two cities&apos; figures are not directly comparable
-            line by line.
+            It is charged identically in all ten boroughs, so any difference
+            between them comes entirely from the council&apos;s own element.
           </p>
           <p>
             The charges exclude parish and town council precepts. Those apply
@@ -204,8 +201,8 @@ export default function ManchesterMethodologyPage() {
             not vary by authority. Bands themselves are still based on what a
             property was worth on 1 April 1991. Most Greater Manchester housing
             sits in bands A to C, so a typical bill is well below the Band D
-            headline — which is not true across much of inner London, and is
-            the most common way these figures get misread.
+            headline. That is the most common way these figures get misread:
+            Band D is a reference point, not a typical charge.
           </p>
           <p className="text-slate-400">
             Sources: {MANCHESTER_COUNCIL_TAX_SOURCES.join("; ")}. Every figure
@@ -223,8 +220,9 @@ export default function ManchesterMethodologyPage() {
           <p>
             Each area carries {LIFESTYLE_KEYS.length} scores from 0 to 10:{" "}
             {LIFESTYLE_KEYS.map((k) => LIFESTYLE_LABELS[k].toLowerCase()).join(", ")}
-            . They are comparable across areas but not across cities — a 7 for
-            nightlife in Greater Manchester is not a 7 for nightlife in London.
+            . They are comparable between the areas covered here and nowhere
+            else: a 7 for nightlife means seventh-decile among these{" "}
+            {areaCount} areas, not on any absolute scale.
           </p>
           <p>
             These are editorial judgements, informed by transport data,

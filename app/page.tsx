@@ -426,10 +426,10 @@ export default function HomePage() {
               Where to live in Greater Manchester
             </Link>
             <Link
-              href="/manchester/guides/moving-to-manchester-from-london"
+              href="/manchester/neighbourhoods"
               className="rounded-lg border border-slate-700 px-4 py-2 hover:border-slate-500 transition-colors"
             >
-              Moving to Manchester from London
+              Browse Manchester areas
             </Link>
             <Link
               href="/manchester/rent-index"

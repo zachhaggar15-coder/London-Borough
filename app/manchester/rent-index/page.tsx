@@ -120,11 +120,12 @@ export default function ManchesterRentIndexPage() {
       >
         <div className="max-w-3xl space-y-4 text-slate-300">
           <p>
-            The London version of this page keys room rents off the postcode
-            region letter, which works there because the regions are large and
-            internally consistent. Greater Manchester&apos;s M districts are
-            not: M1 and M18 are eight kilometres and roughly £300 a month
-            apart, so a single M average would describe neither.
+            No official series publishes room-level rents, so these come from
+            visible listing samples. They are keyed to explicit postcode
+            district groups rather than to the M prefix as a whole, because
+            that prefix covers far too much ground to average: M1 in the city
+            centre and M18 in Gorton are eight kilometres and roughly £300 a
+            month apart, and a single M figure would describe neither.
           </p>
           <p>
             Instead each area names the district group it is sampled against.
