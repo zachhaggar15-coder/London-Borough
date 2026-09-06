@@ -150,6 +150,12 @@ export default function ManchesterHomePage() {
           >
             The ten boroughs
           </Link>
+          <Link
+            href={manchesterPath("/salary")}
+            className="rounded-lg border border-slate-700 px-4 py-2 transition-colors hover:border-slate-500"
+          >
+            What your salary rents
+          </Link>
         </div>
 
         <Section

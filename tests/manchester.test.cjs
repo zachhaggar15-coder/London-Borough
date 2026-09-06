@@ -360,3 +360,58 @@ test("every guide's internal links point somewhere this site serves", () => {
     }
   }
 });
+
+// ── Salary cluster ────────────────────────────────────────────────────
+
+test("the salary ladder stops where the budget stops binding", () => {
+  // A first draft ran to £85,000 and the top five rungs produced the same
+  // page five times. The ladder must not creep back up: pages that say
+  // "you can afford anywhere" are near-duplicates of each other.
+  const levels = seo.MANCHESTER_SALARY_LEVELS;
+  const unconstrained = levels.filter(
+    (s) => seo.getManchesterSalaryPageData(s).comfortable.length >= 50,
+  );
+  assert.ok(
+    unconstrained.length <= 2,
+    `${unconstrained.length} salary pages say the budget is not the constraint: ${unconstrained}`,
+  );
+});
+
+test("salary pages always have something to recommend", () => {
+  for (const salary of seo.MANCHESTER_SALARY_LEVELS) {
+    const data = seo.getManchesterSalaryPageData(salary);
+    // Below a certain salary no one-bed fits, and that is an honest answer
+    // — but the page must still offer rooms rather than an empty list.
+    assert.ok(data.roomShare.length > 0, `${salary} has no room options at all`);
+    assert.ok(data.cheapestOneBed, `${salary} has no cheapest one-bed`);
+  }
+});
+
+test("affordability buckets are disjoint and correctly bounded", () => {
+  for (const salary of seo.MANCHESTER_SALARY_LEVELS) {
+    const { comfortable, stretch } = seo.getManchesterSalaryPageData(salary);
+    const ids = new Set(comfortable.map((r) => r.neighbourhood.id));
+    for (const row of stretch) {
+      assert.ok(!ids.has(row.neighbourhood.id), `${salary}: ${row.neighbourhood.id} in both buckets`);
+      assert.ok(row.shareOfTakeHome > 0.35 && row.shareOfTakeHome <= 0.45, `${salary} stretch bound`);
+    }
+    for (const row of comfortable) {
+      assert.ok(row.shareOfTakeHome <= 0.35, `${salary} comfortable bound`);
+    }
+  }
+});
+
+test("take-home rises monotonically with salary", () => {
+  const levels = [...seo.MANCHESTER_SALARY_LEVELS];
+  for (let i = 1; i < levels.length; i += 1) {
+    const prev = seo.getManchesterSalaryPageData(levels[i - 1]).takeHomeMonthly;
+    const next = seo.getManchesterSalaryPageData(levels[i]).takeHomeMonthly;
+    assert.ok(next > prev, `${levels[i]} take-home is not above ${levels[i - 1]}`);
+  }
+});
+
+test("only real salary levels are accepted", () => {
+  assert.ok(seo.isManchesterSalaryLevel(35000));
+  assert.ok(!seo.isManchesterSalaryLevel(33000));
+  assert.ok(!seo.isManchesterSalaryLevel(150000));
+});

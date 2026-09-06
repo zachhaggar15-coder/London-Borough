@@ -26,6 +26,7 @@ const MANCHESTER_LINKS = [
   { href: "/manchester/commute", label: "Commute" },
   { href: "/manchester/lifestyle", label: "Lifestyle" },
   { href: "/manchester/guides", label: "Guides" },
+  { href: "/manchester/salary", label: "Salary" },
   { href: "/manchester/rent-index", label: "Rent index" },
 ];
 
@@ -110,15 +111,30 @@ export default function SiteFooter() {
         </nav>
 
         <div className="space-y-2 text-slate-500">
+          {/*
+            Names both cities: this footer renders on every Manchester page
+            too, and describing the site as a London guide there was both
+            inaccurate and the sort of thing an ad reviewer notices. Each
+            city links to its own methodology, because the two genuinely
+            differ — travel bands against tube zones, and no live journey
+            planner behind the Manchester times.
+          */}
           <p>
-            {SITE_NAME} is an independent guide to choosing a London
-            neighbourhood. Rent and commute figures are decision-support
+            An independent guide to choosing where to live in London and
+            Greater Manchester. Rent and commute figures are decision-support
             estimates, not live listings or guaranteed journey times — see the{" "}
             <Link
               href="/methodology"
               className="underline underline-offset-2 transition-colors hover:text-white"
             >
-              methodology
+              London methodology
+            </Link>{" "}
+            or the{" "}
+            <Link
+              href="/manchester/methodology"
+              className="underline underline-offset-2 transition-colors hover:text-white"
+            >
+              Manchester methodology
             </Link>
             .
           </p>

@@ -11,7 +11,7 @@
  * indexed London page to add an argument none of them need.
  */
 
-import { SITE_URL } from "@/lib/seo-data";
+import { SITE_URL, ukTakeHomeMonthly } from "@/lib/seo-data";
 import { CITIES } from "@/lib/cities";
 import { GM_BOROUGHS, boroughSlug, type GmBorough } from "@/lib/manchester/boroughs";
 import { MANCHESTER_NEIGHBOURHOODS } from "@/lib/manchester/data/neighbourhoods";
@@ -639,6 +639,13 @@ export function getManchesterIndexableRoutes(): ManchesterRoute[] {
       changefreq: "monthly" as const,
       lastmod: guide.updated,
     })),
+    { path: manchesterPath("/salary"), priority: 0.7, changefreq: "weekly", lastmod: rent },
+    ...MANCHESTER_SALARY_LEVELS.map((amount) => ({
+      path: manchesterPath(`/salary/${amount}`),
+      priority: 0.7,
+      changefreq: "monthly" as const,
+      lastmod: rent,
+    })),
   ];
 }
 
@@ -675,3 +682,93 @@ function haversineKm(
 }
 
 export type { TravelBand };
+
+// ──────────────────────────────────────────────────────────────────
+// Salary  →  /manchester/salary/[amount]
+// ──────────────────────────────────────────────────────────────────
+
+/**
+ * Salary levels worth a page in Greater Manchester.
+ *
+ * A shorter and lower ladder than London's, which runs to £150,000, and
+ * the shape of it is dictated by where the budget stops binding. In
+ * Greater Manchester that happens at about £45,000: above it, essentially
+ * every area fits inside the 35% guideline. A first draft ran to £85,000
+ * and the top five rungs produced the same page five times, which is
+ * precisely the near-duplicate pattern that got earlier clusters pulled
+ * in AdSense review. It now stops at £55,000 — one rung past the point
+ * the answer changes, and no further.
+ *
+ * It also starts lower than London's. £22,000 is below anything a London
+ * page could usefully cover and is an ordinary Greater Manchester salary
+ * with real options attached to it.
+ */
+export const MANCHESTER_SALARY_LEVELS = [
+  22000, 25000, 28000, 30000, 35000, 40000, 45000, 55000,
+] as const;
+
+export type ManchesterSalaryLevel = (typeof MANCHESTER_SALARY_LEVELS)[number];
+
+export function isManchesterSalaryLevel(value: number): boolean {
+  return (MANCHESTER_SALARY_LEVELS as readonly number[]).includes(value);
+}
+
+export type SalaryAreaFit = {
+  neighbourhood: ManchesterNeighbourhood;
+  rentGbp: number;
+  shareOfTakeHome: number;
+};
+
+export type ManchesterSalaryPageData = {
+  salary: number;
+  takeHomeMonthly: number;
+  budget33: number;
+  budget35: number;
+  /** One-beds inside the 35% guideline, cheapest share of income first. */
+  comfortable: SalaryAreaFit[];
+  /** One-beds between 35% and 45% — doable, but tight. */
+  stretch: SalaryAreaFit[];
+  /** Rooms in a share, always populated. */
+  roomShare: SalaryAreaFit[];
+  roomShareWithinBudget: SalaryAreaFit[];
+  /** The cheapest one-bed anywhere, for honest framing when nothing fits. */
+  cheapestOneBed: SalaryAreaFit;
+};
+
+export function getManchesterSalaryPageData(
+  salary: number,
+): ManchesterSalaryPageData {
+  const takeHomeMonthly = ukTakeHomeMonthly(salary);
+  const budget33 = Math.round(takeHomeMonthly * 0.33);
+  const budget35 = Math.round(takeHomeMonthly * 0.35);
+
+  const fit = (n: ManchesterNeighbourhood, rentGbp: number): SalaryAreaFit => ({
+    neighbourhood: n,
+    rentGbp,
+    shareOfTakeHome: rentGbp / takeHomeMonthly,
+  });
+
+  const oneBeds = MANCHESTER_NEIGHBOURHOODS.map((n) =>
+    fit(n, n.rent.oneBedMedianGbp),
+  ).sort((a, b) => a.rentGbp - b.rentGbp);
+
+  const rooms = MANCHESTER_NEIGHBOURHOODS.map((n) =>
+    fit(n, manchesterRoomRentFor(n)),
+  ).sort((a, b) => a.rentGbp - b.rentGbp);
+
+  return {
+    salary,
+    takeHomeMonthly,
+    budget33,
+    budget35,
+    comfortable: oneBeds.filter((row) => row.shareOfTakeHome <= 0.35),
+    stretch: oneBeds.filter(
+      (row) => row.shareOfTakeHome > 0.35 && row.shareOfTakeHome <= 0.45,
+    ),
+    roomShare: rooms,
+    roomShareWithinBudget: rooms.filter((row) => row.shareOfTakeHome <= 0.35),
+    // Never null: there is always a cheapest area, and a page that can
+    // recommend nothing still has to say what the floor actually is.
+    cheapestOneBed: oneBeds[0],
+  };
+}
