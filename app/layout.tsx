@@ -3,6 +3,7 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { GOOGLE_ADSENSE_CLIENT_ID } from "@/lib/monetisation";
 import { SITE_URL } from "@/lib/seo-data";
+import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import CookieConsent from "@/components/CookieConsent";
 import { CONTACT_EMAIL, SITE_NAME } from "@/lib/site-config";
@@ -95,6 +96,7 @@ export default function RootLayout({
             __html: JSON.stringify(organizationSchema),
           }}
         />
+        <SiteHeader />
         {children}
         <SiteFooter />
         {/*
