@@ -14,15 +14,16 @@
 
 import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
-import { NEIGHBOURHOODS } from "@/lib/data/neighbourhoods";
 import { scoreAll } from "@/lib/scoring";
 import NeighbourhoodCard from "@/components/NeighbourhoodCard";
+import { useCityData } from "@/components/CityDataProvider";
 
 const TOP_N_OPTIONS = [5, 10, 20];
 
 export default function NeighbourhoodList() {
   const query = useStore((s) => s.query);
   const commute = useStore((s) => s.commute);
+  const { neighbourhoods, scoringAdapters } = useCityData();
   const selected = useStore((s) => s.selectedNeighbourhoodId);
   const selectNeighbourhood = useStore((s) => s.selectNeighbourhood);
   const topN = useStore((s) => s.topN);
@@ -31,8 +32,8 @@ export default function NeighbourhoodList() {
   const [showAll, setShowAll] = useState(false);
 
   const scored = useMemo(
-    () => scoreAll(NEIGHBOURHOODS, commute, query),
-    [commute, query],
+    () => scoreAll(neighbourhoods, commute, query, scoringAdapters),
+    [neighbourhoods, commute, query, scoringAdapters],
   );
 
   const included = scored.filter((s) => !s.isExcluded);

@@ -3,7 +3,6 @@ import { LIFESTYLE_KEYS, LIFESTYLE_LABELS } from "@/lib/types";
 import type { LifestyleScores } from "@/lib/types";
 import { TRAVEL_BAND_LABELS } from "@/lib/manchester/travel-band";
 import type { ManchesterNeighbourhood } from "@/lib/manchester/types";
-import { boroughSlug } from "@/lib/manchester/boroughs";
 import { manchesterPath } from "@/lib/manchester/seo-data";
 
 /**
@@ -93,13 +92,15 @@ export function AreaCard({
           £{n.rent.oneBedMedianGbp.toLocaleString()}
         </p>
       </div>
+      {/*
+        The borough is plain text, not a link. The whole card is already an
+        anchor to the area page, and an <a> inside an <a> is invalid HTML —
+        React refuses to hydrate it, which took out every Manchester page
+        that renders a card. The borough is linked from the area page and
+        the borough index instead.
+      */}
       <p className="mt-1 flex items-center gap-2 text-xs text-slate-500">
-        <Link
-          href={manchesterPath(`/boroughs/${boroughSlug(n.borough)}`)}
-          className="transition-colors hover:text-slate-300"
-        >
-          {n.borough}
-        </Link>
+        <span>{n.borough}</span>
         <BandPill neighbourhood={n} />
       </p>
       {note && <p className="mt-2 text-sm text-slate-400">{note}</p>}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { zonesOf } from "@/lib/centrality";
 import {
   LIFESTYLE_PAGES,
   getLifestylePageData,
@@ -140,8 +141,8 @@ export default async function LifestylePage({ params }: Props) {
                             {n.name}
                           </h3>
                           <p className="text-xs text-slate-400">
-                            {n.borough} · Zone{n.transportZones.length > 1 ? "s" : ""}{" "}
-                            {n.transportZones.join("/")}
+                            {n.borough} · Zone{zonesOf(n).length > 1 ? "s" : ""}{" "}
+                            {zonesOf(n).join("/")}
                             {!isGbp && (
                               <>
                                 {" "}

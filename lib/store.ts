@@ -21,11 +21,18 @@ import type {
   RentBasis,
 } from "@/lib/types";
 import { DESTINATIONS } from "@/lib/data/destinations";
+import type { CityId } from "@/lib/cities";
 
 type CommuteMap = Record<string, number>;
 type CommuteSourceMap = Record<string, CommuteEstimateSource>;
 
 type State = {
+  /**
+   * Which city's tool is mounted. The store is a singleton and both
+   * cities' tools read it, so anything persisted has to be scoped by
+   * this or a London shortlist would show up on the Manchester map.
+   */
+  cityId: CityId;
   query: UserQuery;
   commute: CommuteMap;
   commuteSources: CommuteSourceMap;
@@ -37,9 +44,17 @@ type State = {
   shortlistedNeighbourhoodIds: string[];
   /** How many of the top-ranked neighbourhoods to show on map + list. */
   topN: number;
+  /** Whether the results sidebar is collapsed to give the map the full width. */
+  isPanelCollapsed: boolean;
 };
 
 type Actions = {
+  /**
+   * Point the store at a city and load that city's saved shortlist.
+   * Called once when a tool mounts; a no-op if the city has not changed,
+   * so it is safe to run on every render pass.
+   */
+  initCity: (cityId: CityId, defaultDestination: Destination | null) => void;
   setDestination: (destination: Destination | null) => void;
   setMaxCommute: (minutes: number) => void;
   setSalary: (salary: number | null) => void;
@@ -59,11 +74,22 @@ type Actions = {
   removeFromShortlist: (id: string) => void;
   clearShortlist: () => void;
   setTopN: (n: number) => void;
+  togglePanelCollapsed: () => void;
+  setPanelCollapsed: (collapsed: boolean) => void;
 };
 
-const SHORTLIST_STORAGE_KEY = "where-in-london-shortlist";
+/**
+ * Shortlists are stored per city. The original key had no city in it,
+ * and is kept as London's so nobody who already had a shortlist loses it.
+ */
+function shortlistStorageKey(cityId: CityId): string {
+  return cityId === "london"
+    ? "where-in-london-shortlist"
+    : `where-in-${cityId}-shortlist`;
+}
 
 export const useStore = create<State & Actions>((set) => ({
+  cityId: "london",
   query: {
     destination: DESTINATIONS[0],          // sensible default: Marylebone
     maxCommuteMinutes: 45,
@@ -80,9 +106,25 @@ export const useStore = create<State & Actions>((set) => ({
   isochrone: null,
   isLoadingIsochrone: false,
   selectedNeighbourhoodId: null,
-  shortlistedNeighbourhoodIds: readShortlistFromStorage(),
+  shortlistedNeighbourhoodIds: readShortlistFromStorage("london"),
   topN: 10,
+  isPanelCollapsed: false,
 
+  initCity: (cityId, defaultDestination) =>
+    set((s) => {
+      if (s.cityId === cityId) return s;
+      return {
+        cityId,
+        shortlistedNeighbourhoodIds: readShortlistFromStorage(cityId),
+        // A destination from the other city would score every area as
+        // unreachable, so it is replaced rather than carried over.
+        query: { ...s.query, destination: defaultDestination },
+        commute: {},
+        commuteSources: {},
+        isochrone: null,
+        selectedNeighbourhoodId: null,
+      };
+    }),
   setDestination: (destination) =>
     set((s) => ({ query: { ...s.query, destination } })),
   setMaxCommute: (minutes) =>
@@ -126,7 +168,7 @@ export const useStore = create<State & Actions>((set) => ({
       } else {
         next = [id, ...s.shortlistedNeighbourhoodIds].slice(0, 4);
       }
-      writeShortlistToStorage(next);
+      writeShortlistToStorage(s.cityId, next);
       return { shortlistedNeighbourhoodIds: next };
     }),
   removeFromShortlist: (id) =>
@@ -134,20 +176,24 @@ export const useStore = create<State & Actions>((set) => ({
       const next = s.shortlistedNeighbourhoodIds.filter(
         (existing) => existing !== id,
       );
-      writeShortlistToStorage(next);
+      writeShortlistToStorage(s.cityId, next);
       return { shortlistedNeighbourhoodIds: next };
     }),
-  clearShortlist: () => {
-    writeShortlistToStorage([]);
-    set({ shortlistedNeighbourhoodIds: [] });
-  },
+  clearShortlist: () =>
+    set((s) => {
+      writeShortlistToStorage(s.cityId, []);
+      return { shortlistedNeighbourhoodIds: [] };
+    }),
   setTopN: (n) => set({ topN: Math.max(1, Math.min(50, n)) }),
+  togglePanelCollapsed: () =>
+    set((s) => ({ isPanelCollapsed: !s.isPanelCollapsed })),
+  setPanelCollapsed: (collapsed) => set({ isPanelCollapsed: collapsed }),
 }));
 
-function readShortlistFromStorage(): string[] {
+function readShortlistFromStorage(cityId: CityId): string[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = window.localStorage.getItem(SHORTLIST_STORAGE_KEY);
+    const raw = window.localStorage.getItem(shortlistStorageKey(cityId));
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed)
@@ -158,10 +204,10 @@ function readShortlistFromStorage(): string[] {
   }
 }
 
-function writeShortlistToStorage(ids: string[]) {
+function writeShortlistToStorage(cityId: CityId, ids: string[]) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(
-    SHORTLIST_STORAGE_KEY,
+    shortlistStorageKey(cityId),
     JSON.stringify(ids.slice(0, 4)),
   );
 }

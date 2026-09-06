@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
 import { gbp } from "@/lib/affordability";
-import { NEIGHBOURHOODS } from "@/lib/data/neighbourhoods";
 import {
   personalResultsSummary,
   recommendationExplanation,
@@ -13,17 +12,19 @@ import { rentBasisShortLabel } from "@/lib/rent";
 import { scoreAll } from "@/lib/scoring";
 import { shareUrlForState } from "@/lib/share-state";
 import { useStore } from "@/lib/store";
+import { useCityData } from "@/components/CityDataProvider";
 import type { ScoredNeighbourhood } from "@/lib/types";
 
 export default function ResultsSummaryPanel() {
   const query = useStore((s) => s.query);
   const commute = useStore((s) => s.commute);
   const selectNeighbourhood = useStore((s) => s.selectNeighbourhood);
+  const { neighbourhoods, scoringAdapters, labels } = useCityData();
   const [shareState, setShareState] = useState<"idle" | "copied" | "shared">("idle");
 
   const scored = useMemo(
-    () => scoreAll(NEIGHBOURHOODS, commute, query),
-    [commute, query],
+    () => scoreAll(neighbourhoods, commute, query, scoringAdapters),
+    [neighbourhoods, commute, query, scoringAdapters],
   );
   const summary = useMemo(
     () => personalResultsSummary(scored, query),
@@ -39,8 +40,8 @@ export default function ResultsSummaryPanel() {
 
   async function shareResults() {
     const url = shareUrlForState(window.location.origin, query, topIds);
-    const title = "My best places to live in London";
-    const text = summary.keyDecision ?? "Here are my Where in London results.";
+    const title = labels.shareTitle;
+    const text = summary.keyDecision ?? labels.shareText;
     try {
       if (navigator.share) {
         await navigator.share({ title, text, url });

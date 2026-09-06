@@ -16,7 +16,7 @@
  */
 
 /** Greater London bounding box (slightly generous). */
-const LONDON_BBOX = {
+export const LONDON_BBOX = {
   west: -0.6,
   east: 0.4,
   south: 51.25,
@@ -46,7 +46,25 @@ export type PostcodeLookup =
  *  this just catches obvious junk before we make the network call. */
 const UK_POSTCODE_RE = /^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/i;
 
-export async function lookupPostcode(input: string): Promise<PostcodeLookup> {
+/**
+ * The area a lookup is constrained to.
+ *
+ * Both cities reject a postcode outside their own bounding box: showing
+ * someone a Manchester map because they typed a Bristol postcode is worse
+ * than telling them it is out of range. `noun` only names the area in the
+ * error message.
+ */
+export type GeoScope = {
+  bbox: { west: number; east: number; south: number; north: number };
+  noun: string;
+};
+
+export const LONDON_SCOPE: GeoScope = { bbox: LONDON_BBOX, noun: "Greater London" };
+
+export async function lookupPostcode(
+  input: string,
+  scope: GeoScope = LONDON_SCOPE,
+): Promise<PostcodeLookup> {
   const trimmed = input.trim();
   if (!UK_POSTCODE_RE.test(trimmed)) {
     return { ok: false, error: { kind: "invalid_format" } };
@@ -87,12 +105,12 @@ export async function lookupPostcode(input: string): Promise<PostcodeLookup> {
   }
 
   const r = data.result;
-  // Greater London check — better to fail fast than show a useless map.
+  // In-scope check — better to fail fast than show a useless map.
   if (
-    r.longitude < LONDON_BBOX.west ||
-    r.longitude > LONDON_BBOX.east ||
-    r.latitude < LONDON_BBOX.south ||
-    r.latitude > LONDON_BBOX.north
+    r.longitude < scope.bbox.west ||
+    r.longitude > scope.bbox.east ||
+    r.latitude < scope.bbox.south ||
+    r.latitude > scope.bbox.north
   ) {
     return { ok: false, error: { kind: "outside_london" } };
   }

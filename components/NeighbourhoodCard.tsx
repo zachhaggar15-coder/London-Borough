@@ -7,12 +7,13 @@
 
 import type { ScoredNeighbourhood } from "@/lib/types";
 import { gbp } from "@/lib/affordability";
-import { commuteRouteSummary } from "@/lib/commute-details";
 import { recommendationExplanation } from "@/lib/decision";
 import { formatApproxMinutes } from "@/lib/format";
 import { rentBasisShortLabel } from "@/lib/rent";
 import { matchScoreHex, suitsWho } from "@/lib/scoring";
 import { useStore } from "@/lib/store";
+import { useCityData } from "@/components/CityDataProvider";
+import { zonesOf } from "@/lib/centrality";
 
 type Props = {
   scored: ScoredNeighbourhood;
@@ -32,6 +33,7 @@ export default function NeighbourhoodCard({
   const query = useStore((s) => s.query);
   const commuteSources = useStore((s) => s.commuteSources);
   const shortlistedIds = useStore((s) => s.shortlistedNeighbourhoodIds);
+  const { commuteRouteSummary } = useCityData();
   const {
     neighbourhood: n,
     commuteMinutes,
@@ -86,7 +88,7 @@ export default function NeighbourhoodCard({
                 </span>
               )}
               <div className="text-[10px] uppercase tracking-wider text-slate-500">
-                Zone {n.transportZones.join("/")}
+                Zone {zonesOf(n).join("/")}
               </div>
             </div>
           </div>

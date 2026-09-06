@@ -20,6 +20,7 @@ import {
   TRAVEL_BAND_LABELS,
 } from "@/lib/manchester/travel-band";
 import { manchesterGuidesByRecency } from "@/lib/manchester/data/guides";
+import ManchesterClient from "@/app/manchester/ManchesterClient";
 import { AreaCard, DataNote, PageShell, Section } from "@/components/manchester/Pieces";
 
 const CITY = CITIES.manchester;
@@ -116,6 +117,11 @@ export default function ManchesterHomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
+
+      {/* ── Interactive tool ─────────────────────────────────────────── */}
+      <div className="h-[85vh] min-h-[560px] w-full overflow-hidden">
+        <ManchesterClient />
+      </div>
 
       <PageShell>
         <h1 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">

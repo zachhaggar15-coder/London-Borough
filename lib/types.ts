@@ -6,6 +6,8 @@
  * radar charts) and provenance (source + asOf) is captured per metric.
  */
 
+import type { TravelBand } from "@/lib/manchester/travel-band";
+
 export type LatLng = { lat: number; lng: number };
 
 /**
@@ -113,7 +115,20 @@ export type Neighbourhood = {
   /** Optional area polygon. If absent, the map generates a deterministic
    *  display polygon from the curated centroid. */
   polygon?: GeoJSON.Polygon;
-  transportZones: number[];
+
+  /**
+   * How central the area is. Exactly one of these is set, and which one
+   * depends on the city.
+   *
+   * London uses travel zones 1-6, a single fare geography spanning tube,
+   * rail, Overground and DLR. Greater Manchester has no equivalent —
+   * Metrolink's zones cover only the tram — so it uses travel bands
+   * instead. Both are optional here so one Neighbourhood type can serve
+   * both cities; read them through lib/centrality.ts rather than
+   * directly, which keeps the "exactly one" rule in one place.
+   */
+  transportZones?: number[];
+  travelBand?: TravelBand;
 
   // Affordability
   rent: Rent;

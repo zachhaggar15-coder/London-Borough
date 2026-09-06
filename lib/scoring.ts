@@ -11,6 +11,7 @@
 import type {
   LifestyleScores,
   Neighbourhood,
+  RentBasis,
   ScoredNeighbourhood,
   UserQuery,
 } from "@/lib/types";
@@ -19,6 +20,23 @@ import { displayCommuteMinutes } from "@/lib/commute-details";
 import { activePreferenceKeys, commuteFitScore } from "@/lib/decision";
 import { PERSONALITY_SCORERS } from "@/lib/personalities";
 import { selectedRentGbp } from "@/lib/rent";
+
+/**
+ * The pieces of scoring that are city-specific.
+ *
+ * Only rent pricing differs in practice: London derives a room price from
+ * the area's one-bed figure around a London-wide pivot, and Greater
+ * Manchester samples rooms directly by postcode district. Everything else
+ * — the weights, the affordability curve, the personality scorers — is
+ * the same judgement in both cities and stays shared.
+ *
+ * Defaults to London so no existing call site has to pass anything.
+ */
+export type ScoringAdapters = {
+  selectedRent: (n: Neighbourhood, basis: RentBasis) => number;
+};
+
+const LONDON_ADAPTERS: ScoringAdapters = { selectedRent: selectedRentGbp };
 
 const DEFAULT_WEIGHTS = { affordability: 0.42, lifestyle: 0.38, commute: 0.2 };
 const ADVANCED_WEIGHTS = { affordability: 0.46, lifestyle: 0.34, commute: 0.2 };
@@ -74,6 +92,7 @@ export function scoreNeighbourhood(
   neighbourhood: Neighbourhood,
   commuteMinutes: number | null,
   query: UserQuery,
+  adapters: ScoringAdapters = LONDON_ADAPTERS,
 ): ScoredNeighbourhood {
   const effectiveCommute = displayCommuteMinutes(
     neighbourhood,
@@ -93,7 +112,7 @@ export function scoreNeighbourhood(
           query.rentBudgetShareOfTakeHome,
         )
       : null);
-  const selectedRent = selectedRentGbp(neighbourhood, query.rentBasis);
+  const selectedRent = adapters.selectedRent(neighbourhood, query.rentBasis);
 
   const aff =
     effectiveBudget == null
@@ -155,10 +174,11 @@ export function scoreAll(
   neighbourhoods: Neighbourhood[],
   commuteByNeighbourhoodId: Record<string, number | undefined>,
   query: UserQuery,
+  adapters: ScoringAdapters = LONDON_ADAPTERS,
 ): ScoredNeighbourhood[] {
   return neighbourhoods
     .map((n) =>
-      scoreNeighbourhood(n, commuteByNeighbourhoodId[n.id] ?? null, query),
+      scoreNeighbourhood(n, commuteByNeighbourhoodId[n.id] ?? null, query, adapters),
     )
     .sort((a, b) => {
       if (a.isExcluded !== b.isExcluded) return a.isExcluded ? 1 : -1;

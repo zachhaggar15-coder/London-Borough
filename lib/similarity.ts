@@ -1,6 +1,7 @@
 import { NEIGHBOURHOODS } from "@/lib/data/neighbourhoods";
 import type { LifestyleScores, Neighbourhood } from "@/lib/types";
 import { LIFESTYLE_LABELS } from "@/lib/types";
+import { zonesOf } from "@/lib/centrality";
 
 export type SimilarAreaCategory =
   | "mostSimilar"
@@ -133,7 +134,7 @@ export function bestFeatureLabel(neighbourhood: Neighbourhood): string {
 }
 
 export function centralityScore(neighbourhood: Neighbourhood): number {
-  const minZone = Math.min(...neighbourhood.transportZones);
+  const minZone = Math.min(...zonesOf(neighbourhood));
   const zoneScore = 1 - Math.min(1, (minZone - 1) / 5);
   const distanceKm = haversineKm(neighbourhood.centroid, CENTRAL_LONDON);
   const distanceScore = 1 - Math.min(1, distanceKm / 25);

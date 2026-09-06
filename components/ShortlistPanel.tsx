@@ -4,11 +4,11 @@ import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
 import { gbp } from "@/lib/affordability";
-import { NEIGHBOURHOODS_BY_ID } from "@/lib/data/neighbourhoods";
 import { comparisonDecision } from "@/lib/decision";
 import { formatApproxMinutes } from "@/lib/format";
 import { scoreNeighbourhood } from "@/lib/scoring";
 import { useStore } from "@/lib/store";
+import { useCityData } from "@/components/CityDataProvider";
 import type { ScoredNeighbourhood } from "@/lib/types";
 import DataQualityBadge from "@/components/DataQualityBadge";
 
@@ -20,16 +20,19 @@ export default function ShortlistPanel() {
   const selectedId = useStore((s) => s.selectedNeighbourhoodId);
   const query = useStore((s) => s.query);
   const commute = useStore((s) => s.commute);
+  const { neighbourhoodsById, scoringAdapters, links } = useCityData();
 
   const scored = useMemo(
     () =>
       ids
         .map((id) => {
-          const n = NEIGHBOURHOODS_BY_ID[id];
-          return n ? scoreNeighbourhood(n, commute[n.id] ?? null, query) : null;
+          const n = neighbourhoodsById[id];
+          return n
+            ? scoreNeighbourhood(n, commute[n.id] ?? null, query, scoringAdapters)
+            : null;
         })
         .filter((item): item is ScoredNeighbourhood => item != null),
-    [ids, commute, query],
+    [ids, commute, query, neighbourhoodsById, scoringAdapters],
   );
   const decision = useMemo(
     () => (scored.length >= 2 ? comparisonDecision(scored, query) : null),
@@ -119,7 +122,7 @@ export default function ShortlistPanel() {
               Decision compare
             </div>
             <Link
-              href="/compare"
+              href={links.compare}
               className="text-[11px] text-slate-500 hover:text-slate-200"
               onClick={() =>
                 trackEvent(ANALYTICS_EVENTS.comparisonCompleted, {
