@@ -63,7 +63,7 @@ export default function CouplesPage() {
               the pain.
             </p>
           </header>
-          <CouplesClient />
+          <CouplesClient city="london" />
         </main>
       </div>
     </>

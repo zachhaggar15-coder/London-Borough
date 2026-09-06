@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { BoroughSummary } from "@/lib/boroughs";
 import { matchScoreHex } from "@/lib/scoring";
+import { useCityData } from "@/components/CityDataProvider";
 
 type Props = {
   boroughs: BoroughSummary[];
@@ -10,6 +11,9 @@ type Props = {
 };
 
 export default function BoroughSearch({ boroughs, onSelect }: Props) {
+  const {
+    labels: { boroughNoun },
+  } = useCityData();
   const [search, setSearch] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
@@ -45,7 +49,7 @@ export default function BoroughSearch({ boroughs, onSelect }: Props) {
               Borough
             </div>
             <div className="text-[10px] uppercase tracking-wider text-slate-500">
-              {boroughs.length} London boroughs
+              {boroughs.length} {boroughNoun}
             </div>
           </div>
           <div className="relative">

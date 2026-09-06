@@ -4,21 +4,47 @@ import { useEffect, useMemo, useState } from "react";
 import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
 import { gbp } from "@/lib/affordability";
 import { rankCouplesNeighbourhoods } from "@/lib/couples";
-import { DESTINATIONS } from "@/lib/data/destinations";
-import { NEIGHBOURHOODS } from "@/lib/data/neighbourhoods";
+import { COUPLES_CONFIGS } from "@/lib/couples-config";
+import type { CityId } from "@/lib/cities";
 import { formatApproxMinutes } from "@/lib/format";
 import { PERSONALITIES } from "@/lib/personalities";
 import { RENT_BASIS_OPTIONS, rentBasisLabel } from "@/lib/rent";
-import type { CommuteEstimate, PersonalityKey, RentBasis, UserQuery } from "@/lib/types";
+import type { Destination, Neighbourhood, PersonalityKey, RentBasis, UserQuery } from "@/lib/types";
 
 type CommuteMap = Record<string, number | undefined>;
 
-export default function CouplesClient() {
-  const [destinationAId, setDestinationAId] = useState("canary-wharf");
-  const [destinationBId, setDestinationBId] = useState("kings-cross");
+/**
+ * Everything this tool needs that differs between cities.
+ *
+ * Deliberately a smaller slice than the CityData context the map uses:
+ * the couples page is a standalone form with no map, and taking the whole
+ * context would make it look like it renders one.
+ *
+ * Resolved inside this client component from a plain city id rather than
+ * passed in as a prop, because a server component cannot hand functions
+ * across the boundary — the rent adapter and the commute fetcher are both
+ * functions, and passing the config directly fails at render.
+ */
+export type CouplesConfig = {
+  neighbourhoods: Neighbourhood[];
+  destinations: Destination[];
+  /** Two destinations far enough apart that the default is a real compromise. */
+  defaultDestinationAId: string;
+  defaultDestinationBId: string;
+  defaultBudgetGbp: number;
+  selectedRent: (n: Neighbourhood, basis: RentBasis) => number;
+  fetchCommute: (destination: Destination) => Promise<CommuteMap>;
+  areaHref: (id: string) => string;
+};
+
+export default function CouplesClient({ city }: { city: CityId }) {
+  const config = COUPLES_CONFIGS[city];
+  const { neighbourhoods, destinations, selectedRent } = config;
+  const [destinationAId, setDestinationAId] = useState(config.defaultDestinationAId);
+  const [destinationBId, setDestinationBId] = useState(config.defaultDestinationBId);
   const [maxA, setMaxA] = useState(45);
   const [maxB, setMaxB] = useState(45);
-  const [budget, setBudget] = useState<number | null>(1_900);
+  const [budget, setBudget] = useState<number | null>(config.defaultBudgetGbp);
   const [rentBasis, setRentBasis] = useState<RentBasis>("oneBedFlat");
   const [personality, setPersonality] = useState<PersonalityKey>("balanced");
   const [commuteState, setCommuteState] = useState<{
@@ -27,16 +53,15 @@ export default function CouplesClient() {
     commuteB: CommuteMap;
   }>({ key: "", commuteA: {}, commuteB: {} });
 
-  const destinationA = DESTINATIONS.find((item) => item.id === destinationAId)!;
-  const destinationB = DESTINATIONS.find((item) => item.id === destinationBId)!;
+  const destinationA = destinations.find((item) => item.id === destinationAId)!;
+  const destinationB = destinations.find((item) => item.id === destinationBId)!;
   const commuteRequestKey = `${destinationAId}:${destinationBId}`;
+
+  const fetchCommute = config.fetchCommute;
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      fetchCommute(destinationAId),
-      fetchCommute(destinationBId),
-    ])
+    Promise.all([fetchCommute(destinationA), fetchCommute(destinationB)])
       .then(([a, b]) => {
         if (cancelled) return;
         setCommuteState({ key: commuteRequestKey, commuteA: a, commuteB: b });
@@ -49,7 +74,14 @@ export default function CouplesClient() {
     return () => {
       cancelled = true;
     };
-  }, [commuteRequestKey, destinationAId, destinationBId]);
+  }, [
+    commuteRequestKey,
+    destinationAId,
+    destinationBId,
+    destinationA,
+    destinationB,
+    fetchCommute,
+  ]);
 
   const commuteA = useMemo(
     () => (commuteState.key === commuteRequestKey ? commuteState.commuteA : {}),
@@ -77,7 +109,7 @@ export default function CouplesClient() {
 
   const ranked = useMemo(
     () =>
-      rankCouplesNeighbourhoods(NEIGHBOURHOODS, {
+      rankCouplesNeighbourhoods(neighbourhoods, {
         commuteA,
         commuteB,
         maxCommuteA: maxA,
@@ -85,8 +117,19 @@ export default function CouplesClient() {
         monthlyRentBudgetGbp: budget,
         rentBasis,
         sharedQuery,
+        selectedRent,
       }),
-    [commuteA, commuteB, maxA, maxB, budget, rentBasis, sharedQuery],
+    [
+      neighbourhoods,
+      commuteA,
+      commuteB,
+      maxA,
+      maxB,
+      budget,
+      rentBasis,
+      sharedQuery,
+      selectedRent,
+    ],
   );
 
   const visible = ranked.filter((item) => !item.isExcluded).slice(0, 8);
@@ -99,6 +142,7 @@ export default function CouplesClient() {
           <PersonControl
             label="Person A works near"
             destinationId={destinationAId}
+            destinations={destinations}
             max={maxA}
             onDestination={setDestinationAId}
             onMax={setMaxA}
@@ -106,6 +150,7 @@ export default function CouplesClient() {
           <PersonControl
             label="Person B works near"
             destinationId={destinationBId}
+            destinations={destinations}
             max={maxB}
             onDestination={setDestinationBId}
             onMax={setMaxB}
@@ -229,12 +274,14 @@ export default function CouplesClient() {
 function PersonControl({
   label,
   destinationId,
+  destinations,
   max,
   onDestination,
   onMax,
 }: {
   label: string;
   destinationId: string;
+  destinations: Destination[];
   max: number;
   onDestination: (id: string) => void;
   onMax: (minutes: number) => void;
@@ -247,7 +294,7 @@ function PersonControl({
           onChange={(event) => onDestination(event.target.value)}
           className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
         >
-          {DESTINATIONS.map((item) => (
+          {destinations.map((item) => (
             <option key={item.id} value={item.id}>
               {item.label}
             </option>
@@ -310,22 +357,3 @@ function Metric({
   );
 }
 
-async function fetchCommute(destinationId: string): Promise<CommuteMap> {
-  const response = await fetch("/api/commute", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ destinationId }),
-  });
-  if (!response.ok) return {};
-  const data = (await response.json()) as {
-    commute?: Record<string, number>;
-    estimates?: Record<string, CommuteEstimate>;
-  };
-  if (data.commute) return data.commute;
-  return Object.fromEntries(
-    Object.entries(data.estimates ?? {}).map(([id, estimate]) => [
-      id,
-      estimate.minutes,
-    ]),
-  );
-}

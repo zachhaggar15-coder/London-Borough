@@ -17,6 +17,13 @@ export type CouplesInput = {
   monthlyRentBudgetGbp: number | null;
   rentBasis: RentBasis;
   sharedQuery: UserQuery;
+  /**
+   * How this city prices the selected rent basis. Defaults to London's,
+   * so existing callers are unchanged; Manchester passes its own because
+   * it samples room rents by postcode district rather than deriving them
+   * from a London-wide one-bed pivot.
+   */
+  selectedRent?: (n: Neighbourhood, basis: RentBasis) => number;
 };
 
 export type CouplesRecommendation = {
@@ -39,7 +46,10 @@ export function scoreCouplesNeighbourhood(
 ): CouplesRecommendation {
   const commuteA = input.commuteA[neighbourhood.id] ?? null;
   const commuteB = input.commuteB[neighbourhood.id] ?? null;
-  const rent = selectedRentGbp(neighbourhood, input.rentBasis);
+  const rent = (input.selectedRent ?? selectedRentGbp)(
+    neighbourhood,
+    input.rentBasis,
+  );
   const affordability =
     input.monthlyRentBudgetGbp == null
       ? 1
@@ -143,7 +153,10 @@ function couplesTradeoff(
   commuteB: number | null,
   input: CouplesInput,
 ): string {
-  const rent = selectedRentGbp(neighbourhood, input.rentBasis);
+  const rent = (input.selectedRent ?? selectedRentGbp)(
+    neighbourhood,
+    input.rentBasis,
+  );
   if (
     input.monthlyRentBudgetGbp != null &&
     rent > input.monthlyRentBudgetGbp * 1.1

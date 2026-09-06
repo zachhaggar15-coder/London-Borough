@@ -19,6 +19,7 @@ import {
   RENT_MARKET_SOURCES,
 } from "@/lib/data/rent-market";
 import { CONTENT_YEAR } from "@/lib/site-config";
+import { zonesOf } from "@/lib/centrality";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -159,9 +160,9 @@ export default async function ComparePage({ params }: Props) {
   const dearerN = rentWinner === a.id ? b : a;
 
   const zoneLabel = (n: typeof a): string =>
-    n.transportZones.length > 1
-      ? `Zones ${n.transportZones.join(" & ")}`
-      : `Zone ${n.transportZones[0]}`;
+    zonesOf(n).length > 1
+      ? `Zones ${zonesOf(n).join(" & ")}`
+      : `Zone ${zonesOf(n)[0]}`;
 
   const linesFor = (n: typeof a): string[] => [
     ...new Set(n.mainStations.flatMap((s) => s.lines)),
@@ -339,8 +340,8 @@ export default async function ComparePage({ params }: Props) {
                 className="block rounded-lg bg-slate-900 border border-slate-800 p-5 hover:border-emerald-700/60 transition-colors"
               >
                 <p className="text-xs text-slate-400 mb-2">
-                  {borough} · Zone{neighbourhood.transportZones.length > 1 ? "s" : ""}{" "}
-                  {neighbourhood.transportZones.join("/")}
+                  {borough} · Zone{zonesOf(neighbourhood).length > 1 ? "s" : ""}{" "}
+                  {zonesOf(neighbourhood).join("/")}
                 </p>
                 <p className="font-semibold text-emerald-400">
                   Living in {neighbourhood.name} — full area guide
@@ -422,7 +423,7 @@ export default async function ComparePage({ params }: Props) {
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-slate-400">Zone(s)</span>
-                      <span>{n.transportZones.join(", ")}</span>
+                      <span>{zonesOf(n).join(", ")}</span>
                     </div>
                   </div>
                 </div>

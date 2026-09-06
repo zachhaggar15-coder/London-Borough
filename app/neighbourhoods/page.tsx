@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { NEIGHBOURHOODS } from "@/lib/data/neighbourhoods";
 import { getNeighbourhoodsByBorough, SITE_URL } from "@/lib/seo-data";
+import { zonesOf } from "@/lib/centrality";
 
 export const metadata: Metadata = {
   title: "London neighbourhoods guide — rents, transport & area profiles",
@@ -60,8 +61,8 @@ export default function NeighbourhoodsIndexPage() {
                           Living in {n.name}, {borough}
                         </p>
                         <p className="text-xs text-slate-400 mt-0.5">
-                          Zone{n.transportZones.length > 1 ? "s" : ""}{" "}
-                          {n.transportZones.join("/")}
+                          Zone{zonesOf(n).length > 1 ? "s" : ""}{" "}
+                          {zonesOf(n).join("/")}
                         </p>
                       </div>
                       <span className="flex-shrink-0 text-sm font-medium text-white">

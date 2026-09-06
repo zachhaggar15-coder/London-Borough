@@ -6,6 +6,7 @@ import {
   RENT_MARKET_REVIEW_AS_OF,
   RENT_MARKET_SOURCES,
 } from "@/lib/data/rent-market";
+import { zonesOf } from "@/lib/centrality";
 import RentIndexTable, {
   type RentIndexRow,
 } from "@/components/RentIndexTable";
@@ -31,8 +32,8 @@ export default function LondonRentIndexPage() {
     id: n.id,
     name: n.name,
     borough: n.borough,
-    zoneLabel: n.transportZones.join("/"),
-    zoneSort: Math.min(...n.transportZones),
+    zoneLabel: zonesOf(n).join("/"),
+    zoneSort: Math.min(...zonesOf(n)),
     oneBed: n.rent.oneBedMedianGbp,
     twoBed: n.rent.twoBedMedianGbp,
   }));

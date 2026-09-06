@@ -15,7 +15,7 @@
 
 import { useState } from "react";
 import { useStore } from "@/lib/store";
-import { DESTINATIONS } from "@/lib/data/destinations";
+import { useCityData } from "@/components/CityDataProvider";
 import {
   LIFESTYLE_KEYS,
   LIFESTYLE_LABELS,
@@ -40,6 +40,7 @@ import {
 import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
 
 export default function ControlPanel() {
+  const { destinations, geoScope, labels } = useCityData();
   const query = useStore((s) => s.query);
   const setDestination = useStore((s) => s.setDestination);
   const setMaxCommute = useStore((s) => s.setMaxCommute);
@@ -68,14 +69,14 @@ export default function ControlPanel() {
   // True if the active destination came from search (not a pre-seeded one)
   const isCustomDestination =
     query.destination != null &&
-    !DESTINATIONS.some((d) => d.id === query.destination!.id);
+    !destinations.some((d) => d.id === query.destination!.id);
 
   async function runSearch() {
     if (!searchInput.trim()) return;
     setIsSearching(true);
     setSearchError(null);
     setSearchResults(null);
-    const out = await geocode(searchInput);
+    const out = await geocode(searchInput, geoScope);
     setIsSearching(false);
     if (!out.ok) {
       setSearchError(out.error);
@@ -132,7 +133,7 @@ export default function ControlPanel() {
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="e.g. SW1A 1AA · King's Cross · Tooting"
+              placeholder={labels.destinationPlaceholder}
               className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none"
               autoComplete="off"
             />
@@ -149,7 +150,7 @@ export default function ControlPanel() {
         {/* Error from search */}
         {searchError && (
           <div className="mt-1.5 text-xs text-red-400">
-            {describeGeocodeError(searchError)}
+            {describeGeocodeError(searchError, geoScope.noun)}
           </div>
         )}
 
@@ -181,7 +182,7 @@ export default function ControlPanel() {
             </div>
             <button
               type="button"
-              onClick={() => setDestination(DESTINATIONS[0])}
+              onClick={() => setDestination(destinations[0])}
               className="shrink-0 text-[11px] text-slate-400 hover:text-white"
               aria-label="Clear custom destination"
             >
@@ -198,7 +199,7 @@ export default function ControlPanel() {
           <select
             value={isCustomDestination ? "" : query.destination?.id ?? ""}
             onChange={(e) => {
-              const dest = DESTINATIONS.find((d) => d.id === e.target.value);
+              const dest = destinations.find((d) => d.id === e.target.value);
               if (dest) {
                 setDestination(dest);
                 trackEvent(ANALYTICS_EVENTS.filtersChanged, {
@@ -214,7 +215,7 @@ export default function ControlPanel() {
                 — (custom destination active) —
               </option>
             )}
-            {DESTINATIONS.map((d) => (
+            {destinations.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.label}
               </option>

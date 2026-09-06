@@ -15,6 +15,7 @@ import {
   rentRegionForArea,
 } from "@/lib/data/rent-market";
 import { similarAreasFor, type SimilarAreaGroups } from "@/lib/similarity";
+import { zonesOf } from "@/lib/centrality";
 import { CONTENT_YEAR, POLICY_LAST_UPDATED } from "@/lib/site-config";
 import { RENT_MARKET_REVIEW_AS_OF } from "@/lib/data/rent-market";
 import { COUNCIL_TAX_AS_OF } from "@/lib/data/council-tax";
@@ -251,7 +252,7 @@ export function getBoroughPageData(slug: string): BoroughPageData | null {
     ),
   ].slice(0, 8);
   const allZones = [
-    ...new Set(neighbourhoods.flatMap((n) => n.transportZones)),
+    ...new Set(neighbourhoods.flatMap((n) => zonesOf(n))),
   ].sort((a, b) => a - b);
 
   // Nearby boroughs: closest by centroid of the borough itself
@@ -594,7 +595,7 @@ export function getSalaryPageData(salary: number): SalaryPageData {
       borough: n.borough,
       oneBedRent: rent,
       rentAsPct: Math.round((rent / takeHome) * 100),
-      zones: n.transportZones,
+      zones: zonesOf(n),
       lines,
       summary: n.summary,
     };
@@ -609,7 +610,7 @@ export function getSalaryPageData(salary: number): SalaryPageData {
       borough: n.borough,
       roomRent: room,
       roomAsPct: Math.round((room / takeHome) * 100),
-      zones: n.transportZones,
+      zones: zonesOf(n),
       lines,
       summary: n.summary,
     });

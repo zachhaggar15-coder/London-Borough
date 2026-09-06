@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { absoluteUrl, getIndexableRoutes } from "@/lib/seo-data";
+import { getManchesterIndexableRoutes } from "@/lib/manchester/seo-data";
 
 // Deterministic: every entry carries a real content-review date, so the
 // sitemap can be statically generated and refreshed on deploy.
@@ -22,7 +23,11 @@ function sitemapEntry(
 }
 
 export async function GET() {
-  const entries = getIndexableRoutes().map((entry) =>
+  // Manchester returns an empty list until MANCHESTER_IN_SITEMAP is on, so
+  // the section can ship and be crawled without being pushed at Google
+  // before its content is complete.
+  const routes = [...getIndexableRoutes(), ...getManchesterIndexableRoutes()];
+  const entries = routes.map((entry) =>
     sitemapEntry(entry.path, entry.priority, entry.changefreq, entry.lastmod),
   );
   const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${entries.join("")}</urlset>`;

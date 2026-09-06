@@ -8,15 +8,13 @@
 
 import { useMemo } from "react";
 import { useStore } from "@/lib/store";
-import { NEIGHBOURHOODS, NEIGHBOURHOODS_BY_ID } from "@/lib/data/neighbourhoods";
+import { useCityData } from "@/components/CityDataProvider";
 import { LIFESTYLE_KEYS, LIFESTYLE_LABELS } from "@/lib/types";
 import { gbp } from "@/lib/affordability";
-import { commuteRouteSummary } from "@/lib/commute-details";
 import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
 import { recommendationExplanation } from "@/lib/decision";
 import { formatApproxMinutes } from "@/lib/format";
 import { strengthInsights, tradeoffInsights } from "@/lib/insights";
-import { rentProfileFor } from "@/lib/rent";
 import {
   matchScoreHex,
   scoreNeighbourhood,
@@ -25,6 +23,7 @@ import {
   suitsWho,
 } from "@/lib/scoring";
 import { provenanceLabel } from "@/lib/provenance";
+import { zonesOf } from "@/lib/centrality";
 
 export default function DetailDrawer() {
   const selectedId = useStore((s) => s.selectedNeighbourhoodId);
@@ -34,16 +33,23 @@ export default function DetailDrawer() {
   const query = useStore((s) => s.query);
   const commute = useStore((s) => s.commute);
   const commuteSources = useStore((s) => s.commuteSources);
+  const {
+    neighbourhoods,
+    neighbourhoodsById,
+    scoringAdapters,
+    rentProfileFor,
+    commuteRouteSummary,
+  } = useCityData();
 
   const data = useMemo(() => {
     if (!selectedId) return null;
-    const n = NEIGHBOURHOODS_BY_ID[selectedId];
+    const n = neighbourhoodsById[selectedId];
     if (!n) return null;
-    return scoreNeighbourhood(n, commute[n.id] ?? null, query);
-  }, [selectedId, commute, query]);
+    return scoreNeighbourhood(n, commute[n.id] ?? null, query, scoringAdapters);
+  }, [selectedId, commute, query, neighbourhoodsById, scoringAdapters]);
   const allScored = useMemo(
-    () => scoreAll(NEIGHBOURHOODS, commute, query),
-    [commute, query],
+    () => scoreAll(neighbourhoods, commute, query, scoringAdapters),
+    [neighbourhoods, commute, query, scoringAdapters],
   );
 
   if (!data) return null;
@@ -75,7 +81,7 @@ export default function DetailDrawer() {
             <div className="flex items-baseline gap-2">
               <h2 className="text-xl font-semibold">{n.name}</h2>
               <span className="text-xs text-slate-500">
-                {n.borough} · Zone {n.transportZones.join("/")}
+                {n.borough} · Zone {zonesOf(n).join("/")}
               </span>
             </div>
             <div className="mt-0.5 text-xs text-slate-400">{n.summary}</div>

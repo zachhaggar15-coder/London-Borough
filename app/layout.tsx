@@ -3,9 +3,15 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { GOOGLE_ADSENSE_CLIENT_ID } from "@/lib/monetisation";
 import { SITE_URL } from "@/lib/seo-data";
+import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import CookieConsent from "@/components/CookieConsent";
-import { CONTACT_EMAIL, SITE_NAME } from "@/lib/site-config";
+import {
+  CITIES_COVERED,
+  CONTACT_EMAIL,
+  NETWORK_DESCRIPTION,
+  SITE_NAME,
+} from "@/lib/site-config";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -68,8 +74,7 @@ const organizationSchema = {
   "@type": "Organization",
   name: SITE_NAME,
   url: SITE_URL,
-  description:
-    "An independent, data-driven guide to choosing a London neighbourhood by commute, rent and lifestyle.",
+  description: NETWORK_DESCRIPTION,
   logo: `${SITE_URL}/opengraph-image`,
   email: CONTACT_EMAIL,
   contactPoint: {
@@ -78,7 +83,11 @@ const organizationSchema = {
     email: CONTACT_EMAIL,
     availableLanguage: "English",
   },
-  areaServed: { "@type": "City", name: "London" },
+  // Both cities, because the Organization schema describes the publisher
+  // rather than the homepage. Leaving it as London alone understated the
+  // site by half once the Manchester section landed, and /about is a page
+  // ad reviewers actually read.
+  areaServed: CITIES_COVERED.map((name) => ({ "@type": "Place", name })),
 };
 
 export default function RootLayout({
@@ -95,6 +104,7 @@ export default function RootLayout({
             __html: JSON.stringify(organizationSchema),
           }}
         />
+        <SiteHeader />
         {children}
         <SiteFooter />
         {/*

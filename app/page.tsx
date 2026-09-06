@@ -15,11 +15,15 @@ import {
   getComparePageData,
   getFeaturedCompareSlugs,
   LIFESTYLE_PAGES,
+  londonRentMedians,
   SALARY_LEVELS,
   SITE_URL,
 } from "@/lib/seo-data";
 import { DESTINATIONS } from "@/lib/data/destinations";
 import { guidesByRecency } from "@/lib/data/guides";
+import { MANCHESTER_NEIGHBOURHOODS } from "@/lib/manchester/data/neighbourhoods";
+import { GM_BOROUGHS } from "@/lib/manchester/boroughs";
+import { manchesterRentMedians } from "@/lib/manchester/seo-data";
 
 export const metadata: Metadata = {
   title: "Where in London — find your neighbourhood",
@@ -41,6 +45,9 @@ export default function HomePage() {
   const popularComparisons = getFeaturedCompareSlugs(6)
     .map((slug) => getComparePageData(slug))
     .filter(Boolean);
+  const manchesterCount = MANCHESTER_NEIGHBOURHOODS.length;
+  const manchesterMedianOneBed = manchesterRentMedians().oneBed;
+  const londonMedianOneBed = londonRentMedians().oneBed;
 
   const websiteSchema = {
     "@context": "https://schema.org",
@@ -101,13 +108,18 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
 
+      {/* ── Interactive tool ─────────────────────────────────────────── */}
+      <div className="h-[85vh] min-h-[560px] w-full overflow-hidden">
+        <HomeClient />
+      </div>
+
       {/* ── Server-rendered hero ─────────────────────────────────────────
-          The tool below is client-only, so without this the page had no
-          server-rendered H1 and no answer above the fold — a searcher landing
-          on "where to live in London" got an empty map asking for input. The
-          hero stays deliberately compact so the map is still the dominant
-          element, per the product rule in STRATEGY.md. */}
-      <section className="border-b border-slate-800 bg-slate-950 px-6 pb-8 pt-12">
+          Sits below the map so the tool is the first thing on the page, per
+          the product rule in STRATEGY.md that the map is the dominant
+          element. The H1 and the intro copy are still server-rendered, so
+          the page keeps the crawlable answer it was missing when the tool
+          was client-only — it is now below the fold rather than above it. */}
+      <section className="border-y border-slate-800 bg-slate-950 px-6 py-10">
         <div className="mx-auto max-w-5xl">
           <h1 className="mb-4 max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
             Where to live in London
@@ -141,11 +153,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* ── Interactive tool ─────────────────────────────────────────── */}
-      <div className="h-[85vh] min-h-[560px] w-full overflow-hidden">
-        <HomeClient />
-      </div>
 
       {/* ── Below-fold SEO content ───────────────────────────────────── */}
       <div className="bg-slate-950 text-slate-100 border-t border-slate-800">
@@ -387,6 +394,48 @@ export default function HomePage() {
               className="rounded-lg border border-slate-700 text-slate-400 px-4 py-2 text-sm hover:text-white transition-colors"
             >
               View all boroughs →
+            </Link>
+          </div>
+        </section>
+
+        {/* ── Manchester cross-link ──────────────────────────────────
+            The Manchester section launched with 183 URLs reachable only
+            from the header and footer. Internal links are most of what
+            decides whether a new section gets crawled and ranked or just
+            sits in the sitemap, so it gets a real block here rather than
+            a nav entry alone. Placed below the London clusters: this page
+            ranks for London queries and should stay about London. */}
+        <section className="border-t border-slate-800 mx-auto max-w-5xl px-6 py-16">
+          <h2 className="text-2xl font-bold tracking-tight mb-2">
+            Not set on London?
+          </h2>
+          <p className="text-slate-400 mb-6 max-w-3xl">
+            The same treatment now covers Greater Manchester —{" "}
+            {manchesterCount} areas across all {GM_BOROUGHS.length} boroughs,
+            with their own rent baseline, council tax and journey times. The
+            median one-bed there is around £
+            {manchesterMedianOneBed.toLocaleString()} a month, against £
+            {londonMedianOneBed.toLocaleString()} across the London areas on
+            this page.
+          </p>
+          <div className="flex flex-wrap gap-3 text-sm">
+            <Link
+              href="/manchester"
+              className="rounded-lg bg-emerald-600 px-4 py-2 font-medium hover:bg-emerald-500 transition-colors"
+            >
+              Where to live in Greater Manchester
+            </Link>
+            <Link
+              href="/manchester/neighbourhoods"
+              className="rounded-lg border border-slate-700 px-4 py-2 hover:border-slate-500 transition-colors"
+            >
+              Browse Manchester areas
+            </Link>
+            <Link
+              href="/manchester/rent-index"
+              className="rounded-lg border border-slate-700 px-4 py-2 hover:border-slate-500 transition-colors"
+            >
+              Manchester rent by area
             </Link>
           </div>
         </section>

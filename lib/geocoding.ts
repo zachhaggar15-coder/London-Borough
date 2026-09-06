@@ -1,5 +1,5 @@
 /**
- * Geocoding — turn user-typed strings into lat/lng.
+ * Geocoding — turn user-typed strings into lat/lng, within one city.
  *
  * Handles four input shapes:
  *   1. UK postcode      ("SW1A 1AA")        → postcodes.io
@@ -11,23 +11,24 @@
  *   - If the input looks like a UK postcode, prefer postcodes.io (more
  *     accurate, faster, no rate-limit politeness needed).
  *   - Otherwise, fall back to Nominatim, scoped to GB and constrained to
- *     the Greater London viewbox so we don't return matches in Leeds.
+ *     the calling city's viewbox so a search for "Victoria" does not
+ *     return the wrong city's station.
  *
  * Both providers are free, key-less, CORS-enabled, and good enough for
  * an MVP. If usage ever exceeds Nominatim's polite-use cap (1 req/sec),
  * upgrade to MapTiler or Mapbox geocoding behind the same function.
  */
 
-import { lookupPostcode } from "@/lib/postcodes";
+import { LONDON_SCOPE, lookupPostcode, type GeoScope } from "@/lib/postcodes";
 
 /** Loose UK postcode regex — used to route between the two providers. */
 const UK_POSTCODE_RE = /^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/i;
 
-/** Greater London bounding box (slightly generous). */
-const LONDON_BBOX = { west: -0.6, east: 0.4, south: 51.25, north: 51.75 };
-
 /** Nominatim viewbox order: left, top, right, bottom. */
-const NOMINATIM_VIEWBOX = `${LONDON_BBOX.west},${LONDON_BBOX.north},${LONDON_BBOX.east},${LONDON_BBOX.south}`;
+function viewboxFor(scope: GeoScope): string {
+  const { west, north, east, south } = scope.bbox;
+  return `${west},${north},${east},${south}`;
+}
 
 export type GeocodeResult = {
   /** Short human label, e.g. "King's Cross Station, Camden" */
@@ -49,12 +50,12 @@ export type GeocodeLookup =
   | { ok: true; results: GeocodeResult[] }
   | { ok: false; error: GeocodeError };
 
-function inLondon(lat: number, lng: number): boolean {
+function inScope(lat: number, lng: number, scope: GeoScope): boolean {
   return (
-    lng >= LONDON_BBOX.west &&
-    lng <= LONDON_BBOX.east &&
-    lat >= LONDON_BBOX.south &&
-    lat <= LONDON_BBOX.north
+    lng >= scope.bbox.west &&
+    lng <= scope.bbox.east &&
+    lat >= scope.bbox.south &&
+    lat <= scope.bbox.north
   );
 }
 
@@ -79,7 +80,10 @@ type NominatimHit = {
   };
 };
 
-async function geocodeViaNominatim(query: string): Promise<GeocodeLookup> {
+async function geocodeViaNominatim(
+  query: string,
+  scope: GeoScope,
+): Promise<GeocodeLookup> {
   const url =
     "https://nominatim.openstreetmap.org/search" +
     `?q=${encodeURIComponent(query)}` +
@@ -87,7 +91,7 @@ async function geocodeViaNominatim(query: string): Promise<GeocodeLookup> {
     "&limit=5" +
     "&countrycodes=gb" +
     "&addressdetails=1" +
-    `&viewbox=${NOMINATIM_VIEWBOX}` +
+    `&viewbox=${viewboxFor(scope)}` +
     "&bounded=1";
 
   let res: Response;
@@ -102,7 +106,7 @@ async function geocodeViaNominatim(query: string): Promise<GeocodeLookup> {
 
   const inBox = data
     .map((d) => ({ ...d, latNum: parseFloat(d.lat), lngNum: parseFloat(d.lon) }))
-    .filter((d) => inLondon(d.latNum, d.lngNum));
+    .filter((d) => inScope(d.latNum, d.lngNum, scope));
 
   if (inBox.length === 0) return { ok: false, error: { kind: "not_found" } };
 
@@ -115,7 +119,7 @@ async function geocodeViaNominatim(query: string): Promise<GeocodeLookup> {
         d.address?.quarter ??
         d.address?.city_district ??
         d.address?.city ??
-        "London";
+        scope.noun;
       return {
         label: shortenLabel(d.display_name),
         area,
@@ -128,12 +132,15 @@ async function geocodeViaNominatim(query: string): Promise<GeocodeLookup> {
 }
 
 /** Top-level geocoder. Routes between postcodes.io and Nominatim. */
-export async function geocode(input: string): Promise<GeocodeLookup> {
+export async function geocode(
+  input: string,
+  scope: GeoScope = LONDON_SCOPE,
+): Promise<GeocodeLookup> {
   const trimmed = input.trim();
   if (!trimmed) return { ok: false, error: { kind: "empty" } };
 
   if (UK_POSTCODE_RE.test(trimmed)) {
-    const pc = await lookupPostcode(trimmed);
+    const pc = await lookupPostcode(trimmed, scope);
     if (pc.ok) {
       return {
         ok: true,
@@ -158,17 +165,20 @@ export async function geocode(input: string): Promise<GeocodeLookup> {
       return { ok: false, error: { kind: "network" } };
   }
 
-  return geocodeViaNominatim(trimmed);
+  return geocodeViaNominatim(trimmed, scope);
 }
 
-export function describeGeocodeError(error: GeocodeError): string {
+export function describeGeocodeError(
+  error: GeocodeError,
+  areaNoun = LONDON_SCOPE.noun,
+): string {
   switch (error.kind) {
     case "empty":
       return "";
     case "not_found":
-      return "Couldn't find that in London. Try a postcode, station, or area name.";
+      return `Couldn't find that in ${areaNoun}. Try a postcode, station, or area name.`;
     case "outside_london":
-      return "That location is outside Greater London.";
+      return `That location is outside ${areaNoun}.`;
     case "network":
       return "Couldn't reach the search service. Try again.";
   }

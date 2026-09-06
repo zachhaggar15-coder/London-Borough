@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { NEIGHBOURHOODS } from "@/lib/data/neighbourhoods";
 import { DESTINATIONS } from "@/lib/data/destinations";
+import { MANCHESTER_NEIGHBOURHOODS } from "@/lib/manchester/data/neighbourhoods";
+import { GM_BOROUGHS } from "@/lib/manchester/boroughs";
 import { SITE_URL } from "@/lib/seo-data";
 import {
   CONTACT_EMAIL,
@@ -12,16 +14,20 @@ import {
   RENT_MARKET_REVIEW_AS_OF,
   RENT_MARKET_SOURCES,
 } from "@/lib/data/rent-market";
+import {
+  MANCHESTER_RENT_REVIEW_AS_OF,
+  MANCHESTER_RENT_SOURCES,
+} from "@/lib/manchester/data/rent-market";
 
 export const metadata: Metadata = {
-  title: "About Where in London — who makes this and why",
+  title: "About this site — who makes it and why",
   description:
-    "Who runs Where in London, why it exists, how it is funded, and what the data can and cannot tell you about choosing a London neighbourhood.",
+    "Who runs this site, why it exists, how it is funded, and what the data can and cannot tell you about choosing where to live in London or Greater Manchester.",
   alternates: { canonical: `${SITE_URL}/about` },
   openGraph: {
-    title: "About Where in London — who makes this and why",
+    title: "About this site — who makes it and why",
     description:
-      "Who runs Where in London, why it exists, how it is funded, and what the data can and cannot tell you.",
+      "Who runs this site, why it exists, how it is funded, and what the data can and cannot tell you.",
     url: `${SITE_URL}/about`,
     type: "article",
   },
@@ -69,9 +75,11 @@ export default function AboutPage() {
               About {SITE_NAME}
             </h1>
             <p className="text-lg text-slate-300">
-              {SITE_NAME} helps people work out which part of London actually
+              This site helps people work out which part of a city actually
               suits them — by commute, by rent, and by what they want their week
               to look like — instead of guessing from property listings alone.
+              It started as {SITE_NAME}, covering the capital, and now covers
+              Greater Manchester as well.
             </p>
           </header>
 
@@ -88,10 +96,10 @@ export default function AboutPage() {
                 That question has three moving parts that interact — what you
                 can afford, how long you are willing to travel, and what you want
                 within walking distance. Change your rent ceiling by £150 a month
-                and the realistic map of London shifts. Change your office from
-                Canary Wharf to Paddington and it shifts again. This site exists
-                to make those trade-offs visible before you start booking
-                viewings.
+                and the realistic map of a city shifts. Change your office from
+                Canary Wharf to Paddington, or from Piccadilly to MediaCityUK,
+                and it shifts again. This site exists to make those trade-offs
+                visible before you start booking viewings.
               </p>
             </div>
           </section>
@@ -121,16 +129,32 @@ export default function AboutPage() {
             <ul className="space-y-2 text-slate-300 list-disc pl-5">
               <li>
                 <strong className="text-slate-100">
-                  {NEIGHBOURHOODS.length} neighbourhood guides
+                  {NEIGHBOURHOODS.length} London neighbourhood guides
                 </strong>{" "}
                 — rent, transport, lifestyle scores and an honest list of
                 trade-offs for each area.
               </li>
               <li>
                 <strong className="text-slate-100">
+                  {MANCHESTER_NEIGHBOURHOODS.length} Greater Manchester area
+                  guides
+                </strong>{" "}
+                — the same treatment across all {GM_BOROUGHS.length} boroughs of
+                the conurbation, with its own rent baseline, council tax and
+                journey times.{" "}
+                <Link
+                  href="/manchester"
+                  className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
+                >
+                  Browse the Manchester section
+                </Link>
+                .
+              </li>
+              <li>
+                <strong className="text-slate-100">
                   {DESTINATIONS.length} commute guides
                 </strong>{" "}
-                — where to live if you need to reach a given part of London
+                — where to live if you need to reach a given part of the city
                 regularly.
               </li>
               <li>
@@ -151,17 +175,42 @@ export default function AboutPage() {
               Where the numbers come from
             </h2>
             <p className="mb-3 text-slate-300">
-              Rent figures were last reviewed on{" "}
+              London rent figures were last reviewed on{" "}
               <time dateTime={RENT_MARKET_REVIEW_AS_OF}>
                 {RENT_MARKET_REVIEW_AS_OF}
               </time>
               , drawing on:
             </p>
-            <ul className="space-y-2 text-slate-300 list-disc pl-5">
+            <ul className="mb-6 space-y-2 text-slate-300 list-disc pl-5">
               {RENT_MARKET_SOURCES.map((source) => (
                 <li key={source}>{source}</li>
               ))}
             </ul>
+            <p className="mb-3 text-slate-300">
+              Greater Manchester figures are held separately and were last
+              reviewed on{" "}
+              <time dateTime={MANCHESTER_RENT_REVIEW_AS_OF}>
+                {MANCHESTER_RENT_REVIEW_AS_OF}
+              </time>
+              , drawing on:
+            </p>
+            <ul className="space-y-2 text-slate-300 list-disc pl-5">
+              {MANCHESTER_RENT_SOURCES.map((source) => (
+                <li key={source}>{source}</li>
+              ))}
+            </ul>
+            <p className="mt-4 text-slate-300">
+              The two cities use different baselines on purpose, and the{" "}
+              <Link
+                href="/manchester/methodology"
+                className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
+              >
+                Manchester methodology
+              </Link>{" "}
+              sets out where its method differs from the London one — travel
+              bands instead of tube zones, a Mayoral precept instead of a GLA
+              one, and no live journey planner behind the commute times.
+            </p>
           </section>
 
           <section className="mb-10">
@@ -170,9 +219,10 @@ export default function AboutPage() {
               <p>
                 It is not a live property portal, and it does not list individual
                 flats. It is not a guaranteed route planner — for live times and
-                disruptions, use Transport for London. It is not financial, legal
-                or mortgage advice, and the take-home pay calculations are
-                illustrative rather than a substitute for proper tax advice.
+                disruptions, use Transport for London or Transport for Greater
+                Manchester. It is not financial, legal or mortgage advice, and
+                the take-home pay calculations are illustrative rather than a
+                substitute for proper tax advice.
               </p>
               <p>
                 Rent estimates describe an area, not a property. Two flats on the

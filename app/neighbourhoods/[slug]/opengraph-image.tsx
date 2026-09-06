@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { NEIGHBOURHOODS } from "@/lib/data/neighbourhoods";
+import { centralityLabel } from "@/lib/centrality";
 
 export const runtime = "edge";
 export const size = { width: 1200, height: 630 };
@@ -13,12 +14,10 @@ export default async function Image({ params }: Props) {
 
   const name = n?.name ?? "London";
   const borough = n?.borough?.split("/")[0]?.trim() ?? "London";
-  const zone =
-    n?.transportZones?.length === 1
-      ? `Zone ${n.transportZones[0]}`
-      : n?.transportZones
-        ? `Zones ${n.transportZones.join(" & ")}`
-        : "";
+  // centralityLabel already produces "Zone 2" / "Zones 2 & 3" and returns
+  // an empty string when the area has neither zones nor a band, which is
+  // exactly what this OG card wants for an unknown slug.
+  const zone = n ? centralityLabel(n) : "";
   const rent = n ? `£${n.rent.oneBedMedianGbp.toLocaleString()}/mo` : "";
   const summary = n?.summary?.slice(0, 100) ?? "";
 

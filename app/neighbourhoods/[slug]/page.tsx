@@ -22,6 +22,7 @@ import { provenanceLabel } from "@/lib/provenance";
 import { CONTENT_YEAR } from "@/lib/site-config";
 import { councilTaxForBorough, formatPounds } from "@/lib/council-tax";
 import { COUNCIL_TAX_YEAR } from "@/lib/data/council-tax";
+import { zonesOf } from "@/lib/centrality";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -38,9 +39,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { neighbourhood: n } = data;
   const zoneStr =
-    n.transportZones.length > 1
-      ? `Zones ${n.transportZones.join("–")}`
-      : `Zone ${n.transportZones[0]}`;
+    zonesOf(n).length > 1
+      ? `Zones ${zonesOf(n).join("–")}`
+      : `Zone ${zonesOf(n)[0]}`;
   const title = `Living in ${n.name}: rent & is it worth it? (${CONTENT_YEAR})`;
   const description = `Living in ${n.name}? One-bed rent averages £${n.rent.oneBedMedianGbp.toLocaleString()}/month, ${zoneStr}. Is ${n.name} a nice place to live? See transport, lifestyle scores and the verdict.`;
 
@@ -72,9 +73,9 @@ export default async function NeighbourhoodPage({ params }: Props) {
   } = data;
 
   const zoneStr =
-    n.transportZones.length > 1
-      ? `Zones ${n.transportZones.join(" & ")}`
-      : `Zone ${n.transportZones[0]}`;
+    zonesOf(n).length > 1
+      ? `Zones ${zonesOf(n).join(" & ")}`
+      : `Zone ${zonesOf(n)[0]}`;
 
   const primaryBorough = n.borough.split("/")[0].trim();
   const bSlug = boroughSlug(primaryBorough);

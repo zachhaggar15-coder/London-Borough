@@ -1,13 +1,14 @@
 /**
- * The MapLibre canvas — satellite basemap, bounded to Greater London.
+ * The MapLibre canvas — satellite basemap, bounded to one city.
  *
  * Basemap selection:
  *   - If NEXT_PUBLIC_MAPTILER_KEY is set → MapTiler "Hybrid" (satellite + labels)
  *   - Otherwise → inline style with ESRI World Imagery (satellite, no key
  *     needed) plus ESRI Boundaries & Places for place labels.
  *
- * The map is hard-bounded to Greater London (maxBounds) so the user
- * physically can't pan into the open ocean.
+ * The map is hard-bounded to the active city (maxBounds) so the user
+ * physically can't pan away from the data. Which city, and everything
+ * else that differs between them, comes from the CityData context.
  *
  * Renders, in stacking order from bottom to top:
  *   1. Satellite tiles (basemap)
@@ -29,23 +30,10 @@ import Map, {
 } from "react-map-gl/maplibre";
 import type { FilterSpecification, StyleSpecification } from "maplibre-gl";
 import { useStore } from "@/lib/store";
-import { NEIGHBOURHOODS } from "@/lib/data/neighbourhoods";
-import {
-  BOROUGH_BOUNDARY_ATTRIBUTION,
-  BOROUGH_BOUNDARY_SOURCE_URL,
-  BOROUGH_FILTER_NAMES,
-  BOROUGH_NAME_FIELD,
-} from "@/lib/data/borough-boundaries";
-import { boroughSummaries, type BoroughSummary } from "@/lib/boroughs";
-import { polygonForNeighbourhood } from "@/lib/data/polygons";
+import { useCityData } from "@/components/CityDataProvider";
+import type { BoroughSummary } from "@/lib/boroughs";
 import { matchScoreHex, scoreAll } from "@/lib/scoring";
 import BoroughSearch from "@/components/BoroughSearch";
-
-/** Greater London bounding box (slightly generous). */
-const LONDON_BOUNDS: [[number, number], [number, number]] = [
-  [-0.6, 51.25], // SW
-  [0.4, 51.75],  // NE
-];
 
 /**
  * Default inline style — satellite imagery with no API key required.
@@ -101,7 +89,20 @@ export default function MapView() {
   const [selectedBoroughId, setSelectedBoroughId] = useState<string | null>(
     null,
   );
+  // Flipped on load so the resize observer below attaches to a real map
+  // instance rather than a ref that is still null on first commit.
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
 
+  const {
+    neighbourhoods,
+    scoringAdapters,
+    polygonFor,
+    boroughSummaries,
+    boroughBoundary,
+    bounds,
+    centre,
+    initialZoom,
+  } = useCityData();
   const query = useStore((s) => s.query);
   const commute = useStore((s) => s.commute);
   const selected = useStore((s) => s.selectedNeighbourhoodId);
@@ -109,13 +110,17 @@ export default function MapView() {
   const shortlistedIds = useStore((s) => s.shortlistedNeighbourhoodIds);
   const isochrone = useStore((s) => s.isochrone);
   const topN = useStore((s) => s.topN);
+  const isPanelCollapsed = useStore((s) => s.isPanelCollapsed);
 
   const scored = useMemo(
-    () => scoreAll(NEIGHBOURHOODS, commute, query),
-    [commute, query],
+    () => scoreAll(neighbourhoods, commute, query, scoringAdapters),
+    [neighbourhoods, commute, query, scoringAdapters],
   );
 
-  const boroughs = useMemo(() => boroughSummaries(scored), [scored]);
+  const boroughs = useMemo(
+    () => boroughSummaries(scored),
+    [boroughSummaries, scored],
+  );
   const selectedBorough = useMemo(
     () => boroughs.find((b) => b.id === selectedBoroughId) ?? null,
     [boroughs, selectedBoroughId],
@@ -124,10 +129,10 @@ export default function MapView() {
     () =>
       [
         "==",
-        ["get", BOROUGH_NAME_FIELD],
+        ["get", boroughBoundary.nameField],
         selectedBorough?.name ?? "__none__",
       ] as unknown as FilterSpecification,
-    [selectedBorough],
+    [boroughBoundary.nameField, selectedBorough],
   );
 
   // Only render the top-N reachable neighbourhoods on the map. The
@@ -189,7 +194,7 @@ export default function MapView() {
   const polygonGeojson = useMemo(() => {
     const features = visibleScored.flatMap((s) => {
       const poly =
-        s.neighbourhood.polygon ?? polygonForNeighbourhood(s.neighbourhood.id);
+        s.neighbourhood.polygon ?? polygonFor(s.neighbourhood.id);
       if (!poly) return [];
       return [
         {
@@ -211,7 +216,40 @@ export default function MapView() {
       ];
     });
     return { type: "FeatureCollection" as const, features };
-  }, [visibleScored, selected]);
+  }, [visibleScored, selected, polygonFor]);
+
+  /**
+   * Keep the canvas the size of its container.
+   *
+   * MapLibre sizes its drawing buffer once and only re-reads the
+   * container on an explicit resize(). Collapsing the results sidebar
+   * leaves a full-width container still drawing into a sidebar-width
+   * canvas — the map visibly stops at the old edge.
+   *
+   * Two triggers, because neither alone was enough in testing. The
+   * explicit dependency on the collapse flag is the one that actually
+   * fires for the sidebar toggle; the observer catches window resizes and
+   * orientation changes. resize() is idempotent, so running both is
+   * harmless.
+   */
+  useEffect(() => {
+    const map = ref.current;
+    if (!map) return;
+
+    // Wait for the browser to commit the new layout before measuring:
+    // on the same frame the container is still the old width.
+    const frame = requestAnimationFrame(() => map.resize());
+    return () => cancelAnimationFrame(frame);
+  }, [isPanelCollapsed, isMapLoaded]);
+
+  useEffect(() => {
+    const map = ref.current;
+    if (!map || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(() => map.resize());
+    observer.observe(map.getContainer());
+    return () => observer.disconnect();
+  }, [isMapLoaded]);
 
   useEffect(() => {
     if (!selected || !ref.current) return;
@@ -219,14 +257,14 @@ export default function MapView() {
       suppressNextSelectedFly.current = false;
       return;
     }
-    const target = NEIGHBOURHOODS.find((n) => n.id === selected);
+    const target = neighbourhoods.find((n) => n.id === selected);
     if (!target) return;
     ref.current.flyTo({
       center: [target.centroid.lng, target.centroid.lat],
       zoom: 13,
       duration: 800,
     });
-  }, [selected]);
+  }, [selected, neighbourhoods]);
 
   function selectBorough(borough: BoroughSummary) {
     setSelectedBoroughId(borough.id);
@@ -271,14 +309,19 @@ export default function MapView() {
       <Map
         ref={ref}
         mapStyle={getMapStyle()}
-        initialViewState={{ longitude: -0.1, latitude: 51.51, zoom: 10.3 }}
-        maxBounds={LONDON_BOUNDS}
+        initialViewState={{
+          longitude: centre.lng,
+          latitude: centre.lat,
+          zoom: initialZoom,
+        }}
+        maxBounds={bounds}
         minZoom={9}
         maxZoom={16}
         interactiveLayerIds={[
           "neighbourhood-circles",
           "neighbourhood-polygon-fill",
         ]}
+        onLoad={() => setIsMapLoaded(true)}
         onClick={onClick}
         cursor="default"
         style={{ width: "100%", height: "100%" }}
@@ -286,8 +329,8 @@ export default function MapView() {
         <Source
           id="borough-boundaries"
           type="geojson"
-          data={BOROUGH_BOUNDARY_SOURCE_URL}
-          attribution={BOROUGH_BOUNDARY_ATTRIBUTION}
+          data={boroughBoundary.sourceUrl}
+          attribution={boroughBoundary.attribution}
         >
           <Layer
             id="selected-borough-fill"
@@ -303,8 +346,8 @@ export default function MapView() {
             type="line"
             filter={[
               "in",
-              ["get", BOROUGH_NAME_FIELD],
-              ["literal", BOROUGH_FILTER_NAMES],
+              ["get", boroughBoundary.nameField],
+              ["literal", boroughBoundary.filterNames],
             ] as unknown as FilterSpecification}
             paint={{
               "line-color": "#ffffff",
