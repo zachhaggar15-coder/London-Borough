@@ -10,9 +10,11 @@ import {
 import { boroughSlug } from "@/lib/manchester/boroughs";
 import {
   TRAVEL_BANDS,
+  TRAVEL_BAND_LABELS,
+} from "@/lib/travel-band";
+import {
   TRAVEL_BAND_DESCRIPTIONS,
   TRAVEL_BAND_DISTANCE_KM,
-  TRAVEL_BAND_LABELS,
 } from "@/lib/manchester/travel-band";
 import { ONS_RENT_REFERENCE_MONTH } from "@/lib/manchester/data/rent-market";
 import {

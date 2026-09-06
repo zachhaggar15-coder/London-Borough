@@ -11,7 +11,7 @@ import {
   relatedManchesterComparisons,
 } from "@/lib/manchester/seo-data";
 import { boroughSlug } from "@/lib/manchester/boroughs";
-import { TRAVEL_BAND_LABELS } from "@/lib/manchester/travel-band";
+import { TRAVEL_BAND_LABELS } from "@/lib/travel-band";
 import { LIFESTYLE_KEYS, LIFESTYLE_LABELS } from "@/lib/types";
 import type { ManchesterNeighbourhood } from "@/lib/manchester/types";
 import {

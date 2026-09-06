@@ -18,6 +18,7 @@ import { SITE_URL } from "@/lib/seo-data";
 import type { City } from "@/lib/cities";
 import { PERSONALITY_SCORERS } from "@/lib/personalities";
 import { centralityRank } from "@/lib/centrality";
+import type { TravelBand } from "@/lib/travel-band";
 import type {
   Destination,
   LifestyleScores,
@@ -153,6 +154,22 @@ export type CityInput = {
   regionName: string;
 
   destinations: Destination[];
+
+  /**
+   * What each travel band means here.
+   *
+   * The four band names are shared, but the distances and the character
+   * behind them are not: Greater Manchester's fringe is Wigan and
+   * Ramsbottom, the West of England's is Bath and Weston-super-Mare, and
+   * those are not the same kind of place. The labels are per city so a
+   * band description never reads as boilerplate.
+   */
+  travelBands: {
+    descriptions: Record<TravelBand, string>;
+    distances: Record<TravelBand, string>;
+    /** One line on why this city does not use a zone system. */
+    rationale: string;
+  };
 
   /** Reviewed door-to-door minutes: area id → destination id → minutes. */
   commuteTimes: Record<string, Record<string, number>>;
@@ -618,6 +635,10 @@ export function createCityContent(input: CityInput) {
     destinations: input.destinations,
     guides: input.guides,
     lifestylePages: input.lifestylePages,
+    travelBands: input.travelBands,
+    councilTax: input.councilTax,
+    rent: input.rent,
+    taxRegimeLabel: input.taxRegimeLabel,
     salaryLevels: input.salaryLevels,
 
     path,

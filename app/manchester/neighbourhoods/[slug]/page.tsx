@@ -18,8 +18,10 @@ import {
 } from "@/lib/manchester/seo-data";
 import { boroughSlug } from "@/lib/manchester/boroughs";
 import {
-  TRAVEL_BAND_DESCRIPTIONS,
   TRAVEL_BAND_LABELS,
+} from "@/lib/travel-band";
+import {
+  TRAVEL_BAND_DESCRIPTIONS,
 } from "@/lib/manchester/travel-band";
 import {
   MANCHESTER_RENT_SOURCES,

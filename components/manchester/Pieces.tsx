@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { LIFESTYLE_KEYS, LIFESTYLE_LABELS } from "@/lib/types";
 import type { LifestyleScores } from "@/lib/types";
-import { TRAVEL_BAND_LABELS } from "@/lib/manchester/travel-band";
+import { TRAVEL_BAND_LABELS } from "@/lib/travel-band";
 import type { ManchesterNeighbourhood } from "@/lib/manchester/types";
 import { manchesterPath } from "@/lib/manchester/seo-data";
 

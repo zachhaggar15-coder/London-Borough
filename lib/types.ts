@@ -6,7 +6,7 @@
  * radar charts) and provenance (source + asOf) is captured per metric.
  */
 
-import type { TravelBand } from "@/lib/manchester/travel-band";
+import type { TravelBand } from "@/lib/travel-band";
 
 export type LatLng = { lat: number; lng: number };
 

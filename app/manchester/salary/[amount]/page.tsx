@@ -10,7 +10,7 @@ import {
   type SalaryAreaFit,
 } from "@/lib/manchester/seo-data";
 import { boroughSlug } from "@/lib/manchester/boroughs";
-import { TRAVEL_BAND_LABELS } from "@/lib/manchester/travel-band";
+import { TRAVEL_BAND_LABELS } from "@/lib/travel-band";
 import {
   Breadcrumbs,
   DataNote,

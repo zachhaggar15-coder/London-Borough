@@ -1,5 +1,5 @@
 import type { LatLng, LifestyleScores, Rent, Station } from "@/lib/types";
-import type { TravelBand } from "@/lib/manchester/travel-band";
+import type { TravelBand } from "@/lib/travel-band";
 import type { GmBorough } from "@/lib/manchester/boroughs";
 import type { RoomDistrictGroup } from "@/lib/manchester/data/rent-market";
 

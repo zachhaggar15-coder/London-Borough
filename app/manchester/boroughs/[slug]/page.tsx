@@ -17,7 +17,7 @@ import {
   MANCHESTER_COUNCIL_TAX_YEAR,
   bandChargeFor,
 } from "@/lib/manchester/data/council-tax";
-import { TRAVEL_BAND_LABELS } from "@/lib/manchester/travel-band";
+import { TRAVEL_BAND_LABELS } from "@/lib/travel-band";
 import {
   AreaCard,
   Breadcrumbs,

@@ -8,7 +8,7 @@ import {
   manchesterUrl,
   rankByLifestyle,
 } from "@/lib/manchester/seo-data";
-import { TRAVEL_BAND_LABELS } from "@/lib/manchester/travel-band";
+import { TRAVEL_BAND_LABELS } from "@/lib/travel-band";
 import {
   Breadcrumbs,
   DataNote,

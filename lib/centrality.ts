@@ -1,5 +1,5 @@
 import type { Neighbourhood } from "@/lib/types";
-import { TRAVEL_BAND_LABELS } from "@/lib/manchester/travel-band";
+import { TRAVEL_BAND_LABELS } from "@/lib/travel-band";
 
 /**
  * Reading centrality across two cities that measure it differently.

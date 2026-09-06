@@ -8,7 +8,7 @@ import {
 } from "@/lib/manchester/seo-data";
 import { MANCHESTER_NEIGHBOURHOODS } from "@/lib/manchester/data/neighbourhoods";
 import { boroughSlug } from "@/lib/manchester/boroughs";
-import { TRAVEL_BAND_LABELS } from "@/lib/manchester/travel-band";
+import { TRAVEL_BAND_LABELS } from "@/lib/travel-band";
 import {
   MANCHESTER_RENT_SOURCES,
   ONS_RENT_REFERENCE_MONTH,

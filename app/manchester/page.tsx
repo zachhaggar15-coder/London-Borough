@@ -16,8 +16,10 @@ import { ONS_BOROUGH_RENT_GBP, ONS_RENT_REFERENCE_MONTH } from "@/lib/manchester
 import { BAND_D_BY_BOROUGH } from "@/lib/manchester/data/council-tax";
 import {
   TRAVEL_BANDS,
-  TRAVEL_BAND_DESCRIPTIONS,
   TRAVEL_BAND_LABELS,
+} from "@/lib/travel-band";
+import {
+  TRAVEL_BAND_DESCRIPTIONS,
 } from "@/lib/manchester/travel-band";
 import { manchesterGuidesByRecency } from "@/lib/manchester/data/guides";
 import ManchesterClient from "@/app/manchester/ManchesterClient";

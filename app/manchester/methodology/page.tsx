@@ -25,9 +25,11 @@ import {
 import { GM_TRANSIT_KMH } from "@/lib/manchester/commute";
 import {
   TRAVEL_BANDS,
+  TRAVEL_BAND_LABELS,
+} from "@/lib/travel-band";
+import {
   TRAVEL_BAND_DESCRIPTIONS,
   TRAVEL_BAND_DISTANCE_KM,
-  TRAVEL_BAND_LABELS,
 } from "@/lib/manchester/travel-band";
 import { LIFESTYLE_KEYS, LIFESTYLE_LABELS } from "@/lib/types";
 import {

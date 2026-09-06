@@ -9,7 +9,7 @@ import {
 } from "@/lib/manchester/seo-data";
 import { MANCHESTER_DESTINATIONS } from "@/lib/manchester/data/destinations";
 import { boroughSlug } from "@/lib/manchester/boroughs";
-import { TRAVEL_BAND_LABELS } from "@/lib/manchester/travel-band";
+import { TRAVEL_BAND_LABELS } from "@/lib/travel-band";
 import { COMMUTE_SOURCE_LABELS } from "@/lib/manchester/commute";
 import {
   Breadcrumbs,

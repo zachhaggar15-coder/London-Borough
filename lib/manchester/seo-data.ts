@@ -27,7 +27,7 @@ import {
   MANCHESTER_GUIDES,
   manchesterGuidesLastUpdated,
 } from "@/lib/manchester/data/guides";
-import { travelBandRank, type TravelBand } from "@/lib/manchester/travel-band";
+import { travelBandRank, type TravelBand } from "@/lib/travel-band";
 import { PERSONALITY_SCORERS } from "@/lib/personalities";
 import type { ManchesterNeighbourhood } from "@/lib/manchester/types";
 import type { LifestyleScores, PersonalityKey } from "@/lib/types";
