@@ -39,7 +39,7 @@ const {
   GM_MAYORAL_PRECEPT_BAND_D,
   GM_MAYORAL_PRECEPT_BREAKDOWN,
 } = jiti("../lib/manchester/data/council-tax.ts");
-const { TRAVEL_BANDS } = jiti("../lib/manchester/travel-band.ts");
+const { TRAVEL_BANDS } = jiti("../lib/travel-band.ts");
 
 const DESTINATION_IDS = MANCHESTER_DESTINATIONS.map((d) => d.id);
 
