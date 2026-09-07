@@ -11,6 +11,9 @@ import { GM_TRANSIT_KMH } from "@/lib/manchester/commute";
 import { WEST_OF_ENGLAND_TRANSIT_KMH } from "@/lib/bristol/commute";
 import { WEST_YORKSHIRE_TRANSIT_KMH } from "@/lib/leeds/commute";
 import { EDINBURGH_TRANSIT_KMH } from "@/lib/edinburgh/commute";
+import { GENEVA_TRANSIT_KMH } from "@/lib/geneva/commute";
+import { PARIS_TRANSIT_KMH } from "@/lib/paris/commute";
+import { BARCELONA_TRANSIT_KMH } from "@/lib/barcelona/commute";
 
 /**
  * The map viewport, corridor geometry and journey narrative for each
@@ -185,6 +188,137 @@ export const CITY_MAP_CONFIGS: Record<ContentCityId, CityMapConfig> = {
       panelTitle: "Find where to live in Edinburgh and the Lothians",
       panelSubtitle: "Compare areas by commute, rent and everyday life.",
       destinationPlaceholder: "e.g. EH1 1BQ · Waverley · Leith",
+    },
+  },
+  /*
+   * The three international sections draw no council outline: the ONS
+   * ArcGIS boundary service covers UK authorities only, and there is no
+   * single equivalent that spans a Swiss canton, French arrondissements
+   * and Catalan districts. The area footprints still render — those come
+   * from the polygon engine, not from a boundary layer.
+   */
+  geneva: {
+    // Bel-Air, the point every tram line crosses.
+    centre: { lat: 46.2044, lng: 6.1432 },
+    // Wide enough to hold Nyon in the north-east and Thonon in the
+    // south-east, because both are genuine options for someone working
+    // here and cropping them off the map would hide the whole point.
+    bbox: { minLat: 46.05, maxLat: 46.45, minLng: 5.90, maxLng: 6.55 },
+    initialZoom: 10.2,
+    corridors: [
+      // The Léman Express runs south-east to Annemasse and north-east
+      // along the lake, which is the axis that matters most here.
+      { pattern: /léman express|leman express/i, rotation: 0.1, stretch: 0.13 },
+      { pattern: /cff|sncf|ter/i, rotation: "radial", stretch: 0.12 },
+      // The tram network fans out from Bel-Air in every direction.
+      { pattern: /tpg tram/i, rotation: "radial", stretch: 0.11 },
+      { pattern: /tpg bus|tango|cgn|nstcm|tpn/i, rotation: "radial", stretch: 0.1 },
+    ],
+    commuteNarrative: {
+      modePatterns: [
+        { pattern: /tram/i, mode: "tram" },
+        { pattern: /bus/i, mode: "bus" },
+        { pattern: /cff|sncf|ter|léman express|leman express|nstcm/i, mode: "rail" },
+      ],
+      directHints: {
+        cornavin: /cff|léman express|leman express|tpg tram/i,
+        banking: /tpg tram 12|tpg bus/i,
+        nations: /tpg tram 15|tpg bus 5/i,
+        airport: /cff|léman express|leman express|tpg bus 10/i,
+        "annemasse-centre": /léman express|leman express|tango/i,
+      },
+      transitKmh: GENEVA_TRANSIT_KMH,
+      networkShape:
+        "Geneva's network converges on Bel-Air and Cornavin, and the border adds a queue no map shows",
+      // The canton is small, so a "cross-region" journey starts sooner.
+      longJourneyKm: 10,
+    },
+    labels: {
+      panelTitle: "Find where to live in and around Geneva",
+      panelSubtitle: "Compare areas by commute, rent and everyday life — on both sides of the border.",
+      destinationPlaceholder: "e.g. 1201 Genève · Cornavin · CERN",
+    },
+  },
+
+  paris: {
+    // Notre-Dame, the point every French road distance is measured from.
+    centre: { lat: 48.8530, lng: 2.3499 },
+    bbox: { minLat: 48.75, maxLat: 49.02, minLng: 2.14, maxLng: 2.60 },
+    // The tightest viewport on the site, because Paris is the smallest
+    // city on it: the whole thing inside the périphérique is about a
+    // sixth the area of Greater London.
+    initialZoom: 11.0,
+    corridors: [
+      // The RER runs on long straight axes; the métro fans out.
+      { pattern: /rer a/i, rotation: 0.0, stretch: 0.14 },
+      { pattern: /rer b/i, rotation: 1.57, stretch: 0.14 },
+      { pattern: /rer|transilien|sncf/i, rotation: "radial", stretch: 0.12 },
+      { pattern: /métro|metro/i, rotation: "radial", stretch: 0.1 },
+    ],
+    commuteNarrative: {
+      modePatterns: [
+        { pattern: /métro|metro/i, mode: "public transport" },
+        { pattern: /bus/i, mode: "bus" },
+        { pattern: /rer|transilien|sncf/i, mode: "rail" },
+      ],
+      directHints: {
+        chatelet: /métro 1|métro 4|métro 7|métro 11|métro 14|rer a|rer b|rer d/i,
+        opera: /métro 3|métro 7|métro 8|métro 9/i,
+        "saint-lazare": /métro 3|métro 12|métro 13|métro 14|transilien l/i,
+        "gare-de-lyon": /métro 1|métro 14|rer a|rer d/i,
+        "la-defense": /rer a|métro 1/i,
+        cdg: /rer b/i,
+        montparnasse: /métro 4|métro 6|métro 12|métro 13/i,
+      },
+      transitKmh: PARIS_TRANSIT_KMH,
+      networkShape:
+        "the métro is dense inside the boundary and stops at it, so anything beyond depends on the RER",
+      // In a city this compact, eight kilometres is already a long way.
+      longJourneyKm: 8,
+    },
+    labels: {
+      panelTitle: "Find where to live in Paris",
+      panelSubtitle: "Compare quartiers by commute, rent and everyday life.",
+      destinationPlaceholder: "e.g. 75011 · Châtelet · La Défense",
+    },
+  },
+
+  barcelona: {
+    // Plaça de Catalunya, where the old city meets the Eixample grid.
+    centre: { lat: 41.3870, lng: 2.1700 },
+    bbox: { minLat: 41.28, maxLat: 41.50, minLng: 2.02, maxLng: 2.30 },
+    initialZoom: 11.2,
+    corridors: [
+      // The metro runs along the coast and up the grid; the FGC is the
+      // only quick way through Collserola to Sant Cugat.
+      { pattern: /fgc/i, rotation: 1.2, stretch: 0.13 },
+      { pattern: /rodalies|ave/i, rotation: 0.15, stretch: 0.13 },
+      { pattern: /metro|tram/i, rotation: "radial", stretch: 0.11 },
+      { pattern: /funicular/i, rotation: "radial", stretch: 0.08 },
+    ],
+    commuteNarrative: {
+      modePatterns: [
+        { pattern: /tram/i, mode: "tram" },
+        { pattern: /bus/i, mode: "bus" },
+        { pattern: /metro|fgc|rodalies|ave|funicular/i, mode: "rail" },
+      ],
+      directHints: {
+        "placa-catalunya": /metro l1|metro l3|fgc|rodalies/i,
+        "22at": /metro l1|metro l4|tram t4|tram t5/i,
+        diagonal: /metro l3|metro l5|fgc/i,
+        "sants-estacio": /metro l3|metro l5|rodalies|ave/i,
+        aeroport: /metro l9|rodalies r2/i,
+        "sant-cugat": /fgc/i,
+      },
+      transitKmh: BARCELONA_TRANSIT_KMH,
+      networkShape:
+        "Barcelona's metro covers the coastal city densely and Collserola blocks everything behind it",
+      longJourneyKm: 9,
+    },
+    labels: {
+      panelTitle: "Find where to live in Barcelona",
+      panelSubtitle: "Compare barris by commute, rent and everyday life.",
+      destinationPlaceholder: "e.g. 08001 · Plaça Catalunya · Poblenou",
     },
   },
 };

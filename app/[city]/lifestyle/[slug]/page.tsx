@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { money } from "@/lib/currency";
 import {
   CONTENT_CITY_IDS,
   getCityContent,
@@ -51,6 +52,7 @@ export default async function CityLifestylePage({ params }: Props) {
   const { city, slug } = await params;
   if (!isContentCityId(city)) notFound();
   const content = getCityContent(city);
+  const currency = content.input.currency;
   const page = content.getLifestylePage(slug);
   if (!page) notFound();
 
@@ -109,7 +111,7 @@ export default async function CityLifestylePage({ params }: Props) {
                       <span className="flex items-baseline justify-between gap-3">
                         <span className="font-medium">{n.name}</span>
                         <span className="shrink-0 text-sm text-slate-400">
-                          £{n.rent.oneBedMedianGbp.toLocaleString()}
+                          {money(n.rent.oneBedMedianGbp, currency)}
                         </span>
                       </span>
                       <span className="mt-1 block text-xs text-slate-500">

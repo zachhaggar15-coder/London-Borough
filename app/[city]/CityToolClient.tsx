@@ -39,6 +39,18 @@ const TOOLS: Record<ContentCityId, React.ComponentType> = {
     ssr: false,
     loading: () => LOADING,
   }),
+  geneva: dynamic(() => import("@/components/city-tools/GenevaTool"), {
+    ssr: false,
+    loading: () => LOADING,
+  }),
+  paris: dynamic(() => import("@/components/city-tools/ParisTool"), {
+    ssr: false,
+    loading: () => LOADING,
+  }),
+  barcelona: dynamic(() => import("@/components/city-tools/BarcelonaTool"), {
+    ssr: false,
+    loading: () => LOADING,
+  }),
 };
 
 export default function CityToolClient({ city }: { city: ContentCityId }) {

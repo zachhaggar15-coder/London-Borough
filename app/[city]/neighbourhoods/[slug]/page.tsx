@@ -7,6 +7,7 @@ import {
   isContentCityId,
 } from "@/lib/city-registry";
 import { ordinal } from "@/lib/city-content";
+import { money, moneyWithGbp } from "@/lib/currency";
 import { centralityLabel } from "@/lib/centrality";
 import { PERSONALITIES } from "@/lib/personalities";
 import { formatApproxMinutes } from "@/lib/format";
@@ -41,7 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!n) return {};
 
   const title = `Living in ${n.name}: rent, commute and what it is actually like`;
-  const description = `A one-bed in ${n.name} averages £${n.rent.oneBedMedianGbp.toLocaleString()} a month. ${centralityLabel(n)} ${n.borough}. Commute times, lifestyle scores and the trade-offs, laid out.`;
+  const description = `A one-bed in ${n.name} averages ${money(n.rent.oneBedMedianGbp, content.input.currency)} a month. ${centralityLabel(n)} ${n.borough}. Commute times, lifestyle scores and the trade-offs, laid out.`;
 
   return {
     title,
@@ -78,25 +79,27 @@ export default async function CityNeighbourhoodPage({ params }: Props) {
     .topPersonalities(n)
     .map((key) => PERSONALITIES.find((p) => p.key === key)?.label ?? key);
   const allLines = [...new Set(n.mainStations.flatMap((s) => s.lines))];
-  const bandD = input.councilTax.bandD[n.borough];
+  const bandD = content.councilTax?.bandD[n.borough] ?? null;
+  const currency = input.currency;
+  const anyDriveTimes = commutes.some((c) => c.driveMinutes != null);
   const band = centralityLabel(n);
 
   const vsRegion = n.rent.oneBedMedianGbp - regionMedianOneBed;
   const expensiveAnswer =
     vsRegion === 0
-      ? `A one-bed in ${n.name} averages £${n.rent.oneBedMedianGbp.toLocaleString()} a month, exactly the median across the ${count} ${region} areas covered here.`
+      ? `A one-bed in ${n.name} averages ${moneyWithGbp(n.rent.oneBedMedianGbp, currency)} a month, exactly the median across the ${count} ${region} areas covered here.`
       : vsRegion > 0
-        ? `A one-bed in ${n.name} averages £${n.rent.oneBedMedianGbp.toLocaleString()} a month — about £${vsRegion.toLocaleString()} above the £${regionMedianOneBed.toLocaleString()} median across the ${count} areas covered here, putting it around the ${ordinal(percentile)} percentile. On rent alone it is a dearer than average place to live in ${region}.`
-        : `A one-bed in ${n.name} averages £${n.rent.oneBedMedianGbp.toLocaleString()} a month — about £${Math.abs(vsRegion).toLocaleString()} below the £${regionMedianOneBed.toLocaleString()} median across the ${count} areas covered here, putting it around the ${ordinal(percentile)} percentile. On rent alone it is a cheaper than average place to live in ${region}.`;
+        ? `A one-bed in ${n.name} averages ${moneyWithGbp(n.rent.oneBedMedianGbp, currency)} a month — about ${money(vsRegion, currency)} above the ${money(regionMedianOneBed, currency)} median across the ${count} areas covered here, putting it around the ${ordinal(percentile)} percentile. On rent alone it is a dearer than average place to live in ${region}.`
+        : `A one-bed in ${n.name} averages ${moneyWithGbp(n.rent.oneBedMedianGbp, currency)} a month — about ${money(Math.abs(vsRegion), currency)} below the ${money(regionMedianOneBed, currency)} median across the ${count} areas covered here, putting it around the ${ordinal(percentile)} percentile. On rent alone it is a cheaper than average place to live in ${region}.`;
 
   // A 2% gap counts as "level". An area at £1,000 against a baseline of
   // £998 is a rounding artefact, and printing "0% above" reads as broken.
   const baselineAnswer =
     Math.abs(vsBaseline.percent) < 2
-      ? `That is effectively level with the ONS average of £${vsBaseline.baseline.toLocaleString()} for ${n.borough} as a whole — ${n.name} sits right on its ${input.councilNoun.singular}'s going rate.`
+      ? `That is effectively level with ${input.rent.baselineLabel} of ${money(vsBaseline.baseline, currency)} for ${n.borough} as a whole — ${n.name} sits right on its ${input.councilNoun.singular}'s going rate.`
       : vsBaseline.difference > 0
-        ? `That is about ${vsBaseline.percent}% above the ONS average of £${vsBaseline.baseline.toLocaleString()} for ${n.borough} as a whole, which is the premium the area itself commands.`
-        : `That is about ${Math.abs(vsBaseline.percent)}% below the ONS average of £${vsBaseline.baseline.toLocaleString()} for ${n.borough} as a whole — ${n.name} is one of the cheaper parts of its ${input.councilNoun.singular}.`;
+        ? `That is about ${vsBaseline.percent}% above ${input.rent.baselineLabel} of ${money(vsBaseline.baseline, currency)} for ${n.borough} as a whole, which is the premium the area itself commands.`
+        : `That is about ${Math.abs(vsBaseline.percent)}% below ${input.rent.baselineLabel} of ${money(vsBaseline.baseline, currency)} for ${n.borough} as a whole — ${n.name} is one of the cheaper parts of its ${input.councilNoun.singular}.`;
 
   // Thresholds sit at 8 and 4 rather than 7 and 4: a 7 is somewhere
   // sociable that still closes at eleven, and calling that "busy and
@@ -207,7 +210,7 @@ export default async function CityNeighbourhoodPage({ params }: Props) {
                   {row.label}
                 </dt>
                 <dd className="mt-1 text-xl font-semibold tabular-nums">
-                  £{row.value.toLocaleString()}
+                  {money(row.value, currency)}
                   <span className="ml-1 text-sm font-normal text-slate-500">
                     /month
                   </span>
@@ -218,21 +221,46 @@ export default async function CityNeighbourhoodPage({ params }: Props) {
           <p className="mt-5 max-w-3xl text-slate-300">
             {expensiveAnswer} {baselineAnswer}
           </p>
-          <p className="mt-3 max-w-3xl text-slate-300">
-            Council tax in {n.borough} is £{bandD.toLocaleString()} at Band D
-            for {input.councilTax.year}. Most housing here sits below Band D,
-            so the bill on a typical flat will be lower than that headline —
-            check the band for the specific address before you budget against
-            it.
-          </p>
+          {bandD != null && content.councilTax ? (
+            <p className="mt-3 max-w-3xl text-slate-300">
+              Council tax in {n.borough} is {money(bandD, currency)} at Band D
+              for {content.councilTax.year}. Most housing here sits below Band
+              D, so the bill on a typical flat will be lower than that headline
+              — check the band for the specific address before you budget
+              against it.
+            </p>
+          ) : content.localCosts ? (
+            <p className="mt-3 max-w-3xl text-slate-300">
+              There is no council tax equivalent for a tenant here. What you do
+              pay on top of rent is set out in{" "}
+              <Link
+                href={content.councilPath(n.borough)}
+                className="underline underline-offset-2 hover:text-white"
+              >
+                {content.localCosts.heading.toLowerCase()}
+              </Link>
+              , and for a British reader it is the part of the budget most
+              likely to be wrong by a wide margin.
+            </p>
+          ) : null}
         </Section>
 
         <Section
           title="Getting to work"
-          lead="Typical door-to-door times on a weekday morning: walking to the stop, waiting, riding, and walking off at the other end."
+          lead={
+            anyDriveTimes
+              ? "Typical door-to-door times on a weekday morning. Public transport includes walking to the stop, waiting, riding and walking off at the other end; driving includes parking at the far end."
+              : "Typical door-to-door times on a weekday morning: walking to the stop, waiting, riding, and walking off at the other end."
+          }
         >
-          <ScrollTable minWidth="28rem">
-            <TableHead cells={["Destination", "Typical journey"]} />
+          <ScrollTable minWidth={anyDriveTimes ? "32rem" : "28rem"}>
+            <TableHead
+              cells={
+                anyDriveTimes
+                  ? ["Destination", "Public transport", "Driving"]
+                  : ["Destination", "Typical journey"]
+              }
+            />
             <tbody>
               {commutes.map((c) => (
                 <tr key={c.id} className="border-b border-slate-900">
@@ -244,9 +272,16 @@ export default async function CityNeighbourhoodPage({ params }: Props) {
                       {c.label}
                     </Link>
                   </td>
-                  <td className="py-2.5 tabular-nums text-slate-300">
+                  <td className="py-2.5 pr-4 tabular-nums text-slate-300">
                     {formatApproxMinutes(c.minutes)}
                   </td>
+                  {anyDriveTimes && (
+                    <td className="py-2.5 tabular-nums text-slate-400">
+                      {c.driveMinutes != null
+                        ? formatApproxMinutes(c.driveMinutes)
+                        : "—"}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -339,10 +374,10 @@ export default async function CityNeighbourhoodPage({ params }: Props) {
         )}
 
         <DataNote>
-          Rent figures are reviewed market estimates for {n.name}, anchored on
-          the ONS average for {n.borough} in {input.rent.referenceMonth} (£
-          {vsBaseline.baseline.toLocaleString()} for a one-bed) and adjusted
-          for the local premium or discount. Sources:{" "}
+          Rent figures are reviewed market estimates for {n.name}, anchored
+          on {input.rent.baselineLabel} for {n.borough} in{" "}
+          {input.rent.referenceMonth} ({money(vsBaseline.baseline, currency)}{" "}
+          for a one-bed) and adjusted for the local premium or discount. Sources:{" "}
           {input.rent.sources.join("; ")}. Journey times are reviewed
           estimates, not timetable times, and no live journey planner sits
           behind them.

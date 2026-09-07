@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { money } from "@/lib/currency";
 import {
   CONTENT_CITY_IDS,
   getCityContent,
@@ -39,6 +40,7 @@ export default async function CitySalaryIndexPage({ params }: Props) {
   const { city } = await params;
   if (!isContentCityId(city)) notFound();
   const content = getCityContent(city);
+  const currency = content.input.currency;
   const { input, copy } = content;
 
   const levels = input.salaryLevels;
@@ -66,8 +68,8 @@ export default async function CitySalaryIndexPage({ params }: Props) {
         Worked backwards from gross pay to what you can actually sign for:
         income tax and National Insurance come off first, then a rent budget of
         35% of what is left, then the areas that fit inside it. The ladder
-        starts at £{first.toLocaleString()} and stops at £
-        {last.toLocaleString()}, because past that point every area in the
+        starts at {money(first, currency)} and stops at{" "}
+        {money(last, currency)}, because past that point every area in the
         region fits and the answer stops being interesting.
       </p>
 
@@ -92,14 +94,14 @@ export default async function CitySalaryIndexPage({ params }: Props) {
                     href={content.path(`/salary/${row.salary}`)}
                     className="font-medium tabular-nums transition-colors hover:text-emerald-400"
                   >
-                    £{row.salary.toLocaleString()}
+                    {money(row.salary, currency)}
                   </Link>
                 </td>
                 <td className="py-2.5 pr-4 tabular-nums text-slate-300">
-                  £{row.takeHome.toLocaleString()}
+                  {money(row.takeHome, currency)}
                 </td>
                 <td className="py-2.5 pr-4 tabular-nums text-slate-300">
-                  £{row.budget35.toLocaleString()}
+                  {money(row.budget35, currency)}
                 </td>
                 <td className="py-2.5 tabular-nums text-slate-400">
                   {row.areasFitting} of {content.areas.length}

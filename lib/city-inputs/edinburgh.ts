@@ -1,4 +1,5 @@
 import { CITIES } from "@/lib/cities";
+import { GBP } from "@/lib/currency";
 import {
   SCOTLAND_BAND_RATIOS,
   SCOTLAND_BAND_VALUES,
@@ -8,6 +9,7 @@ import { scotlandTakeHomeMonthly, TAX_REGIME_LABELS } from "@/lib/tax";
 import { LOTHIAN_COUNCILS } from "@/lib/edinburgh/councils";
 import { EDINBURGH_NEIGHBOURHOODS } from "@/lib/edinburgh/data/neighbourhoods";
 import { EDINBURGH_DESTINATIONS } from "@/lib/edinburgh/data/destinations";
+import { createDriveModel } from "@/lib/drive-time";
 import {
   EDINBURGH_BRMA_FOR_COUNCIL,
   EDINBURGH_BRMA_RENT_GBP,
@@ -43,8 +45,39 @@ const ROOM_DISTRICT_FOR_AREA = Object.fromEntries(
   AREAS.map((a) => [a.id, a.roomDistrict]),
 );
 
+/**
+ * Driving in Edinburgh and the Lothians. Slow inside the bypass — a
+ * World Heritage street plan, a great many bus lanes and a 20mph limit
+ * across most of the city — and fast outside it on the A720 and M8. The
+ * result is that driving loses to the bus for anything central and wins
+ * comfortably from the Lothian towns.
+ */
+const DRIVE_MODEL = createDriveModel(AREAS, EDINBURGH_DESTINATIONS, {
+  circuity: 1.3,
+  peakKmh: 30,
+  arrivalPenaltyMinutes: {
+    default: 8,
+    // The Old Town and New Town are the worst places to arrive by car in
+    // Scotland: controlled parking, bus gates and very little of it.
+    waverley: 25,
+    "st-andrew-square": 25,
+    "george-square": 22,
+    haymarket: 18,
+    "leith-shore": 14,
+    // Out-of-town business parks and hospital sites.
+    "edinburgh-park": 6,
+    bioquarter: 8,
+    "livingston-centre": 8,
+  },
+  corridors: [
+    // The A720 bypass and the M8 west.
+    { destinationIds: ["edinburgh-park", "livingston-centre"], kmh: 50 },
+  ],
+});
+
 export const EDINBURGH_INPUT: CityInput = {
   city: CITIES.edinburgh,
+  currency: GBP,
 
   copy: {
     regionLabel: "Edinburgh and the Lothians",
@@ -103,6 +136,11 @@ export const EDINBURGH_INPUT: CityInput = {
       "Pick two workplaces, a commute cap each, a shared budget and a shared idea of the kind of area you want. The ranking favours fair compromises: an area where one of you has a fifteen-minute journey and the other an hour scores worse than one where you both have half an hour.",
     ],
 
+    roomIncludesNote:
+      "Rooms often include bills and council tax, which is worth £120 to £200 a month you are not separately paying.",
+    rentExtrasNote:
+      "bills and council tax for flats, which add roughly £220 to £320 a month",
+
     extraLimits: [
       {
         title: "The Festival.",
@@ -130,10 +168,12 @@ export const EDINBURGH_INPUT: CityInput = {
   },
 
   commuteTimes: EDINBURGH_COMMUTE_TIMES,
+  driveTimes: DRIVE_MODEL,
   transitKmh: EDINBURGH_TRANSIT_KMH,
 
   rent: {
     reviewedAsOf: EDINBURGH_RENT_REVIEW_AS_OF,
+    baselineLabel: "the ONS average",
     referenceMonth: EDINBURGH_RENT_REFERENCE_MONTH,
     // Keyed to Broad Rental Market Areas, not councils: Edinburgh, East
     // Lothian and Midlothian share the single Lothian row.

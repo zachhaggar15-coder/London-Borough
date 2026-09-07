@@ -1,5 +1,6 @@
-import { gbp, defaultMonthlyRentBudgetGbp } from "@/lib/affordability";
 import { formatApproxMinutes } from "@/lib/format";
+import { defaultMonthlyRentBudgetGbp } from "@/lib/affordability";
+import { GBP, money, type Currency } from "@/lib/currency";
 import { rentBasisShortLabel } from "@/lib/rent";
 import type {
   LifestyleScores,
@@ -86,6 +87,7 @@ export function activePreferenceKeys(query: UserQuery): (keyof LifestyleScores)[
 export function bestFeatureFor(
   scored: ScoredNeighbourhood,
   query: UserQuery,
+  currency: Currency = GBP,
 ): string {
   const { neighbourhood: n } = scored;
 
@@ -97,7 +99,7 @@ export function bestFeatureFor(
   }
 
   if (scored.rentVsBudget != null && scored.rentVsBudget <= 0.85) {
-    return `${gbp(scored.selectedRentGbp)}/mo ${rentBasisShortLabel(query.rentBasis)} is comfortably under budget`;
+    return `${money(scored.selectedRentGbp, currency)}/mo ${rentBasisShortLabel(query.rentBasis)} is comfortably under budget`;
   }
 
   const priority = strongestLifestyleKey(n.lifestyle, query);
@@ -107,6 +109,7 @@ export function bestFeatureFor(
 export function mainTradeoffFor(
   scored: ScoredNeighbourhood,
   query: UserQuery,
+  currency: Currency = GBP,
 ): string {
   const { neighbourhood: n } = scored;
 
@@ -115,7 +118,7 @@ export function mainTradeoffFor(
   }
 
   if (scored.rentVsBudget != null && scored.rentVsBudget > 1.1) {
-    return `${gbp(scored.selectedRentGbp)}/mo is materially over your current ${rentBasisShortLabel(query.rentBasis)} budget.`;
+    return `${money(scored.selectedRentGbp, currency)}/mo is materially over your current ${rentBasisShortLabel(query.rentBasis)} budget.`;
   }
 
   if (
@@ -144,6 +147,7 @@ export function mainTradeoffFor(
 export function betterIfFor(
   scored: ScoredNeighbourhood,
   alternatives: ScoredNeighbourhood[],
+  currency: Currency = GBP,
 ): string | null {
   const included = alternatives.filter(
     (item) => !item.isExcluded && item.neighbourhood.id !== scored.neighbourhood.id,
@@ -157,9 +161,7 @@ export function betterIfFor(
       cheaper.commuteMinutes != null && scored.commuteMinutes != null
         ? cheaper.commuteMinutes - scored.commuteMinutes
         : null;
-    return `${cheaper.neighbourhood.name} is better if monthly cost matters more: about ${gbp(
-      scored.selectedRentGbp - cheaper.selectedRentGbp,
-    )}/mo cheaper${
+    return `${cheaper.neighbourhood.name} is better if monthly cost matters more: about ${money(scored.selectedRentGbp - cheaper.selectedRentGbp, currency)}/mo cheaper${
       extraMinutes != null && extraMinutes > COMMUTE_DIFF_THRESHOLD
         ? ` for ${extraMinutes} extra commute minutes`
         : ""
@@ -187,6 +189,7 @@ export function recommendationExplanation(
   scored: ScoredNeighbourhood,
   alternatives: ScoredNeighbourhood[],
   query: UserQuery,
+  currency: Currency = GBP,
 ): RecommendationExplanation {
   const why: string[] = [];
 
@@ -199,8 +202,8 @@ export function recommendationExplanation(
   if (scored.rentVsBudget != null) {
     why.push(
       scored.rentVsBudget <= 1
-        ? `${gbp(scored.selectedRentGbp)}/mo sits within your ${rentBasisShortLabel(query.rentBasis)} budget`
-        : `${gbp(scored.selectedRentGbp)}/mo is a stretch against your current budget`,
+        ? `${money(scored.selectedRentGbp, currency)}/mo sits within your ${rentBasisShortLabel(query.rentBasis)} budget`
+        : `${money(scored.selectedRentGbp, currency)}/mo is a stretch against your current budget`,
     );
   }
 
@@ -213,14 +216,15 @@ export function recommendationExplanation(
     scoreLabel: scoreLabel(scored.matchScore, scored.isExcluded),
     bestFeature: bestFeatureFor(scored, query),
     why: why.slice(0, 3),
-    tradeoff: mainTradeoffFor(scored, query),
-    betterIf: betterIfFor(scored, alternatives),
+    tradeoff: mainTradeoffFor(scored, query, currency),
+    betterIf: betterIfFor(scored, alternatives, currency),
   };
 }
 
 export function comparisonDecision(
   scored: ScoredNeighbourhood[],
   query: UserQuery,
+  currency: Currency = GBP,
 ): ComparisonDecision {
   const candidates = scored.filter((item) => !item.isExcluded);
   const pool = candidates.length > 0 ? candidates : scored;
@@ -230,7 +234,7 @@ export function comparisonDecision(
     `${scoreLabel(item.matchScore).toLowerCase()} at ${(item.matchScore * 10).toFixed(1)}/10`,
   );
   addBestFor(bestFor, "affordability", minBy(pool, (item) => item.selectedRentGbp), (item) =>
-    `${gbp(item.selectedRentGbp)}/mo ${rentBasisShortLabel(query.rentBasis)}`,
+    `${money(item.selectedRentGbp, currency)}/mo ${rentBasisShortLabel(query.rentBasis)}`,
   );
   addBestFor(bestFor, "commute", minBy(pool, (item) => item.commuteMinutes ?? Infinity), (item) =>
     `${formatApproxMinutes(item.commuteMinutes)} estimated commute`,
@@ -242,7 +246,7 @@ export function comparisonDecision(
     `${item.neighbourhood.lifestyle.livelyVsQuiet}/10 liveliness, with ${item.neighbourhood.lifestyle.greenSpace}/10 green space`,
   );
 
-  const tradeoffs = pairwiseTradeoffs(pool);
+  const tradeoffs = pairwiseTradeoffs(pool, currency);
   const top = maxBy(pool, (item) => item.matchScore);
   const recommendation = top
     ? `${top.neighbourhood.name} is probably the strongest overall choice because ${bestFeatureFor(
@@ -261,6 +265,7 @@ export function comparisonDecision(
 export function personalResultsSummary(
   scored: ScoredNeighbourhood[],
   query: UserQuery,
+  currency: Currency = GBP,
 ): ResultsSummary {
   const included = scored.filter((item) => !item.isExcluded);
   const pool = included.length > 0 ? included : scored;
@@ -280,16 +285,19 @@ export function personalResultsSummary(
       )[0] ?? null;
 
   return {
-    priorityBullets: preferenceSummary(query),
+    priorityBullets: preferenceSummary(query, currency),
     bestOverall,
     bestValue,
     bestLifestyle,
     surprisingAlternative,
-    keyDecision: keyDecisionSentence(bestOverall, bestValue, bestLifestyle),
+    keyDecision: keyDecisionSentence(bestOverall, bestValue, bestLifestyle, currency),
   };
 }
 
-export function preferenceSummary(query: UserQuery): string[] {
+export function preferenceSummary(
+  query: UserQuery,
+  currency: Currency = GBP,
+): string[] {
   const items: string[] = [];
   if (query.destination) {
     items.push(
@@ -298,7 +306,7 @@ export function preferenceSummary(query: UserQuery): string[] {
   }
   const budget = effectiveBudgetGbp(query);
   if (budget != null) {
-    items.push(`${gbp(budget)}/mo ${rentBasisShortLabel(query.rentBasis)} budget`);
+    items.push(`${money(budget, currency)}/mo ${rentBasisShortLabel(query.rentBasis)} budget`);
   }
   const active = activePreferenceKeys(query);
   if (active.length > 0) {
@@ -318,6 +326,7 @@ function keyDecisionSentence(
   bestOverall: ScoredNeighbourhood | null,
   bestValue: ScoredNeighbourhood | null,
   bestLifestyle: ScoredNeighbourhood | null,
+  currency: Currency,
 ): string | null {
   if (!bestOverall) return null;
   if (bestValue && bestValue.neighbourhood.id !== bestOverall.neighbourhood.id) {
@@ -327,8 +336,9 @@ function keyDecisionSentence(
         bestOverall.commuteMinutes != null && bestValue.commuteMinutes != null
           ? bestValue.commuteMinutes - bestOverall.commuteMinutes
           : null;
-      return `${bestOverall.neighbourhood.name} gives the strongest balance. ${bestValue.neighbourhood.name} saves about ${gbp(
+      return `${bestOverall.neighbourhood.name} gives the strongest balance. ${bestValue.neighbourhood.name} saves about ${money(
         saving,
+        currency,
       )}/mo${
         commuteDelta != null && commuteDelta > 0
           ? ` but adds ${commuteDelta} commute minutes`
@@ -342,7 +352,10 @@ function keyDecisionSentence(
   return `${bestOverall.neighbourhood.name} is the clearest fit across your commute, budget and lifestyle signals.`;
 }
 
-function pairwiseTradeoffs(scored: ScoredNeighbourhood[]): string[] {
+function pairwiseTradeoffs(
+  scored: ScoredNeighbourhood[],
+  currency: Currency,
+): string[] {
   const out: string[] = [];
   for (let i = 0; i < scored.length; i++) {
     for (let j = i + 1; j < scored.length; j++) {
@@ -362,8 +375,9 @@ function pairwiseTradeoffs(scored: ScoredNeighbourhood[]): string[] {
             ? cheaper.commuteMinutes - pricier.commuteMinutes
             : null;
         out.push(
-          `Choose ${cheaper.neighbourhood.name} over ${pricier.neighbourhood.name} to save about ${gbp(
+          `Choose ${cheaper.neighbourhood.name} over ${pricier.neighbourhood.name} to save about ${money(
             Math.abs(rentDiff),
+            currency,
           )}/mo${
             cheaperCommute != null && Math.abs(cheaperCommute) >= COMMUTE_DIFF_THRESHOLD
               ? cheaperCommute > 0

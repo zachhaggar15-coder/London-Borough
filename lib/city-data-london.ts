@@ -1,4 +1,5 @@
 import { CITIES } from "@/lib/cities";
+import { GBP } from "@/lib/currency";
 import { NEIGHBOURHOODS, NEIGHBOURHOODS_BY_ID } from "@/lib/data/neighbourhoods";
 import { DESTINATIONS } from "@/lib/data/destinations";
 import { LONDON_CENTRE } from "@/lib/geo";
@@ -25,6 +26,7 @@ import type { CommuteEstimate, Destination } from "@/lib/types";
  */
 export const LONDON_CITY_DATA: CityData = {
   city: CITIES.london,
+  currency: GBP,
 
   neighbourhoods: NEIGHBOURHOODS,
   neighbourhoodsById: NEIGHBOURHOODS_BY_ID,

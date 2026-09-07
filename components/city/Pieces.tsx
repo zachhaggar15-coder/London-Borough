@@ -3,6 +3,7 @@ import { LIFESTYLE_KEYS, LIFESTYLE_LABELS } from "@/lib/types";
 import type { LifestyleScores, Neighbourhood } from "@/lib/types";
 import { centralityLabel } from "@/lib/centrality";
 import type { CityContent } from "@/lib/city-content";
+import { money, moneyWithGbp } from "@/lib/currency";
 
 /**
  * Small presentational pieces shared by every generated city section.
@@ -100,7 +101,7 @@ export function AreaCard({
       <div className="flex items-baseline justify-between gap-3">
         <p className="font-medium">{area.name}</p>
         <p className="shrink-0 text-sm text-slate-400">
-          £{area.rent.oneBedMedianGbp.toLocaleString()}
+          {money(area.rent.oneBedMedianGbp, content.input.currency)}
         </p>
       </div>
       {/*
@@ -190,5 +191,48 @@ export function DataNote({ children }: { children: React.ReactNode }) {
     <p className="mt-6 rounded-lg border border-slate-800 bg-slate-900/60 px-4 py-3 text-xs leading-relaxed text-slate-500">
       {children}
     </p>
+  );
+}
+
+/**
+ * What a household here pays beyond rent.
+ *
+ * This is the table that replaces council tax for cities that do not
+ * levy one on tenants, and supplements it where they do. It exists
+ * because the honest answer to "what does living here cost" is different
+ * in each country: a Paris tenant pays no residence tax at all, a Geneva
+ * one pays more for compulsory health insurance than a Londoner pays in
+ * council tax, and a British reader will assume neither.
+ */
+export function LocalCostsTable({ content }: { content: CityContent }) {
+  const costs = content.localCosts;
+  if (!costs) return null;
+  const currency = content.input.currency;
+
+  return (
+    <>
+      <ScrollTable minWidth="34rem">
+        <TableHead cells={["What", "Per month", "Who pays, and what to know"]} />
+        <tbody>
+          {costs.rows.map((row) => (
+            <tr key={row.label} className="border-b border-slate-900">
+              <td className="py-2.5 pr-4 font-medium">{row.label}</td>
+              <td className="py-2.5 pr-4 tabular-nums text-slate-300">
+                {row.monthly == null ? "Varies" : money(row.monthly, currency)}
+              </td>
+              <td className="py-2.5 text-slate-400">{row.note}</td>
+            </tr>
+          ))}
+        </tbody>
+      </ScrollTable>
+      <p className="mt-4 max-w-3xl text-sm text-slate-500">
+        Total of the fixed rows above:{" "}
+        {moneyWithGbp(
+          costs.rows.reduce((sum, row) => sum + (row.monthly ?? 0), 0),
+          currency,
+        )}{" "}
+        a month, on top of rent. Sources: {costs.sources.join("; ")}.
+      </p>
+    </>
   );
 }

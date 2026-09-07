@@ -1,4 +1,5 @@
 import { CITIES } from "@/lib/cities";
+import { GBP } from "@/lib/currency";
 import {
   ENGLAND_BAND_RATIOS,
   ENGLAND_BAND_VALUES,
@@ -8,6 +9,7 @@ import { rukTakeHomeMonthly, TAX_REGIME_LABELS } from "@/lib/tax";
 import { GM_BOROUGHS } from "@/lib/manchester/boroughs";
 import { MANCHESTER_NEIGHBOURHOODS } from "@/lib/manchester/data/neighbourhoods";
 import { MANCHESTER_DESTINATIONS } from "@/lib/manchester/data/destinations";
+import { createDriveModel } from "@/lib/drive-time";
 import {
   MANCHESTER_RENT_REVIEW_AS_OF,
   MANCHESTER_RENT_SOURCES,
@@ -54,8 +56,42 @@ const ROOM_DISTRICT_FOR_AREA = Object.fromEntries(
   AREAS.map((a) => [a.id, a.roomDistrict]),
 );
 
+/**
+ * Driving in Greater Manchester. Circuity is high for an English
+ * conurbation because the Ship Canal, the Irwell and the Mersey all
+ * force detours, and the M60 orbital is the only sane cross-region
+ * route — which is precisely why driving beats transit for the orbital
+ * journeys the commute pages keep warning about.
+ */
+const DRIVE_MODEL = createDriveModel(AREAS, MANCHESTER_DESTINATIONS, {
+  circuity: 1.32,
+  peakKmh: 30,
+  arrivalPenaltyMinutes: {
+    default: 8,
+    // City-centre arrival at 08:30 plus parking is the dominant term on
+    // any short journey into the middle.
+    piccadilly: 20,
+    spinningfields: 22,
+    "oxford-road": 20,
+    ancoats: 16,
+    victoria: 18,
+    "salford-central": 16,
+    // Out-of-town sites with their own car parks.
+    "trafford-park": 6,
+    airport: 10,
+    mediacity: 12,
+    stockport: 12,
+  },
+  corridors: [
+    // The M60/M56 corridor to the airport and Trafford Park runs freely
+    // outside the very peak.
+    { destinationIds: ["airport", "trafford-park"], kmh: 45 },
+  ],
+});
+
 export const MANCHESTER_INPUT: CityInput = {
   city: CITIES.manchester,
+  currency: GBP,
 
   copy: {
     regionLabel: "Greater Manchester",
@@ -111,6 +147,11 @@ export const MANCHESTER_INPUT: CityInput = {
       "Pick two workplaces, a commute cap each, a shared budget and a shared idea of the kind of area you want. The ranking favours fair compromises: an area where one of you has a fifteen-minute journey and the other an hour scores worse than one where you both have half an hour.",
     ],
 
+    roomIncludesNote:
+      "Rooms often include bills and council tax, which is worth £120 to £200 a month you are not separately paying.",
+    rentExtrasNote:
+      "bills and council tax for flats, which add roughly £220 to £320 a month",
+
     extraLimits: [
       {
         title: "Street-level variation.",
@@ -135,10 +176,12 @@ export const MANCHESTER_INPUT: CityInput = {
   },
 
   commuteTimes: MANCHESTER_COMMUTE_TIMES,
+  driveTimes: DRIVE_MODEL,
   transitKmh: GM_TRANSIT_KMH,
 
   rent: {
     reviewedAsOf: MANCHESTER_RENT_REVIEW_AS_OF,
+    baselineLabel: "the ONS average",
     referenceMonth: ONS_RENT_REFERENCE_MONTH,
     baselines: ONS_BOROUGH_RENT_GBP,
     baselineForCouncil: BASELINE_FOR_COUNCIL,

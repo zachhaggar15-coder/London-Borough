@@ -129,10 +129,10 @@ export default function MapView() {
     () =>
       [
         "==",
-        ["get", boroughBoundary.nameField],
+        ["get", boroughBoundary?.nameField ?? "name"],
         selectedBorough?.name ?? "__none__",
       ] as unknown as FilterSpecification,
-    [boroughBoundary.nameField, selectedBorough],
+    [boroughBoundary?.nameField, selectedBorough],
   );
 
   // Only render the top-N reachable neighbourhoods on the map. The
@@ -326,46 +326,48 @@ export default function MapView() {
         cursor="default"
         style={{ width: "100%", height: "100%" }}
       >
-        <Source
-          id="borough-boundaries"
-          type="geojson"
-          data={boroughBoundary.sourceUrl}
-          attribution={boroughBoundary.attribution}
-        >
-          <Layer
-            id="selected-borough-fill"
-            type="fill"
-            filter={selectedBoroughFilter}
-            paint={{
-              "fill-color": "#fbbf24",
-              "fill-opacity": selectedBorough ? 0.04 : 0,
-            }}
-          />
-          <Layer
-            id="borough-boundary-lines"
-            type="line"
-            filter={[
-              "in",
-              ["get", boroughBoundary.nameField],
-              ["literal", boroughBoundary.filterNames],
-            ] as unknown as FilterSpecification}
-            paint={{
-              "line-color": "#ffffff",
-              "line-opacity": 0.24,
-              "line-width": 0.9,
-            }}
-          />
-          <Layer
-            id="selected-borough-line"
-            type="line"
-            filter={selectedBoroughFilter}
-            paint={{
-              "line-color": "#fbbf24",
-              "line-opacity": selectedBorough ? 0.72 : 0,
-              "line-width": 1.8,
-            }}
-          />
-        </Source>
+        {boroughBoundary && (
+          <Source
+            id="borough-boundaries"
+            type="geojson"
+            data={boroughBoundary.sourceUrl}
+            attribution={boroughBoundary.attribution}
+          >
+            <Layer
+              id="selected-borough-fill"
+              type="fill"
+              filter={selectedBoroughFilter}
+              paint={{
+                "fill-color": "#fbbf24",
+                "fill-opacity": selectedBorough ? 0.04 : 0,
+              }}
+            />
+            <Layer
+              id="borough-boundary-lines"
+              type="line"
+              filter={[
+                "in",
+                ["get", boroughBoundary?.nameField ?? "name"],
+                ["literal", boroughBoundary.filterNames],
+              ] as unknown as FilterSpecification}
+              paint={{
+                "line-color": "#ffffff",
+                "line-opacity": 0.24,
+                "line-width": 0.9,
+              }}
+            />
+            <Layer
+              id="selected-borough-line"
+              type="line"
+              filter={selectedBoroughFilter}
+              paint={{
+                "line-color": "#fbbf24",
+                "line-opacity": selectedBorough ? 0.72 : 0,
+                "line-width": 1.8,
+              }}
+            />
+          </Source>
+        )}
 
         {/* Isochrone — declared first so it renders beneath neighbourhood
             circles. Higher opacity than before so it reads cleanly on

@@ -1,4 +1,5 @@
 import { CITIES } from "@/lib/cities";
+import { GBP } from "@/lib/currency";
 import {
   ENGLAND_BAND_RATIOS,
   ENGLAND_BAND_VALUES,
@@ -8,6 +9,7 @@ import { rukTakeHomeMonthly, TAX_REGIME_LABELS } from "@/lib/tax";
 import { WEST_OF_ENGLAND_COUNCILS } from "@/lib/bristol/councils";
 import { BRISTOL_NEIGHBOURHOODS } from "@/lib/bristol/data/neighbourhoods";
 import { BRISTOL_DESTINATIONS } from "@/lib/bristol/data/destinations";
+import { createDriveModel } from "@/lib/drive-time";
 import {
   BRISTOL_COUNCIL_RENT_GBP,
   BRISTOL_RENT_REFERENCE_MONTH,
@@ -47,8 +49,40 @@ const ROOM_DISTRICT_FOR_AREA = Object.fromEntries(
   AREAS.map((a) => [a.id, a.roomDistrict]),
 );
 
+/**
+ * Driving in the West of England. The lowest average speed of the four
+ * UK regions: Bristol has a medieval street plan on steep hills, the
+ * Avon Gorge splits the north-west, and the M32 funnels everything into
+ * one point. The exception is the M4/M5 corridor to the aerospace belt,
+ * which is the one journey the car wins outright.
+ */
+const DRIVE_MODEL = createDriveModel(AREAS, BRISTOL_DESTINATIONS, {
+  circuity: 1.38,
+  peakKmh: 28,
+  arrivalPenaltyMinutes: {
+    default: 8,
+    "temple-meads": 18,
+    "city-centre": 22,
+    "clifton-triangle": 20,
+    southmead: 8,
+    "bath-centre": 20,
+    // Business parks and industrial estates park their own staff.
+    "aztec-west": 5,
+    "uwe-frenchay": 6,
+    avonmouth: 5,
+  },
+  corridors: [
+    // M5 and the Avon ring road: the aerospace belt is a motorway run
+    // from most of the city and a bus odyssey by any other means.
+    { destinationIds: ["aztec-west", "avonmouth", "uwe-frenchay"], kmh: 45 },
+    // The A4 to Bath is congested for its whole length.
+    { destinationIds: ["bath-centre"], kmh: 32 },
+  ],
+});
+
 export const BRISTOL_INPUT: CityInput = {
   city: CITIES.bristol,
+  currency: GBP,
 
   copy: {
     regionLabel: "the West of England",
@@ -104,6 +138,11 @@ export const BRISTOL_INPUT: CityInput = {
       "Pick two workplaces, a commute cap each, a shared budget and a shared idea of the kind of area you want. The ranking favours fair compromises: an area where one of you has a fifteen-minute journey and the other an hour scores worse than one where you both have half an hour.",
     ],
 
+    roomIncludesNote:
+      "Rooms often include bills and council tax, which is worth £120 to £200 a month you are not separately paying.",
+    rentExtrasNote:
+      "bills and council tax for flats, which add roughly £220 to £320 a month",
+
     extraLimits: [
       {
         title: "Gradient.",
@@ -131,10 +170,12 @@ export const BRISTOL_INPUT: CityInput = {
   },
 
   commuteTimes: BRISTOL_COMMUTE_TIMES,
+  driveTimes: DRIVE_MODEL,
   transitKmh: WEST_OF_ENGLAND_TRANSIT_KMH,
 
   rent: {
     reviewedAsOf: BRISTOL_RENT_REVIEW_AS_OF,
+    baselineLabel: "the ONS average",
     referenceMonth: BRISTOL_RENT_REFERENCE_MONTH,
     baselines: BRISTOL_COUNCIL_RENT_GBP,
     baselineForCouncil: BASELINE_FOR_COUNCIL,

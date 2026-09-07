@@ -2,6 +2,7 @@
 
 import { createContext, useContext } from "react";
 import type { City } from "@/lib/cities";
+import type { Currency } from "@/lib/currency";
 import type { BoroughSummary } from "@/lib/boroughs";
 import type { ScoringAdapters } from "@/lib/scoring";
 import type { GeoScope } from "@/lib/postcodes";
@@ -30,6 +31,14 @@ import type {
 export type CityData = {
   city: City;
 
+  /**
+   * What this city prices in. Geneva quotes francs and Paris and
+   * Barcelona quote euros; nobody is ever offered a flat in those cities
+   * in sterling, so the tool works in the local currency throughout and
+   * the pages show an approximate sterling equivalent beside it.
+   */
+  currency: Currency;
+
   neighbourhoods: Neighbourhood[];
   neighbourhoodsById: Record<string, Neighbourhood>;
   destinations: Destination[];
@@ -46,13 +55,18 @@ export type CityData = {
   polygonFor: (id: string) => GeoJSON.Polygon | null;
   boroughSummaries: (scored: ScoredNeighbourhood[]) => BoroughSummary[];
 
-  /** ArcGIS boundary layer for this city's local authorities. */
+  /**
+   * Boundary outline layer for this city's local authorities, where one
+   * exists. The ONS ArcGIS service covers UK authorities only, so the
+   * international sections have none and the map omits the outline
+   * rather than requesting a layer that does not exist.
+   */
   boroughBoundary: {
     sourceUrl: string;
     nameField: string;
     filterNames: string[];
     attribution: string;
-  };
+  } | null;
 
   scoringAdapters: ScoringAdapters;
   rentProfileFor: (n: Neighbourhood) => RentProfile;

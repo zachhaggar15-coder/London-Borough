@@ -21,7 +21,10 @@ export type CityId =
   | "manchester"
   | "bristol"
   | "leeds"
-  | "edinburgh";
+  | "edinburgh"
+  | "geneva"
+  | "paris"
+  | "barcelona";
 
 /** Every city except London, which has its own bespoke route tree. */
 export type ContentCityId = Exclude<CityId, "london">;
@@ -99,6 +102,42 @@ export const CITIES: Record<CityId, City> = {
     centralityLabel: "travel band",
     councilSegment: "councils",
   },
+
+  /*
+   * The three sections below are written for British people moving
+   * abroad, which makes them a different product from the UK ones even
+   * though they share every component. A reader here has already decided
+   * to leave; what they need is the paperwork, the healthcare system, the
+   * bank account and the tax residence question, and only then the
+   * neighbourhood. The guides carry that weight.
+   */
+  geneva: {
+    id: "geneva",
+    name: "Geneva",
+    brand: "Where in Geneva",
+    basePath: "/geneva",
+    transitAuthority: "Transports publics genevois",
+    centralityLabel: "travel band",
+    councilSegment: "communes",
+  },
+  paris: {
+    id: "paris",
+    name: "Paris",
+    brand: "Where in Paris",
+    basePath: "/paris",
+    transitAuthority: "Île-de-France Mobilités",
+    centralityLabel: "travel band",
+    councilSegment: "arrondissements",
+  },
+  barcelona: {
+    id: "barcelona",
+    name: "Barcelona",
+    brand: "Where in Barcelona",
+    basePath: "/barcelona",
+    transitAuthority: "Transports Metropolitans de Barcelona",
+    centralityLabel: "travel band",
+    councilSegment: "districts",
+  },
 };
 
 export const CITY_LIST: City[] = [
@@ -107,6 +146,9 @@ export const CITY_LIST: City[] = [
   CITIES.bristol,
   CITIES.leeds,
   CITIES.edinburgh,
+  CITIES.geneva,
+  CITIES.paris,
+  CITIES.barcelona,
 ];
 
 /** Build a path within a city's namespace: cityPath(CITIES.bristol, "/councils"). */

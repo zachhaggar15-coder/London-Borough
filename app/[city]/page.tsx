@@ -8,6 +8,7 @@ import {
 } from "@/lib/city-registry";
 import { TRAVEL_BANDS, TRAVEL_BAND_LABELS } from "@/lib/travel-band";
 import { spellNumber } from "@/lib/city-content";
+import { money, moneyWithGbp } from "@/lib/currency";
 import CityToolClient from "@/app/[city]/CityToolClient";
 import {
   AreaCard,
@@ -94,17 +95,24 @@ export default async function CityHomePage({ params }: Props) {
         name: `How much is rent in ${input.regionName}?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: `Across the ${areaCount} areas covered here the median one-bed sits at around £${oneBed.toLocaleString()} a month and the median two-bed at around £${twoBed.toLocaleString()}. The spread is wide: the published average one-bed runs from £${rentOf(cheapestCouncil).toLocaleString()} in ${cheapestCouncil} to £${rentOf(priciestCouncil).toLocaleString()} in ${priciestCouncil}.`,
+          text: `Across the ${areaCount} areas covered here the median one-bed sits at around ${moneyWithGbp(oneBed, input.currency)} a month and the median two-bed at around ${money(twoBed, input.currency)}. The spread is wide: the published average one-bed runs from ${money(rentOf(cheapestCouncil), input.currency)} in ${cheapestCouncil} to ${money(rentOf(priciestCouncil), input.currency)} in ${priciestCouncil}.`,
         },
       },
-      {
-        "@type": "Question",
-        name: `Which ${input.regionName} ${noun.singular} has the lowest council tax?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `${lowestTaxCouncil}, at £${input.councilTax.bandD[lowestTaxCouncil].toLocaleString()} at Band D for ${input.councilTax.year}.`,
-        },
-      },
+      // Only asked where the city levies one. In Paris and Barcelona a
+      // tenant pays no residence tax at all, and the local-costs table on
+      // the council pages is the honest answer instead.
+      ...(content.councilTax
+        ? [
+            {
+              "@type": "Question",
+              name: `Which ${input.regionName} ${noun.singular} has the lowest council tax?`,
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: `${lowestTaxCouncil}, at ${money(content.councilTax.bandD[lowestTaxCouncil], input.currency)} at Band D for ${content.councilTax.year}.`,
+              },
+            },
+          ]
+        : []),
     ],
   };
 

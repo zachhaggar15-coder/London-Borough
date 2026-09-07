@@ -4,6 +4,9 @@ import { MANCHESTER_INPUT } from "@/lib/city-inputs/manchester";
 import { BRISTOL_INPUT } from "@/lib/city-inputs/bristol";
 import { LEEDS_INPUT } from "@/lib/city-inputs/leeds";
 import { EDINBURGH_INPUT } from "@/lib/city-inputs/edinburgh";
+import { GENEVA_INPUT } from "@/lib/city-inputs/geneva";
+import { PARIS_INPUT } from "@/lib/city-inputs/paris";
+import { BARCELONA_INPUT } from "@/lib/city-inputs/barcelona";
 
 /**
  * Which cities have a generated section, and their content.
@@ -22,6 +25,9 @@ const CITY_INPUTS: Record<ContentCityId, CityInput> = {
   bristol: BRISTOL_INPUT,
   leeds: LEEDS_INPUT,
   edinburgh: EDINBURGH_INPUT,
+  geneva: GENEVA_INPUT,
+  paris: PARIS_INPUT,
+  barcelona: BARCELONA_INPUT,
 };
 
 export const CONTENT_CITY_IDS = Object.keys(CITY_INPUTS) as ContentCityId[];

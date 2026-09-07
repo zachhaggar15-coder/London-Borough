@@ -29,7 +29,14 @@ export const LONDON_COUPLES_CONFIG: CouplesConfig = {
     (await LONDON_CITY_DATA.fetchCommute(destination)).commute,
 };
 
-/** The awkward pair in each region, and a realistic household budget. */
+/**
+ * The awkward pair in each region, and a realistic household budget.
+ *
+ * The budget field is named budgetGbp for historical reasons but is
+ * always in the city's own currency — francs for Geneva, euros for Paris
+ * and Barcelona. The tool formats it with the city's currency symbol, so
+ * the number here must match that, not a sterling equivalent.
+ */
 const DEFAULTS: Record<
   ContentCityId,
   { a: string; b: string; budgetGbp: number }
@@ -45,6 +52,16 @@ const DEFAULTS: Record<
   leeds: { a: "leeds-station", b: "huddersfield", budgetGbp: 950 },
   // The city's two employment clusters, at opposite ends of the tram.
   edinburgh: { a: "edinburgh-park", b: "leith-shore", budgetGbp: 1_350 },
+  // Geneva's two big non-central employers, at opposite ends of the
+  // canton, on a network built to connect neither to the other. Budget
+  // is in francs, not pounds.
+  geneva: { a: "cern", b: "plan-les-ouates", budgetGbp: 3_500 },
+  // La Défense is outside the city on the RER A and the east of Paris is
+  // not, which is the one genuinely hard pairing in a compact city.
+  paris: { a: "la-defense", b: "gare-de-lyon", budgetGbp: 2_200 },
+  // Opposite sides of Collserola: the FGC tunnel is the only quick way
+  // through, which pushes the answer up the hill.
+  barcelona: { a: "22at", b: "sant-cugat", budgetGbp: 1_800 },
 };
 
 function configFor(id: ContentCityId): CouplesConfig {

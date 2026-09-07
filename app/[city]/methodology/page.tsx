@@ -11,6 +11,7 @@ import { LIFESTYLE_KEYS, LIFESTYLE_LABELS } from "@/lib/types";
 import { spellNumber } from "@/lib/city-content";
 import {
   CityBreadcrumbs,
+  LocalCostsTable,
   PageShell,
   Section,
 } from "@/components/city/Pieces";
@@ -151,29 +152,47 @@ export default async function CityMethodologyPage({ params }: Props) {
         </div>
       </Section>
 
-      <Section title="Council tax">
+      <Section
+        title={content.councilTax ? "Council tax" : "Local taxes and charges"}
+      >
         <div className="max-w-3xl space-y-4 text-slate-300">
           {copy.councilTaxMethod.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
           ))}
-          {input.councilTax.notes.map((note) => (
+          {(content.councilTax?.notes ?? []).map((note) => (
             <p key={note}>{note}</p>
           ))}
-          <p>
-            Every other band is derived exactly from Band D using the statutory
-            ratios, which do not vary by authority. Band D is a reference
-            point, not a typical charge — that is the most common way these
-            figures get misread.
-          </p>
+          {content.councilTax && (
+            <p>
+              Every other band is derived exactly from Band D using the
+              statutory ratios, which do not vary by authority. Band D is a
+              reference point, not a typical charge — that is the most common
+              way these figures get misread.
+            </p>
+          )}
           <p className="text-slate-400">
-            Sources: {input.councilTax.sources.join("; ")}. Every figure was
-            cross-checked against two independent published comparison tables.
-            They remain secondary sources: confirm the charge for a specific
-            address with the council before budgeting against it. Last reviewed{" "}
-            {input.councilTax.asOf}.
+            Sources:{" "}
+            {(
+              content.councilTax?.sources ??
+              content.localCosts?.sources ??
+              []
+            ).join("; ")}
+            . These are secondary sources: confirm any charge that matters to
+            your own budget with the authority itself. Last reviewed{" "}
+            {content.councilTax?.asOf ?? input.rent.reviewedAsOf}
+            .
           </p>
         </div>
       </Section>
+
+      {content.localCosts && (
+        <Section title={content.localCosts.heading}>
+          <p className="max-w-3xl text-slate-300">{content.localCosts.intro}</p>
+          <div className="mt-6">
+            <LocalCostsTable content={content} />
+          </div>
+        </Section>
+      )}
 
       <Section title="Take-home pay">
         <p className="max-w-3xl text-slate-300">{content.taxRegimeLabel}</p>

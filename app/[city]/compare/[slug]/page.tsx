@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { money } from "@/lib/currency";
 import {
   CONTENT_CITY_IDS,
   getCityContent,
@@ -37,9 +38,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const content = getCityContent(city);
   const data = content.getComparePageData(slug);
   if (!data) return {};
+  const currency = content.input.currency;
 
   const title = `${data.a.name} or ${data.b.name}? A straight comparison`;
-  const description = `${data.a.name} vs ${data.b.name} on rent, commute and lifestyle. One-beds run £${data.a.rent.oneBedMedianGbp.toLocaleString()} against £${data.b.rent.oneBedMedianGbp.toLocaleString()}.`;
+  const description = `${data.a.name} vs ${data.b.name} on rent, commute and lifestyle. One-beds run ${money(data.a.rent.oneBedMedianGbp, currency)} against ${money(data.b.rent.oneBedMedianGbp, currency)}.`;
 
   return {
     title,
@@ -141,22 +143,27 @@ export default async function CityComparePage({ params }: Props) {
   const { city, slug } = await params;
   if (!isContentCityId(city)) notFound();
   const content = getCityContent(city);
+  const currency = content.input.currency;
   const data = content.getComparePageData(slug);
   if (!data) notFound();
 
   const { a, b } = data;
   const aCommutes = content.commuteTimesFor(a);
   const bCommutes = content.commuteTimesFor(b);
+  const anyDrive = aCommutes.some((c) => c.driveMinutes != null);
   const rentGap = Math.abs(a.rent.oneBedMedianGbp - b.rent.oneBedMedianGbp);
+  // "Inside the margin of the estimate" has to scale with the currency:
+  // 50 francs and 50 pounds are not the same claim about precision.
+  const rentNoiseFloor = Math.round(50 * currency.perGbp);
   const related = [
     ...content.relatedComparisons(a.id, 3),
     ...content.relatedComparisons(b.id, 3),
   ].filter((s) => s !== slug);
 
   const rentLine =
-    rentGap < 50
-      ? `Rent will not decide this. A one-bed runs £${a.rent.oneBedMedianGbp.toLocaleString()} in ${a.name} against £${b.rent.oneBedMedianGbp.toLocaleString()} in ${b.name} — inside the margin of the estimate itself.`
-      : `${data.cheaper.name} is the cheaper of the two by about £${rentGap.toLocaleString()} a month on a one-bed, or roughly £${(rentGap * 12).toLocaleString()} a year.`;
+    rentGap < rentNoiseFloor
+      ? `Rent will not decide this. A one-bed runs ${money(a.rent.oneBedMedianGbp, currency)} in ${a.name} against ${money(b.rent.oneBedMedianGbp, currency)} in ${b.name} — inside the margin of the estimate itself.`
+      : `${data.cheaper.name} is the cheaper of the two by about ${money(rentGap, currency)} a month on a one-bed, or roughly ${money((rentGap * 12), currency)} a year.`;
 
   const connectivityLine = verdict(a, b, (n) => n.lifestyle.connectivity, {
     higher: `${a.name} has the better transport of the two.`,
@@ -250,10 +257,10 @@ export default async function CityComparePage({ params }: Props) {
                 <tr key={row.label} className="border-b border-slate-900">
                   <td className="py-2.5 pr-4 text-slate-400">{row.label}</td>
                   <td className="py-2.5 pr-4 tabular-nums text-slate-200">
-                    £{row.read(a).toLocaleString()}
+                    {money(row.read(a), currency)}
                   </td>
                   <td className="py-2.5 tabular-nums text-slate-200">
-                    £{row.read(b).toLocaleString()}
+                    {money(row.read(b), currency)}
                   </td>
                 </tr>
               ))}
@@ -265,8 +272,20 @@ export default async function CityComparePage({ params }: Props) {
           title="Commute"
           lead="Typical weekday-morning door-to-door times to each destination tracked here."
         >
-          <ScrollTable minWidth="30rem">
-            <TableHead cells={["Destination", a.name, b.name]} />
+          <ScrollTable minWidth={anyDrive ? "38rem" : "30rem"}>
+            <TableHead
+              cells={
+                anyDrive
+                  ? [
+                      "Destination",
+                      `${a.name} transit`,
+                      `${a.name} car`,
+                      `${b.name} transit`,
+                      `${b.name} car`,
+                    ]
+                  : ["Destination", a.name, b.name]
+              }
+            />
             <tbody>
               {aCommutes.map((row) => {
                 const other = bCommutes.find((c) => c.id === row.id);
@@ -283,9 +302,23 @@ export default async function CityComparePage({ params }: Props) {
                     <td className="py-2.5 pr-4 tabular-nums text-slate-200">
                       {row.minutes} min
                     </td>
-                    <td className="py-2.5 tabular-nums text-slate-200">
+                    {anyDrive && (
+                      <td className="py-2.5 pr-4 tabular-nums text-slate-400">
+                        {row.driveMinutes != null
+                          ? `${row.driveMinutes} min`
+                          : "—"}
+                      </td>
+                    )}
+                    <td className="py-2.5 pr-4 tabular-nums text-slate-200">
                       {other ? `${other.minutes} min` : "—"}
                     </td>
+                    {anyDrive && (
+                      <td className="py-2.5 tabular-nums text-slate-400">
+                        {other?.driveMinutes != null
+                          ? `${other.driveMinutes} min`
+                          : "—"}
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -334,9 +367,9 @@ export default async function CityComparePage({ params }: Props) {
           Rents are reviewed estimates anchored on the published ONS{" "}
           {content.input.councilNoun.singular} averages; journey times are
           reviewed door-to-door estimates for a weekday morning. A gap of under
-          £50 a month or five minutes is inside the margin of the method and
-          should be read as level, which is why this page says so rather than
-          picking a winner on it.
+          {money(rentNoiseFloor, currency)} a month or five minutes is inside
+          the margin of the method and should be read as level, which is why
+          this page says so rather than picking a winner on it.
         </DataNote>
       </PageShell>
     </>

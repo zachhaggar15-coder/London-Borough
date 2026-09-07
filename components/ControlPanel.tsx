@@ -22,10 +22,8 @@ import {
   type Destination,
   type RentBasis,
 } from "@/lib/types";
-import {
-  defaultMonthlyRentBudgetGbp,
-  gbp,
-} from "@/lib/affordability";
+import { defaultMonthlyRentBudgetGbp } from "@/lib/affordability";
+import { money } from "@/lib/currency";
 import { PERSONALITIES } from "@/lib/personalities";
 import {
   geocode,
@@ -40,7 +38,8 @@ import {
 import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
 
 export default function ControlPanel() {
-  const { destinations, geoScope, labels } = useCityData();
+  const cityData = useCityData();
+  const { destinations, geoScope, labels } = cityData;
   const query = useStore((s) => s.query);
   const setDestination = useStore((s) => s.setDestination);
   const setMaxCommute = useStore((s) => s.setMaxCommute);
@@ -262,14 +261,14 @@ export default function ControlPanel() {
         label="Annual salary"
         subtitle={
           derivedBudget != null
-            ? `Rent budget: ${gbp(derivedBudget)}/mo${
+            ? `Rent budget: ${money(derivedBudget, cityData.currency)}/mo${
                 query.monthlyRentBudgetGbp != null ? " (override)" : " (derived)"
               }`
             : "We'll derive a rent budget"
         }
       >
         <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-400">£</span>
+          <span className="text-sm text-slate-400">{cityData.currency.symbol}</span>
           <input
             type="number"
             min={0}
@@ -298,7 +297,7 @@ export default function ControlPanel() {
         ) : (
           <div className="mt-2">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400">£</span>
+              <span className="text-xs text-slate-400">{cityData.currency.symbol}</span>
               <input
                 type="number"
                 min={0}

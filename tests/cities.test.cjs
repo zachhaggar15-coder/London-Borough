@@ -34,7 +34,14 @@ const { CONTENT_CITY_IDS, getCityContent, allCityContent } = jiti(
 const { getIndexableRoutes } = jiti("../lib/seo-data.ts");
 const { ordinal, COUNCIL_TAX_BANDS } = jiti("../lib/city-content.ts");
 const { TRAVEL_BANDS } = jiti("../lib/travel-band.ts");
-const { rukTakeHomeMonthly, scotlandTakeHomeMonthly } = jiti("../lib/tax.ts");
+const {
+  rukTakeHomeMonthly,
+  scotlandTakeHomeMonthly,
+  genevaTakeHomeMonthly,
+  franceTakeHomeMonthly,
+  cataloniaTakeHomeMonthly,
+} = jiti("../lib/tax.ts");
+const { GBP, CHF, EUR } = jiti("../lib/currency.ts");
 const { CITY_MAP_CONFIGS } = jiti("../lib/city-maps.ts");
 
 const CITIES = CONTENT_CITY_IDS.map((id) => [id, getCityContent(id)]);
@@ -164,14 +171,43 @@ for (const [id, content] of CITIES) {
     }
   });
 
-  test(`${id}: every council has a Band D charge`, () => {
-    for (const council of content.councils) {
-      const bandD = content.input.councilTax.bandD[council];
-      assert.ok(typeof bandD === "number" && bandD > 0, `${council}: ${bandD}`);
+  test(`${id}: the recurring-cost model is complete, whichever it uses`, () => {
+    // The UK sections levy council tax on the occupier. None of the
+    // international ones does - Switzerland has no occupier property
+    // tax at all, France abolished taxe d habitation on main
+    // residences in 2023, and Spain IBI falls on the owner. Every city
+    // must carry one model or the other; a city with neither would be
+    // silently telling a reader that living there costs only rent.
+    const hasCouncilTax = Boolean(content.councilTax);
+    assert.ok(
+      hasCouncilTax || Boolean(content.localCosts),
+      `${id} explains neither council tax nor what replaces it`,
+    );
+
+    if (hasCouncilTax) {
+      for (const council of content.councils) {
+        const bandD = content.councilTax.bandD[council];
+        assert.ok(typeof bandD === "number" && bandD > 0, `${council}: ${bandD}`);
+      }
+    } else {
+      assert.ok(
+        content.localCosts.rows.length >= 3,
+        `${id} has no council tax and a thin local-costs table`,
+      );
+      for (const row of content.localCosts.rows) {
+        assert.ok(row.note.length > 40, `${row.label} has no explanation`);
+      }
     }
   });
 
   test(`${id}: council tax band charges rise monotonically from A to H`, () => {
+    if (!content.councilTax) {
+      // Nothing to check: bandCharge returns null for a city with no
+      // occupier property tax, and the pages render the local-costs
+      // table in place of the band table.
+      assert.equal(content.bandCharge(content.councils[0], "D"), null);
+      return;
+    }
     for (const council of content.councils) {
       let previous = 0;
       for (const band of COUNCIL_TAX_BANDS) {
@@ -182,8 +218,12 @@ for (const [id, content] of CITIES) {
     }
   });
 
-  test(`${id}: the map config names every council's ONS code`, () => {
+  test(`${id}: the boundary layer is complete or absent, never partial`, () => {
+    // The ONS ArcGIS service covers UK local authorities only, so the
+    // international sections draw no council outline at all. A city
+    // naming some codes but not others would render a map with holes.
     const config = CITY_MAP_CONFIGS[id];
+    if (!config.onsCodes) return;
     for (const council of content.councils) {
       assert.ok(config.onsCodes[council], `${council} has no ONS code`);
     }
@@ -231,10 +271,17 @@ for (const [id, content] of CITIES) {
     for (const slug of content.councilSlugs()) {
       const data = content.getCouncilPageData(slug);
       assert.ok(data, `${slug} does not resolve`);
-      assert.ok(
-        data.bandDRank >= 1 && data.bandDRank <= content.councils.length,
-        `${slug} rank ${data.bandDRank}`,
-      );
+      if (content.councilTax) {
+        assert.ok(
+          data.bandDRank >= 1 && data.bandDRank <= content.councils.length,
+          `${slug} rank ${data.bandDRank}`,
+        );
+      } else {
+        // No council tax means no ranking on it, and the page must not
+        // print a rank it does not have.
+        assert.equal(data.bandDRank, null, `${slug} has a spurious rank`);
+        assert.equal(data.bandD, null, `${slug} has a spurious Band D`);
+      }
       assert.ok(data.areas.length > 0, `${slug} has no areas`);
     }
     assert.equal(content.getCouncilPageData("camden"), null);
@@ -380,19 +427,99 @@ test("no two cities share prose", () => {
   }
 });
 
-test("Edinburgh uses the Scottish tax and band models, and nobody else does", () => {
+test("every city uses its own jurisdiction tax model", () => {
+  // Income tax is the thing most likely to be silently wrong when a city
+  // is copied from another, and the thing a reader is least able to
+  // check. Each of these is a different statutory regime.
+  const EXPECTED = {
+    manchester: rukTakeHomeMonthly,
+    bristol: rukTakeHomeMonthly,
+    leeds: rukTakeHomeMonthly,
+    edinburgh: scotlandTakeHomeMonthly,
+    geneva: genevaTakeHomeMonthly,
+    paris: franceTakeHomeMonthly,
+    barcelona: cataloniaTakeHomeMonthly,
+  };
+  for (const [id, content] of CITIES) {
+    assert.equal(content.input.takeHomeMonthly, EXPECTED[id], id);
+    assert.ok(
+      content.taxRegimeLabel.length > 80,
+      `${id} does not explain its tax model`,
+    );
+  }
+});
+
+test("Edinburgh uses the Scottish council tax bands and no English city does", () => {
   const edinburgh = getCityContent("edinburgh");
-  assert.equal(edinburgh.input.takeHomeMonthly, scotlandTakeHomeMonthly);
   // Scotland uplifted bands E to H in 2017; the English ninths would
   // understate every large Scottish property on the site.
   assert.ok(
-    edinburgh.input.councilTax.ratios.H > 18 / 9,
+    edinburgh.councilTax.ratios.H > 18 / 9,
     "Edinburgh is using the English band H ratio",
   );
   for (const [id, content] of CITIES) {
-    if (id === "edinburgh") continue;
-    assert.equal(content.input.takeHomeMonthly, rukTakeHomeMonthly, id);
-    assert.equal(content.input.councilTax.ratios.H, 18 / 9, id);
+    if (id === "edinburgh" || !content.councilTax) continue;
+    assert.equal(content.councilTax.ratios.H, 18 / 9, id);
+  }
+});
+
+test("each city prices in its own currency", () => {
+  // Nobody is ever quoted a Geneva flat in sterling. A city showing the
+  // wrong symbol would be quietly wrong on every figure it prints.
+  const EXPECTED = {
+    manchester: GBP, bristol: GBP, leeds: GBP, edinburgh: GBP,
+    geneva: CHF, paris: EUR, barcelona: EUR,
+  };
+  for (const [id, content] of CITIES) {
+    assert.equal(content.input.currency, EXPECTED[id], id);
+  }
+});
+
+test("driving times are modelled for every city except London", () => {
+  for (const [id, content] of CITIES) {
+    const area = content.areas[0];
+    const destination = content.input.destinations[0];
+    const minutes = content.driveMinutes(area, destination.id);
+    assert.ok(
+      typeof minutes === "number" && minutes >= 5,
+      `${id} models no driving time`,
+    );
+  }
+});
+
+test("the car wins where the rail network is thin, and loses in Paris", () => {
+  // The point of modelling driving at all is the orbital journeys these
+  // networks handle badly: built to bring people into a centre, not to
+  // move them around an edge. Where that is true the car should win
+  // somewhere.
+  //
+  // Paris is the deliberate exception and a useful control. It has the
+  // densest metro in Europe and a decade of policy removing parking, so
+  // if the model ever shows the car winning there, the arrival penalties
+  // have been mis-set rather than the city having changed.
+  const carShouldWin = ["manchester", "bristol", "leeds", "edinburgh", "geneva", "barcelona"];
+
+  for (const [id, content] of CITIES) {
+    let carWins = 0;
+    for (const area of content.areas) {
+      for (const destination of content.input.destinations) {
+        const transit = content.commuteMinutes(area, destination.id);
+        const drive = content.driveMinutes(area, destination.id);
+        if (transit && drive != null && drive <= transit.minutes - 15) {
+          carWins += 1;
+        }
+      }
+    }
+
+    if (carShouldWin.includes(id)) {
+      assert.ok(carWins > 0, `${id}: driving never beats transit anywhere`);
+    } else {
+      assert.equal(
+        carWins,
+        0,
+        `${id}: driving beats transit ${carWins} times, which for a city with this transit network means the drive model is wrong`,
+      );
+    }
   }
 });
 

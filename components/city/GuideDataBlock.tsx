@@ -1,6 +1,11 @@
 import Link from "next/link";
+import { money } from "@/lib/currency";
 import type { CityContent, CityGuideSection } from "@/lib/city-content";
-import { ScrollTable, TableHead } from "@/components/city/Pieces";
+import {
+  LocalCostsTable,
+  ScrollTable,
+  TableHead,
+} from "@/components/city/Pieces";
 
 /**
  * Live tables rendered inside a guide's prose.
@@ -26,8 +31,19 @@ export default function GuideDataBlock({
   content: CityContent;
 }) {
   const { input } = content;
+  const currency = input.currency;
 
   if (block === "council-tax") {
+    // A city with no occupier property tax shows what its households
+    // actually pay instead; see LocalCostsTable.
+    if (!content.councilTax) {
+      return content.localCosts ? (
+        <Wrapper>
+          <LocalCostsTable content={content} />
+        </Wrapper>
+      ) : null;
+    }
+    const councilTax = content.councilTax;
     const rows = content.councilsByBandD;
     const heading =
       input.councilNoun.singular.charAt(0).toUpperCase() +
@@ -38,7 +54,7 @@ export default function GuideDataBlock({
           <TableHead cells={[heading, "Band D per year", "Per month"]} />
           <tbody>
             {rows.map((council) => {
-              const bandD = input.councilTax.bandD[council];
+              const bandD = councilTax.bandD[council];
               return (
                 <tr key={council} className="border-b border-slate-900">
                   <td className="py-2.5 pr-4">
@@ -50,10 +66,10 @@ export default function GuideDataBlock({
                     </Link>
                   </td>
                   <td className="py-2.5 pr-4 tabular-nums text-slate-200">
-                    £{bandD.toLocaleString()}
+                    {money(bandD, currency)}
                   </td>
                   <td className="py-2.5 pr-4 tabular-nums text-slate-400">
-                    £{Math.round(bandD / 12).toLocaleString()}
+                    {money(bandD / 12, currency)}
                   </td>
                 </tr>
               );
@@ -90,13 +106,13 @@ export default function GuideDataBlock({
                   </Link>
                 </td>
                 <td className="py-2.5 pr-4 tabular-nums text-slate-200">
-                  £{n.rent.oneBedMedianGbp.toLocaleString()}
+                  {money(n.rent.oneBedMedianGbp, currency)}
                 </td>
                 <td className="py-2.5 pr-4 tabular-nums text-slate-300">
-                  £{n.rent.twoBedMedianGbp.toLocaleString()}
+                  {money(n.rent.twoBedMedianGbp, currency)}
                 </td>
                 <td className="py-2.5 pr-4 tabular-nums text-slate-400">
-                  £{content.roomRentFor(n).toLocaleString()}
+                  {money(content.roomRentFor(n), currency)}
                 </td>
               </tr>
             ))}
@@ -120,16 +136,16 @@ export default function GuideDataBlock({
             return (
               <tr key={salary} className="border-b border-slate-900">
                 <td className="py-2.5 pr-4 tabular-nums font-medium">
-                  £{salary.toLocaleString()}
+                  {money(salary, currency)}
                 </td>
                 <td className="py-2.5 pr-4 tabular-nums text-slate-300">
-                  £{Math.round(monthly).toLocaleString()}
+                  {money(monthly, currency)}
                 </td>
                 <td className="py-2.5 pr-4 tabular-nums text-slate-200">
-                  £{Math.round(monthly * 0.35).toLocaleString()}
+                  {money(monthly * 0.35, currency)}
                 </td>
                 <td className="py-2.5 pr-4 tabular-nums text-slate-400">
-                  £{Math.round(monthly * 0.4).toLocaleString()}
+                  {money(monthly * 0.4, currency)}
                 </td>
               </tr>
             );

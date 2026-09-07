@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { money } from "@/lib/currency";
 import {
   CONTENT_CITY_IDS,
   getCityContent,
@@ -56,6 +57,7 @@ export default async function CityCommutePage({ params }: Props) {
   const { city, slug } = await params;
   if (!isContentCityId(city)) notFound();
   const content = getCityContent(city);
+  const currency = content.input.currency;
   const data = content.getCommutePageData(slug);
   if (!data) notFound();
 
@@ -76,6 +78,18 @@ export default async function CityCommutePage({ params }: Props) {
   )[0];
 
   const anyEstimated = ranked.some((r) => !r.reviewed);
+
+  // Driving times where the city models them. The comparison is the whole
+  // point on an orbital destination: the rail networks in these regions
+  // were built to reach a centre, so the car often wins going round.
+  const driveByArea = new Map(
+    ranked.map((r) => [r.area.id, content.driveMinutes(r.area, slug)]),
+  );
+  const anyDrive = [...driveByArea.values()].some((v) => v != null);
+  const carWins = ranked.filter((r) => {
+    const drive = driveByArea.get(r.area.id);
+    return drive != null && drive <= r.minutes - 15;
+  });
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -115,12 +129,20 @@ export default async function CityCommutePage({ params }: Props) {
           {ranked.length} {copy.regionLabel} areas ranked by how long it takes
           to reach {destination.label} on a weekday morning, door to door.{" "}
           {under30.length} of them come in at half an hour or under.
+          {carWins.length > 0 && (
+            <>
+              {" "}
+              For {carWins.length} of them driving is at least a quarter of an
+              hour quicker than the bus or train, which is worth knowing before
+              you rule an area out on its public transport alone.
+            </>
+          )}
           {valuePick && (
             <>
               {" "}
               The one worth a second look is {valuePick.area.name}: about{" "}
-              {valuePick.minutes} minutes, at £
-              {valuePick.area.rent.oneBedMedianGbp.toLocaleString()} a month
+              {valuePick.minutes} minutes, at{" "}
+              {money(valuePick.area.rent.oneBedMedianGbp, currency)} a month
               for a one-bed — the cheapest area inside that window.
             </>
           )}
@@ -132,7 +154,14 @@ export default async function CityCommutePage({ params }: Props) {
         >
           <ScrollTable minWidth="38rem">
             <TableHead
-              cells={["Area", "Journey", "1-bed", councilNoun, "Band"]}
+              cells={[
+                "Area",
+                "Public transport",
+                ...(anyDrive ? ["Driving"] : []),
+                "1-bed",
+                councilNoun,
+                "Band",
+              ]}
             />
             <tbody>
               {ranked.map((row) => (
@@ -154,8 +183,15 @@ export default async function CityCommutePage({ params }: Props) {
                       <span className="ml-1 text-xs text-slate-600">est.</span>
                     )}
                   </td>
+                  {anyDrive && (
+                    <td className="py-2.5 pr-4 tabular-nums text-slate-400">
+                      {driveByArea.get(row.area.id) != null
+                        ? `${driveByArea.get(row.area.id)} min`
+                        : "—"}
+                    </td>
+                  )}
                   <td className="py-2.5 pr-4 tabular-nums text-slate-300">
-                    £{row.area.rent.oneBedMedianGbp.toLocaleString()}
+                    {money(row.area.rent.oneBedMedianGbp, currency)}
                   </td>
                   <td className="py-2.5 pr-4 text-slate-400">
                     <Link
@@ -194,8 +230,11 @@ export default async function CityCommutePage({ params }: Props) {
           {anyEstimated
             ? " Rows marked “est.” fall back to straight-line distance at an assumed average speed because that pairing is not in the reviewed matrix; treat them as a rough upper bound."
             : " Every figure on this page comes from the reviewed matrix."}{" "}
-          They will be wrong for you if you cycle, drive, or travel outside the
-          peak. Treat a five-minute difference between two areas as noise.
+          They will be wrong for you if you cycle or travel outside the peak.
+          Treat a five-minute difference between two areas as noise.
+          {anyDrive
+            ? " Driving times are modelled rather than reviewed: road distance at a regional peak speed, plus an arrival penalty for traffic and parking at this destination. They assume you have somewhere to park, which in several of these places is the harder problem."
+            : ""}
         </DataNote>
       </PageShell>
     </>

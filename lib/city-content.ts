@@ -16,6 +16,7 @@
 
 import { SITE_URL } from "@/lib/seo-data";
 import type { City } from "@/lib/cities";
+import type { Currency } from "@/lib/currency";
 import { PERSONALITY_SCORERS } from "@/lib/personalities";
 import { centralityRank } from "@/lib/centrality";
 import type { TravelBand } from "@/lib/travel-band";
@@ -174,8 +175,44 @@ export type CityCopy = {
   compareIntro: string;
   /** The two paragraphs on the couples page. */
   couplesIntro: string[];
+  /**
+   * What a room in a share typically includes here, in the local
+   * currency. Bundled bills are worth a lot and vary by country: a UK
+   * room usually folds in council tax, a Geneva one never folds in
+   * health insurance because that follows the person, not the flat.
+   */
+  roomIncludesNote?: string;
+  /**
+   * What a flat rent excludes, named so the salary pages do not quote a
+   * British "bills and council tax" figure at a reader in Barcelona.
+   */
+  rentExtrasNote?: string;
   /** What the data cannot tell you, beyond the four shared limits. */
   extraLimits?: { title: string; body: string }[];
+};
+
+/**
+ * A recurring cost of living somewhere that is not rent and not a
+ * property tax banded by value.
+ *
+ * The UK cities all have council tax, which is a single charge banded by
+ * 1991 property value and levied on the occupier. Almost nowhere else
+ * works like that, and pretending otherwise would be the single easiest
+ * way to mislead a British reader. France abolished taxe d'habitation on
+ * main residences in 2023, so a Paris tenant pays nothing equivalent;
+ * Spain's IBI falls on the owner; Switzerland has no occupier property
+ * tax at all but does have compulsory private health insurance that
+ * costs more per month than any UK council tax bill.
+ *
+ * So the model is: council tax where it exists, and an explicit list of
+ * what a household actually pays where it does not.
+ */
+export type LocalCost = {
+  label: string;
+  /** Monthly cost in the city's own currency, or null where it varies. */
+  monthly: number | null;
+  /** Who pays it, and anything a British reader would not expect. */
+  note: string;
 };
 
 export type CityInput = {
@@ -183,6 +220,9 @@ export type CityInput = {
 
   /** The prose that cannot be derived from the numbers. */
   copy: CityCopy;
+
+  /** What this city prices in. Defaults nowhere — every city states it. */
+  currency: Currency;
 
   /** Areas, each already carrying a travelBand. */
   areas: Neighbourhood[];
@@ -225,6 +265,13 @@ export type CityInput = {
     reviewedAsOf: string;
     referenceMonth: string;
     /**
+     * Short reader-facing name for the published baseline, used inline in
+     * prose: "the ONS average", "the OCSTAT average", "the INCASOL
+     * index". Naming the wrong statistical office is a small error that
+     * destroys a page's credibility with anyone who knows the source.
+     */
+    baselineLabel: string;
+    /**
      * Published averages keyed by whatever unit the statistics actually
      * use. England publishes by local authority; Scotland publishes by
      * Broad Rental Market Area, so several councils share one row.
@@ -242,7 +289,11 @@ export type CityInput = {
     note?: string;
   };
 
-  councilTax: {
+  /**
+   * Occupier property tax, where the city has one. Absent for cities
+   * whose tenants pay no equivalent — see localCosts.
+   */
+  councilTax?: {
     year: string;
     asOf: string;
     /** Council tax only. Scottish water and sewerage is billed on top. */
@@ -255,6 +306,26 @@ export type CityInput = {
     /** Anything structural a reader has to know, e.g. Scottish water. */
     notes: string[];
   };
+
+  /**
+   * The recurring charges a household here actually pays beyond rent.
+   * Required for every city: even where council tax exists, a British
+   * reader moving abroad needs the whole list rather than the one line
+   * they already recognise.
+   */
+  localCosts?: {
+    heading: string;
+    intro: string;
+    rows: LocalCost[];
+    sources: readonly string[];
+  };
+
+  /**
+   * Reviewed peak-hour driving times, by the model in lib/drive-time.ts.
+   * Absent for London, where the tool is public-transport only and the
+   * congestion charge and parking make driving in a different question.
+   */
+  driveTimes?: (areaId: string, destinationId: string) => number | null;
 
   guides: CityGuide[];
   lifestylePages: CityLifestylePage[];
@@ -291,8 +362,9 @@ export type CouncilPageData = {
   baseline: BedroomBaseline;
   cheapest: Neighbourhood;
   priciest: Neighbourhood;
-  bandD: number;
-  bandDRank: number;
+  /** Null in cities with no occupier property tax. */
+  bandD: number | null;
+  bandDRank: number | null;
   transportLines: string[];
 };
 
@@ -398,9 +470,17 @@ export function createCityContent(input: CityInput) {
   };
 
   // ── Councils ────────────────────────────────────────────────────
-  const councilsByBandD = [...councils].sort(
-    (a, b) => input.councilTax.bandD[a] - input.councilTax.bandD[b],
-  );
+  const councilTax = input.councilTax;
+
+  /**
+   * Councils ordered cheapest-first on council tax where the city levies
+   * one, and in registry order where it does not — which is every city
+   * outside the UK, because none of them taxes an occupier by property
+   * band.
+   */
+  const councilsByBandD = councilTax
+    ? [...councils].sort((a, b) => councilTax.bandD[a] - councilTax.bandD[b])
+    : [...councils];
 
   const areasInCouncil = (council: string) =>
     areas
@@ -424,8 +504,8 @@ export function createCityContent(input: CityInput) {
       baseline: input.rent.baselines[baselineKey],
       cheapest: byRent[0],
       priciest: byRent[byRent.length - 1],
-      bandD: input.councilTax.bandD[name],
-      bandDRank: councilsByBandD.indexOf(name) + 1,
+      bandD: councilTax ? councilTax.bandD[name] : null,
+      bandDRank: councilTax ? councilsByBandD.indexOf(name) + 1 : null,
       transportLines: [
         ...new Set(within.flatMap((a) => a.mainStations.flatMap((s) => s.lines))),
       ],
@@ -433,9 +513,10 @@ export function createCityContent(input: CityInput) {
   };
 
   const bandCharge = (council: string, band: CouncilTaxBand): number | null => {
-    const bandD = input.councilTax.bandD[council];
+    if (!councilTax) return null;
+    const bandD = councilTax.bandD[council];
     if (bandD == null) return null;
-    return Math.round(bandD * input.councilTax.ratios[band] * 100) / 100;
+    return Math.round(bandD * councilTax.ratios[band] * 100) / 100;
   };
 
   // ── Commute ─────────────────────────────────────────────────────
@@ -470,12 +551,17 @@ export function createCityContent(input: CityInput) {
     return { destination, ranked };
   };
 
+  /** Peak-hour driving minutes, or null for a city that does not model it. */
+  const driveMinutes = (a: Neighbourhood, destinationId: string): number | null =>
+    input.driveTimes?.(a.id, destinationId) ?? null;
+
   const commuteTimesFor = (a: Neighbourhood) =>
     input.destinations
       .map((d) => ({
         id: d.id,
         label: d.label,
         minutes: commuteMinutes(a, d.id)?.minutes ?? 0,
+        driveMinutes: driveMinutes(a, d.id),
       }))
       .filter((r) => r.minutes > 0)
       .sort((x, y) => x.minutes - y.minutes);
@@ -613,7 +699,7 @@ export function createCityContent(input: CityInput) {
 
   const indexableRoutes = (): IndexableRoute[] => {
     const rent = input.rent.reviewedAsOf;
-    const tax = input.councilTax.asOf;
+    const tax = councilTax?.asOf ?? rent;
     const council = rent >= tax ? rent : tax;
     return [
       { path: path("/"), priority: 0.9, changefreq: "weekly", lastmod: rent },
@@ -685,7 +771,8 @@ export function createCityContent(input: CityInput) {
     guides: input.guides,
     lifestylePages: input.lifestylePages,
     travelBands: input.travelBands,
-    councilTax: input.councilTax,
+    councilTax,
+    localCosts: input.localCosts,
     rent: input.rent,
     taxRegimeLabel: input.taxRegimeLabel,
     salaryLevels: input.salaryLevels,
@@ -715,6 +802,7 @@ export function createCityContent(input: CityInput) {
     bandCharge,
 
     commuteMinutes,
+    driveMinutes,
     commuteSlugs: () => input.destinations.map((d) => d.id),
     getCommutePageData,
     commuteTimesFor,

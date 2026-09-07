@@ -42,8 +42,12 @@ export type CityMapConfig = {
    * rather than drawing it as a circle.
    */
   corridors: CorridorFamily[];
-  /** ONS local authority codes for the boundary layer, in council order. */
-  onsCodes: Record<string, string>;
+  /**
+   * ONS local authority codes for the boundary layer, in council order.
+   * Absent for the international sections: the ONS ArcGIS service covers
+   * UK authorities only, so those cities draw no council outline.
+   */
+  onsCodes?: Record<string, string>;
   /**
    * How the boundary layer spells a council's name, where it differs
    * from the name used in prose. The ONS calls Bristol "Bristol, City
@@ -108,6 +112,7 @@ export function createCityData(
 
   return {
     city,
+    currency: input.currency,
 
     neighbourhoods: areas,
     neighbourhoodsById: content.areasById,
@@ -138,16 +143,20 @@ export function createCityData(
 
     boroughSummaries: (scored) => councilSummaries(input.councils, scored),
 
-    boroughBoundary: {
-      sourceUrl: boundaryUrl(
-        input.councils.map((c) => config.onsCodes[c]).filter(Boolean),
-      ),
-      nameField: BOUNDARY_NAME_FIELD,
-      filterNames: input.councils.map(
-        (c) => config.boundaryNames?.[c] ?? c,
-      ),
-      attribution: BOUNDARY_ATTRIBUTION,
-    },
+    boroughBoundary: config.onsCodes
+      ? {
+          sourceUrl: boundaryUrl(
+            input.councils
+              .map((c) => config.onsCodes![c])
+              .filter(Boolean),
+          ),
+          nameField: BOUNDARY_NAME_FIELD,
+          filterNames: input.councils.map(
+            (c) => config.boundaryNames?.[c] ?? c,
+          ),
+          attribution: BOUNDARY_ATTRIBUTION,
+        }
+      : null,
 
     scoringAdapters: { selectedRent: content.selectedRent },
     rentProfileFor,

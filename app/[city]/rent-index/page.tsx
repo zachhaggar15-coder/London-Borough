@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { money } from "@/lib/currency";
 import {
   CONTENT_CITY_IDS,
   getCityContent,
@@ -40,6 +41,7 @@ export default async function CityRentIndexPage({ params }: Props) {
   const { city } = await params;
   if (!isContentCityId(city)) notFound();
   const content = getCityContent(city);
+  const currency = content.input.currency;
   const { input, copy } = content;
 
   const rows = [...content.areas]
@@ -62,11 +64,11 @@ export default async function CityRentIndexPage({ params }: Props) {
       </h1>
       <p className="mt-4 max-w-3xl text-lg leading-relaxed text-slate-300">
         All {count} areas ranked by what a one-bed costs, cheapest first. The
-        median across the set is £{oneBed.toLocaleString()} a month for a
-        one-bed and £{twoBed.toLocaleString()} for a two-bed. The range runs
-        from {cheapest.n.name} at £
-        {cheapest.n.rent.oneBedMedianGbp.toLocaleString()} to {priciest.n.name}{" "}
-        at £{priciest.n.rent.oneBedMedianGbp.toLocaleString()} — a factor of{" "}
+        median across the set is {money(oneBed, currency)} a month for a
+        one-bed and {money(twoBed, currency)} for a two-bed. The range runs
+        from {cheapest.n.name} at{" "}
+        {money(cheapest.n.rent.oneBedMedianGbp, currency)} to {priciest.n.name}{" "}
+        at {money(priciest.n.rent.oneBedMedianGbp, currency)} — a factor of{" "}
         {(
           priciest.n.rent.oneBedMedianGbp / cheapest.n.rent.oneBedMedianGbp
         ).toFixed(1)}{" "}
@@ -100,13 +102,13 @@ export default async function CityRentIndexPage({ params }: Props) {
                   </Link>
                 </td>
                 <td className="py-2.5 pr-4 tabular-nums text-slate-400">
-                  £{room.toLocaleString()}
+                  {money(room, currency)}
                 </td>
                 <td className="py-2.5 pr-4 tabular-nums text-slate-200">
-                  £{n.rent.oneBedMedianGbp.toLocaleString()}
+                  {money(n.rent.oneBedMedianGbp, currency)}
                 </td>
                 <td className="py-2.5 pr-4 tabular-nums text-slate-300">
-                  £{n.rent.twoBedMedianGbp.toLocaleString()}
+                  {money(n.rent.twoBedMedianGbp, currency)}
                 </td>
                 <td className="py-2.5 pr-4 text-slate-400">
                   <Link

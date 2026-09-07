@@ -10,7 +10,7 @@ export const SITE_NAME = "Where in London";
 
 /** Shown on /about and /privacy so readers know who is behind the site. */
 export const PUBLISHER_DESCRIPTION =
-  "This is an independent, self-funded project run by a single developer in the UK. It is not affiliated with Transport for London, Transport for Greater Manchester, the West of England or West Yorkshire Combined Authorities, Transport for Edinburgh, Transport Scotland, the Greater London Authority, any local council, or any letting agent or property portal.";
+  "This is an independent, self-funded project run by a single developer in the UK. It is not affiliated with Transport for London, Transport for Greater Manchester, the West of England or West Yorkshire Combined Authorities, Transport for Edinburgh, Transport Scotland, the Greater London Authority, any local council or foreign public authority, or any letting agent or property portal. Nothing on it is immigration, legal, tax or financial advice.";
 
 /**
  * The cities the site covers.
@@ -26,11 +26,14 @@ export const CITIES_COVERED = [
   "the West of England",
   "West Yorkshire",
   "Edinburgh and the Lothians",
+  "Geneva",
+  "Paris",
+  "Barcelona",
 ] as const;
 
 /** How the site describes itself when it cannot lead with one city. */
 export const NETWORK_DESCRIPTION =
-  "An independent, data-driven guide to choosing where to live across five British city regions — London, Greater Manchester, the West of England, West Yorkshire and Edinburgh — by commute, rent and lifestyle.";
+  "An independent, data-driven guide to choosing where to live — five British city regions, plus Geneva, Paris and Barcelona for anyone moving abroad — by commute, rent and lifestyle.";
 
 /** Last substantive review of the Privacy Policy and Terms. */
 export const POLICY_LAST_UPDATED = "2026-08-30";

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { money } from "@/lib/currency";
 import {
   CONTENT_CITY_IDS,
   getCityContent,
@@ -38,6 +39,7 @@ export default async function CityCompareIndexPage({ params }: Props) {
   const { city } = await params;
   if (!isContentCityId(city)) notFound();
   const content = getCityContent(city);
+  const currency = content.input.currency;
 
   const comparisons = content
     .compareSlugs()
@@ -67,8 +69,8 @@ export default async function CityCompareIndexPage({ params }: Props) {
                 {c.a.name} vs {c.b.name}
               </p>
               <p className="mt-1 text-xs text-slate-500">
-                £{c.a.rent.oneBedMedianGbp.toLocaleString()} vs £
-                {c.b.rent.oneBedMedianGbp.toLocaleString()} for a one-bed
+                {money(c.a.rent.oneBedMedianGbp, currency)} vs{" "}
+                {money(c.b.rent.oneBedMedianGbp, currency)} for a one-bed
               </p>
             </Link>
           ))}

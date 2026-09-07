@@ -1,4 +1,5 @@
 import { CITIES } from "@/lib/cities";
+import { GBP } from "@/lib/currency";
 import {
   ENGLAND_BAND_RATIOS,
   ENGLAND_BAND_VALUES,
@@ -8,6 +9,7 @@ import { rukTakeHomeMonthly, TAX_REGIME_LABELS } from "@/lib/tax";
 import { WEST_YORKSHIRE_COUNCILS } from "@/lib/leeds/councils";
 import { LEEDS_NEIGHBOURHOODS } from "@/lib/leeds/data/neighbourhoods";
 import { LEEDS_DESTINATIONS } from "@/lib/leeds/data/destinations";
+import { createDriveModel } from "@/lib/drive-time";
 import {
   LEEDS_COUNCIL_RENT_GBP,
   LEEDS_RENT_REFERENCE_MONTH,
@@ -47,8 +49,37 @@ const ROOM_DISTRICT_FOR_AREA = Object.fromEntries(
   AREAS.map((a) => [a.id, a.roomDistrict]),
 );
 
+/**
+ * Driving in West Yorkshire. The M62, M1 and M621 make the inter-town
+ * journeys fast and the intra-Leeds ones slow, which is the mirror image
+ * of the rail network — the trains are excellent between town centres
+ * and useless around the edges.
+ */
+const DRIVE_MODEL = createDriveModel(AREAS, LEEDS_DESTINATIONS, {
+  circuity: 1.3,
+  peakKmh: 32,
+  arrivalPenaltyMinutes: {
+    default: 8,
+    "leeds-station": 20,
+    "wellington-place": 20,
+    "university-leeds": 18,
+    "st-james": 12,
+    "bradford-centre": 15,
+    huddersfield: 14,
+    // Out-of-town with their own parking.
+    "thorpe-park": 5,
+    "white-rose": 6,
+  },
+  corridors: [
+    // The M62 and M621 corridors between the towns.
+    { destinationIds: ["bradford-centre", "huddersfield", "white-rose"], kmh: 48 },
+    { destinationIds: ["thorpe-park"], kmh: 45 },
+  ],
+});
+
 export const LEEDS_INPUT: CityInput = {
   city: CITIES.leeds,
+  currency: GBP,
 
   copy: {
     regionLabel: "West Yorkshire",
@@ -104,6 +135,11 @@ export const LEEDS_INPUT: CityInput = {
       "Pick two workplaces, a commute cap each, a shared budget and a shared idea of the kind of area you want. The ranking favours fair compromises: an area where one of you has a fifteen-minute journey and the other an hour scores worse than one where you both have half an hour.",
     ],
 
+    roomIncludesNote:
+      "Rooms often include bills and council tax, which is worth £120 to £200 a month you are not separately paying.",
+    rentExtrasNote:
+      "bills and council tax for flats, which add roughly £220 to £320 a month",
+
     extraLimits: [
       {
         title: "Service frequency.",
@@ -131,10 +167,12 @@ export const LEEDS_INPUT: CityInput = {
   },
 
   commuteTimes: LEEDS_COMMUTE_TIMES,
+  driveTimes: DRIVE_MODEL,
   transitKmh: WEST_YORKSHIRE_TRANSIT_KMH,
 
   rent: {
     reviewedAsOf: LEEDS_RENT_REVIEW_AS_OF,
+    baselineLabel: "the ONS average",
     referenceMonth: LEEDS_RENT_REFERENCE_MONTH,
     baselines: LEEDS_COUNCIL_RENT_GBP,
     baselineForCouncil: BASELINE_FOR_COUNCIL,

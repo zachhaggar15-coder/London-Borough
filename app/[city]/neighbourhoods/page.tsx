@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { money } from "@/lib/currency";
 import {
   CONTENT_CITY_IDS,
   getCityContent,
@@ -41,6 +42,7 @@ export default async function CityNeighbourhoodsPage({ params }: Props) {
   const { city } = await params;
   if (!isContentCityId(city)) notFound();
   const content = getCityContent(city);
+  const currency = content.input.currency;
   const { input, copy } = content;
 
   const areas = content.areasByBand();
@@ -65,8 +67,8 @@ export default async function CityNeighbourhoodsPage({ params }: Props) {
         {areas.length} areas, grouped by how far out they are rather than
         alphabetically — because the first question anyone moving here asks is
         not what a place is called but how long it takes to get to work from
-        it. The median one-bed across the set is £{oneBed.toLocaleString()} a
-        month and the median two-bed £{twoBed.toLocaleString()}.
+        it. The median one-bed across the set is {money(oneBed, currency)} a
+        month and the median two-bed {money(twoBed, currency)}.
       </p>
 
       {byBand.map(({ band, areas: bandAreas }) => (
@@ -102,10 +104,10 @@ export default async function CityNeighbourhoodsPage({ params }: Props) {
                     </Link>
                   </td>
                   <td className="py-2.5 pr-4 tabular-nums text-slate-300">
-                    £{n.rent.oneBedMedianGbp.toLocaleString()}
+                    {money(n.rent.oneBedMedianGbp, currency)}
                   </td>
                   <td className="py-2.5 pr-4 tabular-nums text-slate-300">
-                    £{n.rent.twoBedMedianGbp.toLocaleString()}
+                    {money(n.rent.twoBedMedianGbp, currency)}
                   </td>
                   <td className="py-2.5 text-xs text-slate-500">
                     {[...new Set(n.mainStations.flatMap((s) => s.lines))]
