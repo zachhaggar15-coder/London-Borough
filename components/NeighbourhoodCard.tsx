@@ -13,7 +13,7 @@ import { rentBasisShortLabel } from "@/lib/rent";
 import { matchScoreHex, suitsWho } from "@/lib/scoring";
 import { useStore } from "@/lib/store";
 import { useCityData } from "@/components/CityDataProvider";
-import { zonesOf } from "@/lib/centrality";
+import { centralityLabel } from "@/lib/centrality";
 
 type Props = {
   scored: ScoredNeighbourhood;
@@ -87,8 +87,14 @@ export default function NeighbourhoodCard({
                   Saved
                 </span>
               )}
+              {/*
+                centralityLabel, not a hardcoded "Zone": London areas
+                carry travel zones and every other city carries travel
+                bands, and printing "Zone " with nothing after it is what
+                this component used to do outside London.
+              */}
               <div className="text-[10px] uppercase tracking-wider text-slate-500">
-                Zone {zonesOf(n).join("/")}
+                {centralityLabel(n)}
               </div>
             </div>
           </div>

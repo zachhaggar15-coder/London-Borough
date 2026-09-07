@@ -89,7 +89,13 @@ export function scotlandTakeHomeMonthly(grossAnnual: number): number {
   return Math.round((gross - incomeTax(gross, SCOTLAND_BANDS) - nationalInsurance(gross)) / 12);
 }
 
+/**
+ * Written as full sentences because the pages print them directly into a
+ * data note. Each names the regime rather than saying "income tax", so a
+ * reader on the Edinburgh pages is never left assuming the UK-wide bands.
+ */
 export const TAX_REGIME_LABELS = {
-  ruk: "England and Wales income tax and Class 1 National Insurance for 2026/27",
-  scotland: "Scottish income tax and Class 1 National Insurance for 2026/27",
+  ruk: "Take-home is modelled on England and Wales income tax and Class 1 employee National Insurance for 2026/27, including the personal allowance taper above £100,000.",
+  scotland:
+    "Take-home is modelled on Scottish income tax — six bands rather than three, with the higher rate starting at £43,662 — and Class 1 employee National Insurance, which is reserved and therefore identical across the UK. It includes the personal allowance taper above £100,000.",
 } as const;

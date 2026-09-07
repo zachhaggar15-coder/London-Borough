@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { absoluteUrl, getIndexableRoutes } from "@/lib/seo-data";
-import { getManchesterIndexableRoutes } from "@/lib/manchester/seo-data";
+import { allCityContent } from "@/lib/city-registry";
 
 // Deterministic: every entry carries a real content-review date, so the
 // sitemap can be statically generated and refreshed on deploy.
@@ -23,10 +23,13 @@ function sitemapEntry(
 }
 
 export async function GET() {
-  // Manchester returns an empty list until MANCHESTER_IN_SITEMAP is on, so
-  // the section can ship and be crawled without being pushed at Google
-  // before its content is complete.
-  const routes = [...getIndexableRoutes(), ...getManchesterIndexableRoutes()];
+  // London's routes plus every generated city's, read from the registry
+  // rather than named here — adding a city adds its URLs to the sitemap
+  // with no change to this file.
+  const routes = [
+    ...getIndexableRoutes(),
+    ...allCityContent().flatMap((content) => content.indexableRoutes()),
+  ];
   const entries = routes.map((entry) =>
     sitemapEntry(entry.path, entry.priority, entry.changefreq, entry.lastmod),
   );

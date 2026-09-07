@@ -136,8 +136,53 @@ export const SCOTLAND_BAND_VALUES: Record<CouncilTaxBand, string> = {
   H: "Over £212,000",
 };
 
+/**
+ * The prose a city cannot derive from its own numbers.
+ *
+ * Everything computable — medians, rankings, spreads, counts — is worked
+ * out from the data and written by the shared templates. What lives here
+ * is the handful of judgements that are genuinely local: why this region
+ * is shaped the way it is, how its network behaves, what its rents are
+ * anchored on, and what the data cannot tell you about it. Without this
+ * the four sections would read as one section with the nouns swapped,
+ * which is the failure mode the whole site exists to avoid.
+ */
+export type CityCopy = {
+  /** The region as a reader names it: "Greater Manchester", "Leeds and West Yorkshire". */
+  regionLabel: string;
+  /** Hub H1 and the paragraph under it. */
+  homeH1: string;
+  homeIntro: string;
+  homeMetaDescription: string;
+  /** Two or three FAQs specific to the region, for the hub's FAQ schema. */
+  homeFaqs: { question: string; answer: string }[];
+  /** Why the commute pages start from the destination here. */
+  commuteIntro: string;
+  /** The character of the local network, for the methodology page. */
+  commuteMethod: string[];
+  /** How rents are anchored, and where the method is weakest. */
+  rentMethod: string[];
+  /** How room rents are sampled — the district scheme in words. */
+  roomMethod: string[];
+  /** Anything structural about council tax here. */
+  councilTaxMethod: string[];
+  /** The intro on the councils index. */
+  councilsIntro: string;
+  /** The intro on the lifestyle index — why these eight cuts. */
+  lifestyleIntro: string;
+  /** The intro on the compare index. */
+  compareIntro: string;
+  /** The two paragraphs on the couples page. */
+  couplesIntro: string[];
+  /** What the data cannot tell you, beyond the four shared limits. */
+  extraLimits?: { title: string; body: string }[];
+};
+
 export type CityInput = {
   city: City;
+
+  /** The prose that cannot be derived from the numbers. */
+  copy: CityCopy;
 
   /** Areas, each already carrying a travelBand. */
   areas: Neighbourhood[];
@@ -297,6 +342,9 @@ export function createCityContent(input: CityInput) {
 
   const path = (p: string) => (p === "/" ? city.basePath : `${city.basePath}${p}`);
   const url = (p: string) => `${SITE_URL}${path(p)}`;
+  /** The council-page path, honouring whatever this city calls them. */
+  const councilPath = (council: string) =>
+    path(`/${city.councilSegment}/${slugify(council)}`);
 
   // ── Rent ────────────────────────────────────────────────────────
   const roomRentFor = (a: Neighbourhood): number => {
@@ -570,7 +618,7 @@ export function createCityContent(input: CityInput) {
     return [
       { path: path("/"), priority: 0.9, changefreq: "weekly", lastmod: rent },
       { path: path("/neighbourhoods"), priority: 0.85, changefreq: "weekly", lastmod: rent },
-      { path: path("/councils"), priority: 0.8, changefreq: "weekly", lastmod: council },
+      { path: path(`/${city.councilSegment}`), priority: 0.8, changefreq: "weekly", lastmod: council },
       { path: path("/commute"), priority: 0.8, changefreq: "weekly", lastmod: rent },
       { path: path("/compare"), priority: 0.7, changefreq: "weekly", lastmod: rent },
       { path: path("/lifestyle"), priority: 0.8, changefreq: "weekly", lastmod: rent },
@@ -586,7 +634,7 @@ export function createCityContent(input: CityInput) {
         lastmod: council,
       })),
       ...councils.map((c) => ({
-        path: path(`/councils/${slugify(c)}`),
+        path: councilPath(c),
         priority: 0.75,
         changefreq: "monthly" as const,
         lastmod: council,
@@ -627,6 +675,7 @@ export function createCityContent(input: CityInput) {
   return {
     input,
     city,
+    copy: input.copy,
     areas,
     areasById,
     councils,
@@ -643,6 +692,7 @@ export function createCityContent(input: CityInput) {
 
     path,
     url,
+    councilPath,
 
     areaSlugs: () => areas.map((a) => a.id),
     getArea: (slug: string) => areasById[slug] ?? null,
@@ -709,6 +759,20 @@ export function slugify(value: string): string {
 
 export function compareSlug(a: string, b: string): string {
   return [a, b].sort().join("-vs-");
+}
+
+/**
+ * Spells out small numbers for running prose. "All ten boroughs" reads
+ * like a sentence; "all 10 boroughs" reads like a spreadsheet. Tables and
+ * data cells keep their digits.
+ */
+const SMALL_NUMBERS = [
+  "zero", "one", "two", "three", "four", "five", "six",
+  "seven", "eight", "nine", "ten", "eleven", "twelve",
+];
+
+export function spellNumber(value: number): string {
+  return SMALL_NUMBERS[value] ?? String(value);
 }
 
 /** English ordinal suffix — "82nd", not "82th". */

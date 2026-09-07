@@ -21,9 +21,7 @@ import {
 } from "@/lib/seo-data";
 import { DESTINATIONS } from "@/lib/data/destinations";
 import { guidesByRecency } from "@/lib/data/guides";
-import { MANCHESTER_NEIGHBOURHOODS } from "@/lib/manchester/data/neighbourhoods";
-import { GM_BOROUGHS } from "@/lib/manchester/boroughs";
-import { manchesterRentMedians } from "@/lib/manchester/seo-data";
+import { allCityContent } from "@/lib/city-registry";
 
 export const metadata: Metadata = {
   title: "Where in London — find your neighbourhood",
@@ -45,8 +43,18 @@ export default function HomePage() {
   const popularComparisons = getFeaturedCompareSlugs(6)
     .map((slug) => getComparePageData(slug))
     .filter(Boolean);
-  const manchesterCount = MANCHESTER_NEIGHBOURHOODS.length;
-  const manchesterMedianOneBed = manchesterRentMedians().oneBed;
+  // The other city sections, read from the registry rather than named
+  // here, so adding a city adds a card to this block automatically.
+  const otherCities = allCityContent().map((content) => ({
+    id: content.city.id,
+    name: content.city.name,
+    region: content.copy.regionLabel,
+    basePath: content.path("/"),
+    areaCount: content.areas.length,
+    councilCount: content.councils.length,
+    councilNoun: content.input.councilNoun.plural,
+    medianOneBed: content.rentMedians().oneBed,
+  }));
   const londonMedianOneBed = londonRentMedians().oneBed;
 
   const websiteSchema = {
@@ -398,45 +406,40 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── Manchester cross-link ──────────────────────────────────
-            The Manchester section launched with 183 URLs reachable only
-            from the header and footer. Internal links are most of what
-            decides whether a new section gets crawled and ranked or just
-            sits in the sitemap, so it gets a real block here rather than
-            a nav entry alone. Placed below the London clusters: this page
-            ranks for London queries and should stay about London. */}
+        {/* ── Other cities ─────────────────────────────
+            Each city section launches with a couple of hundred URLs
+            reachable only from the header and footer. Internal links are
+            most of what decides whether a new section gets crawled and
+            ranked or just sits in the sitemap, so they get a real block
+            here rather than a nav entry alone. Placed below the London
+            clusters: this page ranks for London queries and should stay
+            about London. */}
         <section className="border-t border-slate-800 mx-auto max-w-5xl px-6 py-16">
           <h2 className="text-2xl font-bold tracking-tight mb-2">
             Not set on London?
           </h2>
-          <p className="text-slate-400 mb-6 max-w-3xl">
-            The same treatment now covers Greater Manchester —{" "}
-            {manchesterCount} areas across all {GM_BOROUGHS.length} boroughs,
-            with their own rent baseline, council tax and journey times. The
-            median one-bed there is around £
-            {manchesterMedianOneBed.toLocaleString()} a month, against £
-            {londonMedianOneBed.toLocaleString()} across the London areas on
-            this page.
+          <p className="text-slate-400 mb-8 max-w-3xl">
+            The same treatment covers {otherCities.length} other city
+            regions, each with its own rent baseline, council tax and
+            journey times. For reference, the median one-bed across the
+            London areas on this page is £
+            {londonMedianOneBed.toLocaleString()} a month.
           </p>
-          <div className="flex flex-wrap gap-3 text-sm">
-            <Link
-              href="/manchester"
-              className="rounded-lg bg-emerald-600 px-4 py-2 font-medium hover:bg-emerald-500 transition-colors"
-            >
-              Where to live in Greater Manchester
-            </Link>
-            <Link
-              href="/manchester/neighbourhoods"
-              className="rounded-lg border border-slate-700 px-4 py-2 hover:border-slate-500 transition-colors"
-            >
-              Browse Manchester areas
-            </Link>
-            <Link
-              href="/manchester/rent-index"
-              className="rounded-lg border border-slate-700 px-4 py-2 hover:border-slate-500 transition-colors"
-            >
-              Manchester rent by area
-            </Link>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {otherCities.map((city) => (
+              <Link
+                key={city.id}
+                href={city.basePath}
+                className="rounded-lg border border-slate-800 bg-slate-900 px-4 py-4 hover:border-slate-600 transition-colors"
+              >
+                <p className="font-medium">Where to live in {city.region}</p>
+                <p className="mt-1.5 text-sm text-slate-400">
+                  {city.areaCount} areas across {city.councilCount}{" "}
+                  {city.councilNoun}, median one-bed £
+                  {city.medianOneBed.toLocaleString()}.
+                </p>
+              </Link>
+            ))}
           </div>
         </section>
 

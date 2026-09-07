@@ -23,7 +23,7 @@ import {
   suitsWho,
 } from "@/lib/scoring";
 import { provenanceLabel } from "@/lib/provenance";
-import { zonesOf } from "@/lib/centrality";
+import { centralityLabel } from "@/lib/centrality";
 
 export default function DetailDrawer() {
   const selectedId = useStore((s) => s.selectedNeighbourhoodId);
@@ -81,7 +81,7 @@ export default function DetailDrawer() {
             <div className="flex items-baseline gap-2">
               <h2 className="text-xl font-semibold">{n.name}</h2>
               <span className="text-xs text-slate-500">
-                {n.borough} · Zone {zonesOf(n).join("/")}
+                {n.borough} · {centralityLabel(n)}
               </span>
             </div>
             <div className="mt-0.5 text-xs text-slate-400">{n.summary}</div>

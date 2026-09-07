@@ -1,21 +1,20 @@
 import { NEIGHBOURHOODS } from "@/lib/data/neighbourhoods";
 import { DESTINATIONS } from "@/lib/data/destinations";
 import { selectedRentGbp } from "@/lib/rent";
-import { MANCHESTER_NEIGHBOURHOODS } from "@/lib/manchester/data/neighbourhoods";
-import { MANCHESTER_DESTINATIONS } from "@/lib/manchester/data/destinations";
-import { manchesterSelectedRentGbp } from "@/lib/manchester/rent";
-import { MANCHESTER_CITY_DATA } from "@/lib/city-data-manchester";
 import { LONDON_CITY_DATA } from "@/lib/city-data-london";
+import { createCityData } from "@/lib/city-data";
+import { CITY_MAP_CONFIGS } from "@/lib/city-maps";
+import { CONTENT_CITY_IDS, getCityContent } from "@/lib/city-registry";
 import type { CouplesConfig } from "@/components/CouplesClient";
-import type { CityId } from "@/lib/cities";
+import type { CityId, ContentCityId } from "@/lib/cities";
 
 /**
  * City bindings for the couples tool.
  *
- * The defaults matter more here than they look. Both pairs are chosen to
- * sit on opposite sides of the city, because a couple whose two offices
- * are a mile apart does not need this page — the interesting case is the
- * compromise, and the defaults should show one immediately.
+ * The default destination pairs matter more than they look. Each is
+ * chosen to sit on opposite sides of its region, because a couple whose
+ * two offices are a mile apart does not need this page — the interesting
+ * case is the compromise, and the defaults should show one immediately.
  */
 
 export const LONDON_COUPLES_CONFIG: CouplesConfig = {
@@ -30,22 +29,45 @@ export const LONDON_COUPLES_CONFIG: CouplesConfig = {
     (await LONDON_CITY_DATA.fetchCommute(destination)).commute,
 };
 
-export const MANCHESTER_COUPLES_CONFIG: CouplesConfig = {
-  neighbourhoods: MANCHESTER_NEIGHBOURHOODS,
-  destinations: MANCHESTER_DESTINATIONS,
-  // MediaCityUK and Stockport are the classic Greater Manchester split:
-  // opposite ends of the conurbation with no orbital route between them,
+/** The awkward pair in each region, and a realistic household budget. */
+const DEFAULTS: Record<
+  ContentCityId,
+  { a: string; b: string; budgetGbp: number }
+> = {
+  // Opposite ends of the conurbation with no orbital route between them,
   // which is exactly the problem this page exists to solve.
-  defaultDestinationAId: "mediacity",
-  defaultDestinationBId: "stockport",
-  defaultBudgetGbp: 1_100,
-  selectedRent: manchesterSelectedRentGbp,
-  areaHref: MANCHESTER_CITY_DATA.links.areaHref,
-  fetchCommute: async (destination) =>
-    (await MANCHESTER_CITY_DATA.fetchCommute(destination)).commute,
+  manchester: { a: "mediacity", b: "stockport", budgetGbp: 1_100 },
+  // The West of England's hardest split: the aerospace belt in the north
+  // and Bath in the south-east, with the whole city in between.
+  bristol: { a: "aztec-west", b: "bath-centre", budgetGbp: 1_500 },
+  // Two cities twenty minutes apart on the same line, which makes the
+  // answer a junction town rather than either centre.
+  leeds: { a: "leeds-station", b: "huddersfield", budgetGbp: 950 },
+  // The city's two employment clusters, at opposite ends of the tram.
+  edinburgh: { a: "edinburgh-park", b: "leith-shore", budgetGbp: 1_350 },
 };
+
+function configFor(id: ContentCityId): CouplesConfig {
+  const content = getCityContent(id);
+  const data = createCityData(content, CITY_MAP_CONFIGS[id]);
+  const defaults = DEFAULTS[id];
+
+  return {
+    neighbourhoods: content.areas,
+    destinations: content.input.destinations,
+    defaultDestinationAId: defaults.a,
+    defaultDestinationBId: defaults.b,
+    defaultBudgetGbp: defaults.budgetGbp,
+    selectedRent: content.selectedRent,
+    areaHref: data.links.areaHref,
+    fetchCommute: async (destination) =>
+      (await data.fetchCommute(destination)).commute,
+  };
+}
 
 export const COUPLES_CONFIGS: Record<CityId, CouplesConfig> = {
   london: LONDON_COUPLES_CONFIG,
-  manchester: MANCHESTER_COUPLES_CONFIG,
+  ...(Object.fromEntries(
+    CONTENT_CITY_IDS.map((id) => [id, configFor(id)]),
+  ) as Record<ContentCityId, CouplesConfig>),
 };

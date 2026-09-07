@@ -10,7 +10,7 @@ export const SITE_NAME = "Where in London";
 
 /** Shown on /about and /privacy so readers know who is behind the site. */
 export const PUBLISHER_DESCRIPTION =
-  "This is an independent, self-funded project run by a single developer in the UK. It is not affiliated with Transport for London, Transport for Greater Manchester, the Greater London Authority, the Greater Manchester Combined Authority, any local council, or any letting agent or property portal.";
+  "This is an independent, self-funded project run by a single developer in the UK. It is not affiliated with Transport for London, Transport for Greater Manchester, the West of England or West Yorkshire Combined Authorities, Transport for Edinburgh, Transport Scotland, the Greater London Authority, any local council, or any letting agent or property portal.";
 
 /**
  * The cities the site covers.
@@ -18,13 +18,19 @@ export const PUBLISHER_DESCRIPTION =
  * Single source of truth for the shared pages — /about, /privacy, /terms
  * and the Organization schema — which describe the site as a whole rather
  * than one city. The per-city brands live in lib/cities.ts; this is the
- * neutral description that has to be true of both.
+ * neutral description that has to be true of all of them.
  */
-export const CITIES_COVERED = ["London", "Greater Manchester"] as const;
+export const CITIES_COVERED = [
+  "London",
+  "Greater Manchester",
+  "the West of England",
+  "West Yorkshire",
+  "Edinburgh and the Lothians",
+] as const;
 
 /** How the site describes itself when it cannot lead with one city. */
 export const NETWORK_DESCRIPTION =
-  "An independent, data-driven guide to choosing where to live in London and Greater Manchester, by commute, rent and lifestyle.";
+  "An independent, data-driven guide to choosing where to live across five British city regions — London, Greater Manchester, the West of England, West Yorkshire and Edinburgh — by commute, rent and lifestyle.";
 
 /** Last substantive review of the Privacy Policy and Terms. */
 export const POLICY_LAST_UPDATED = "2026-08-30";

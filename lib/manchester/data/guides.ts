@@ -13,30 +13,14 @@
  * on its own terms or not at all.
  */
 
-export type ManchesterGuideSection = {
-  heading: string;
-  paragraphs: string[];
-  list?: { title?: string; items: string[] };
-  callout?: string;
-  dataBlock?: "council-tax-boroughs" | "rent-spread" | "salary-ladder";
-};
+import type { CityGuide, CityGuideSection } from "@/lib/city-content";
 
-export type ManchesterGuide = {
-  slug: string;
-  h1: string;
-  metaTitle: string;
-  metaDescription: string;
-  summary: string;
-  category: "Money" | "Renting" | "Transport" | "Moving";
-  published: string;
-  updated: string;
-  readMinutes: number;
-  intro: string[];
-  sections: ManchesterGuideSection[];
-  faqs: { question: string; answer: string }[];
-  related: { href: string; label: string }[];
-  sources?: string[];
-};
+/**
+ * Kept as aliases so the existing imports across the Manchester data
+ * modules keep working; the shapes themselves are now shared.
+ */
+export type ManchesterGuideSection = CityGuideSection;
+export type ManchesterGuide = CityGuide;
 
 const PUBLISHED = "2026-09-06";
 
@@ -107,7 +91,7 @@ export const MANCHESTER_GUIDES: ManchesterGuide[] = [
             "Council tax, unless you are in a share that includes it. It varies by several hundred pounds a year across the ten boroughs, and — unlike rent — it does not fall as you move away from the centre. Wigan is the cheapest of the ten; Stockport, Oldham and Rochdale the dearest.",
           ],
         },
-        dataBlock: "council-tax-boroughs",
+        dataBlock: "council-tax",
       },
       {
         heading: "Where the money goes furthest",
@@ -282,7 +266,7 @@ export const MANCHESTER_GUIDES: ManchesterGuide[] = [
           "Every household in the ten boroughs pays a Mayoral precept on top of their council's own charge. For 2026/27 it is £439.25 at Band D, and it splits into two parts: £285.30 for the Mayoral Police and Crime Commissioner, and £153.95 for general functions, of which roughly £92.20 funds Greater Manchester Fire and Rescue and the rest covers the Mayor's other responsibilities including transport.",
           "The precept is identical in all ten boroughs, so it is not what makes one dearer than another. Every pound of difference between Wigan and Stockport comes from the council’s own element and its adult social care precept, which is what makes comparing boroughs on the total a fair comparison.",
         ],
-        dataBlock: "council-tax-boroughs",
+        dataBlock: "council-tax",
       },
       {
         heading: "Why the bills are high",
