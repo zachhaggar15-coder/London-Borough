@@ -18,6 +18,7 @@ import type { ScoredNeighbourhood } from "@/lib/types";
 export default function ResultsSummaryPanel() {
   const query = useStore((s) => s.query);
   const commute = useStore((s) => s.commute);
+  const shortlistedIds = useStore((s) => s.shortlistedNeighbourhoodIds);
   const selectNeighbourhood = useStore((s) => s.selectNeighbourhood);
   const { neighbourhoods, scoringAdapters, labels } = useCityData();
   const [shareState, setShareState] = useState<"idle" | "copied" | "shared">("idle");
@@ -35,11 +36,12 @@ export default function ResultsSummaryPanel() {
     .filter((item) => !item.isExcluded)
     .slice(0, 6)
     .map((item) => item.neighbourhood.id);
+  const sharedIds = shortlistedIds.length > 0 ? shortlistedIds : topIds;
 
   if (!summary.bestOverall) return null;
 
   async function shareResults() {
-    const url = shareUrlForState(window.location.origin, query, topIds);
+    const url = shareUrlForState(window.location.origin, query, sharedIds);
     const title = labels.shareTitle;
     const text = summary.keyDecision ?? labels.shareText;
     try {
@@ -51,7 +53,7 @@ export default function ResultsSummaryPanel() {
         setShareState("copied");
       }
       trackEvent(ANALYTICS_EVENTS.resultsShared, {
-        top_area: summary.bestOverall?.neighbourhood.id,
+        top_area: sharedIds[0] ?? summary.bestOverall?.neighbourhood.id,
       });
     } catch {
       await navigator.clipboard.writeText(url);
@@ -79,6 +81,8 @@ export default function ResultsSummaryPanel() {
             ? "Copied"
             : shareState === "shared"
             ? "Shared"
+            : shortlistedIds.length > 0
+            ? "Share shortlist"
             : "Share"}
         </button>
       </div>

@@ -23,6 +23,8 @@ import { CONTENT_YEAR } from "@/lib/site-config";
 import { councilTaxForBorough, formatPounds } from "@/lib/council-tax";
 import { COUNCIL_TAX_YEAR } from "@/lib/data/council-tax";
 import { zonesOf } from "@/lib/centrality";
+import { DESTINATIONS } from "@/lib/data/destinations";
+import { STATIC_COMMUTE_TIMES } from "@/lib/commute";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -79,6 +81,17 @@ export default async function NeighbourhoodPage({ params }: Props) {
 
   const primaryBorough = n.borough.split("/")[0].trim();
   const bSlug = boroughSlug(primaryBorough);
+  const commuteGuides = DESTINATIONS
+    .map((destination) => ({
+      id: destination.id,
+      label: destination.label,
+      minutes: STATIC_COMMUTE_TIMES[n.id]?.[destination.id],
+    }))
+    .filter((destination): destination is { id: string; label: string; minutes: number } =>
+      typeof destination.minutes === "number",
+    )
+    .sort((a, b) => a.minutes - b.minutes)
+    .slice(0, 4);
 
   const allLines = [...new Set(n.mainStations.flatMap((s) => s.lines))];
   const decisionWatchout = getDecisionWatchout(n);
@@ -600,6 +613,35 @@ export default async function NeighbourhoodPage({ params }: Props) {
                   </li>
                 ))}
               </ul>
+            </section>
+          )}
+
+          {commuteGuides.length > 0 && (
+            <section className="mb-12">
+              <h2 className="mb-2 text-xl font-semibold">
+                Commuting from {n.name}
+              </h2>
+              <p className="mb-4 max-w-3xl text-slate-300">
+                Compare {n.name} with every tracked neighbourhood for these
+                common destinations, with rent and estimated journey time shown
+                together.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {commuteGuides.map((destination) => (
+                  <Link
+                    key={destination.id}
+                    href={`/commute/${destination.id}`}
+                    className="rounded-lg border border-slate-800 bg-slate-900 px-4 py-3 transition-colors hover:border-slate-600"
+                  >
+                    <p className="font-medium text-white">
+                      {n.name} to {destination.label}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-400">
+                      About {destination.minutes} minutes — full commute ranking
+                    </p>
+                  </Link>
+                ))}
+              </div>
             </section>
           )}
 

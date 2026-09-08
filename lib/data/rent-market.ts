@@ -1,6 +1,10 @@
 import type { LatLng, Provenance } from "@/lib/types";
 
-export const RENT_MARKET_REVIEW_AS_OF = "2026-05-25";
+/** Date the London baseline was checked against the latest published ONS release. */
+export const RENT_MARKET_REVIEW_AS_OF = "2026-08-19";
+
+/** Reference period in the ONS Price Index of Private Rents release. */
+export const ONS_RENT_REFERENCE_MONTH = "July 2026";
 
 export const ROOM_SOURCE: Provenance = {
   source: "listing_sample",
@@ -8,7 +12,7 @@ export const ROOM_SOURCE: Provenance = {
 };
 
 export const RENT_MARKET_SOURCES = [
-  "ONS Private Rental Market Statistics for borough-level baseline checks",
+  "ONS Price Index of Private Rents, borough averages by bedroom count, July 2026",
   "Rightmove, Zoopla, OpenRent, and SpareRoom visible listing samples",
   "Manual neighbourhood review for local premium or discount against the borough baseline",
 ] as const;

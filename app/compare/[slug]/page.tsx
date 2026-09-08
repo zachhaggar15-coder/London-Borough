@@ -130,7 +130,7 @@ export default async function ComparePage({ params }: Props) {
   // /commute/route cluster.
   const pairTravel = getCommutePairPageData(commutePairSlugFor(a.id, b.id));
 
-  const related = relatedComparisons(a.id, 8, { indexableOnly: true })
+  const related = relatedComparisons(a.id, 4, { indexableOnly: true })
     .filter((s) => s !== slug)
     .slice(0, 4);
   const relatedData = related

@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
 import { gbp } from "@/lib/affordability";
 import { comparisonDecision } from "@/lib/decision";
 import { formatApproxMinutes } from "@/lib/format";
 import { scoreNeighbourhood } from "@/lib/scoring";
+import { shareUrlForState } from "@/lib/share-state";
 import { useStore } from "@/lib/store";
 import { useCityData } from "@/components/CityDataProvider";
 import type { ScoredNeighbourhood } from "@/lib/types";
@@ -20,7 +21,8 @@ export default function ShortlistPanel() {
   const selectedId = useStore((s) => s.selectedNeighbourhoodId);
   const query = useStore((s) => s.query);
   const commute = useStore((s) => s.commute);
-  const { neighbourhoodsById, scoringAdapters, links } = useCityData();
+  const { neighbourhoodsById, scoringAdapters, links, labels } = useCityData();
+  const [shareState, setShareState] = useState<"idle" | "copied" | "shared">("idle");
 
   const scored = useMemo(
     () =>
@@ -38,6 +40,30 @@ export default function ShortlistPanel() {
     () => (scored.length >= 2 ? comparisonDecision(scored, query) : null),
     [scored, query],
   );
+
+  async function shareShortlist() {
+    const url = shareUrlForState(window.location.origin, query, ids);
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: labels.shareTitle,
+          text: decision?.recommendation ?? labels.shareText,
+          url,
+        });
+        setShareState("shared");
+      } else {
+        await navigator.clipboard.writeText(url);
+        setShareState("copied");
+      }
+      trackEvent(ANALYTICS_EVENTS.resultsShared, {
+        top_area: ids[0],
+        surface: "saved_shortlist",
+      });
+    } catch {
+      await navigator.clipboard.writeText(url);
+      setShareState("copied");
+    }
+  }
 
   useEffect(() => {
     if (scored.length >= 2) {
@@ -67,13 +93,26 @@ export default function ShortlistPanel() {
         <div className="text-xs uppercase tracking-wider text-slate-400">
           Compare ({scored.length}/4)
         </div>
-        <button
-          type="button"
-          onClick={clearShortlist}
-          className="text-[11px] text-slate-500 hover:text-slate-200"
-        >
-          Clear
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={shareShortlist}
+            className="text-[11px] text-emerald-300 hover:text-emerald-100"
+          >
+            {shareState === "copied"
+              ? "Copied"
+              : shareState === "shared"
+              ? "Shared"
+              : "Share"}
+          </button>
+          <button
+            type="button"
+            onClick={clearShortlist}
+            className="text-[11px] text-slate-500 hover:text-slate-200"
+          >
+            Clear
+          </button>
+        </div>
       </div>
 
       <div className="space-y-1.5">
