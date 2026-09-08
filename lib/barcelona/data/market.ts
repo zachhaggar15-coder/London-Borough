@@ -3,8 +3,8 @@ import type { BedroomBaseline, LocalCost } from "@/lib/city-content";
 /**
  * Barcelona districts, rents and local costs.
  *
- * Barcelona has ten administrative districts. Eight of them are here,
- * with the two outer northern ones grouped, plus the metropolitan
+ * All ten administrative districts, with the two outer northern ones
+ * grouped because they behave as one market, plus the metropolitan
  * municipalities beyond the city boundary — which matter for the same
  * reason the petite couronne matters in Paris: the metro crosses the
  * boundary and the rent drops noticeably on the far side.
@@ -14,8 +14,10 @@ export const BARCELONA_DISTRICTS = [
   "Eixample",
   "Gràcia",
   "Sants-Montjuïc",
+  "Les Corts",
   "Sarrià-Sant Gervasi",
   "Sant Martí",
+  "Sant Andreu",
   "Horta & Nou Barris",
   "Àrea metropolitana",
 ] as const;
@@ -46,8 +48,10 @@ export const BARCELONA_RENT_EUR: Record<string, BedroomBaseline> = {
   Eixample: { oneBed: 1150, twoBed: 1500, threeBed: 1900, allProperties: 1450 },
   Gràcia: { oneBed: 1100, twoBed: 1400, threeBed: 1750, allProperties: 1350 },
   "Sants-Montjuïc": { oneBed: 950, twoBed: 1250, threeBed: 1550, allProperties: 1200 },
+  "Les Corts": { oneBed: 1200, twoBed: 1550, threeBed: 2000, allProperties: 1600 },
   "Sarrià-Sant Gervasi": { oneBed: 1300, twoBed: 1700, threeBed: 2200, allProperties: 1750 },
   "Sant Martí": { oneBed: 1000, twoBed: 1300, threeBed: 1650, allProperties: 1250 },
+  "Sant Andreu": { oneBed: 880, twoBed: 1150, threeBed: 1450, allProperties: 1100 },
   "Horta & Nou Barris": { oneBed: 850, twoBed: 1100, threeBed: 1400, allProperties: 1050 },
   "Àrea metropolitana": { oneBed: 800, twoBed: 1050, threeBed: 1300, allProperties: 1000 },
 };
@@ -61,6 +65,8 @@ export type BarcelonaRoomDistrict =
   | "sarria"
   | "poblenou"
   | "clot"
+  | "sant-andreu"
+  | "les-corts"
   | "horta"
   | "nou-barris"
   | "metropolitana";
@@ -73,7 +79,9 @@ export const BARCELONA_ROOM_DISTRICT_LABELS: Record<BarcelonaRoomDistrict, strin
   "poble-sec": "Poble-sec and Montjuïc",
   sarria: "Sarrià, Sant Gervasi and Gràcia Nova",
   poblenou: "Poblenou and the Vila Olímpica",
-  clot: "El Clot and Sant Andreu",
+  clot: "El Clot and Camp de l'Arpa",
+  "sant-andreu": "Sant Andreu de Palomar",
+  "les-corts": "Les Corts and Pedralbes",
   horta: "Horta-Guinardó",
   "nou-barris": "Nou Barris",
   metropolitana: "L'Hospitalet, Badalona and the metropolitan belt",
@@ -88,6 +96,8 @@ export const BARCELONA_ROOM_AVERAGE_EUR: Record<BarcelonaRoomDistrict, number> =
   sarria: 680,
   poblenou: 580,
   clot: 520,
+  "sant-andreu": 500,
+  "les-corts": 640,
   horta: 490,
   "nou-barris": 450,
   metropolitana: 460,

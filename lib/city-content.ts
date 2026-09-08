@@ -340,7 +340,32 @@ export type CityInput = {
   /** Named on the salary pages so the model is not a black box. */
   taxRegimeLabel: string;
 
-  /** How many comparison pages each area gets. Keeps the cluster small. */
+  /**
+   * Hand-picked comparison pairs, grouped into themed sections.
+   *
+   * This exists because the generated alternative failed. Allowing each
+   * area three near neighbours produced 1.1 to 1.8 comparison pages per
+   * area across the seven cities — five to seven times the ratio London
+   * was cut to after two AdSense rejections for low-value content, and
+   * a cluster larger than the neighbourhood pages themselves.
+   *
+   * London's answer was to curate: 24 pairs for 95 areas, chosen because
+   * each is a decision somebody is actually making. Every other city now
+   * does the same. A pair earns a page when the two are a genuine
+   * either/or — commutable from the same job, close enough in rent that
+   * price alone does not settle it, and different enough that the page
+   * has something to say.
+   */
+  comparePairs?: {
+    title: string;
+    description: string;
+    pairs: [string, string][];
+  }[];
+
+  /**
+   * Fallback when comparePairs is absent: how many near neighbours each
+   * area proposes. Kept for the generated path, which no city now uses.
+   */
   comparisonsPerArea?: number;
 };
 
@@ -621,7 +646,22 @@ export function createCityContent(input: CityInput) {
   };
 
   // ── Compare ─────────────────────────────────────────────────────
-  const compareSlugs = (): string[] => {
+  /**
+   * The curated pairs, validated against the area list so a rename
+   * cannot silently drop a page or generate one that 404s.
+   */
+  const compareSections = () =>
+    (input.comparePairs ?? [])
+      .map((section) => ({
+        title: section.title,
+        description: section.description,
+        slugs: section.pairs
+          .filter(([a, b]) => areasById[a] && areasById[b] && a !== b)
+          .map(([a, b]) => compareSlug(a, b)),
+      }))
+      .filter((section) => section.slugs.length > 0);
+
+  const generatedCompareSlugs = (): string[] => {
     const slugs = new Set<string>();
     for (const a of areas) {
       const candidates = areas
@@ -639,6 +679,15 @@ export function createCityContent(input: CityInput) {
       for (const { b } of candidates) slugs.add(compareSlug(a.id, b.id));
     }
     return [...slugs].sort();
+  };
+
+  const compareSlugs = (): string[] => {
+    if (!input.comparePairs) return generatedCompareSlugs();
+    const seen = new Set<string>();
+    for (const section of compareSections()) {
+      for (const slug of section.slugs) seen.add(slug);
+    }
+    return [...seen].sort();
   };
 
   const getComparePageData = (slug: string): ComparePageData | null => {
@@ -815,6 +864,7 @@ export function createCityContent(input: CityInput) {
     rankByLifestyle,
 
     compareSlugs,
+    compareSections,
     getComparePageData,
     relatedComparisons,
 

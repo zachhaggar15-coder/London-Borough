@@ -382,4 +382,178 @@ export const GENEVA_GUIDES: CityGuide[] = [
       "OCSTAT cantonal housing vacancy statistics",
     ],
   },
+
+  {
+    slug: "renting-in-geneva-the-dossier",
+    h1: "Renting in Geneva: the dossier, the régie and the deposit",
+    metaTitle: "Renting in Geneva: how the dossier and the régie actually work",
+    metaDescription:
+      "How flats are actually let in Geneva — the dossier, the régie, the three-times-rent rule, the blocked deposit account and what the vacancy rate does to all of it.",
+    summary:
+      "Geneva does not let flats the way Britain does. This is the file you need, the rule that screens you out, and the deposit that never touches the landlord.",
+    category: "Renting",
+    published: PUBLISHED,
+    updated: PUBLISHED,
+    readMinutes: 8,
+    intro: [
+      "The single most important fact about renting here is the vacancy rate. It has sat below half a per cent for most of the last decade, which means an advertised flat is not a flat you apply for so much as a flat forty other people apply for on the same afternoon.",
+      "That changes the whole shape of the process. You are not negotiating; you are being screened. Almost everything below exists because a régie — the managing agent that stands between you and the owner — has to reject dozens of files for every one it accepts, and it does that on paperwork.",
+      "The good news is that the criteria are explicit rather than tacit. Meet them, and have a complete dossier assembled before you start looking, and you are competitive. Turn up without one and you will lose flats you could have afforded.",
+    ],
+    sections: [
+      {
+        heading: "The three-times rule bites before affordability does",
+        paragraphs: [
+          "Most régies apply a rule of thumb that your gross annual salary must be at least three times the annual rent, and some ask for four. A flat at CHF 2,400 a month is CHF 28,800 a year, so the file wants to see roughly CHF 86,400 gross before anyone reads the rest of it.",
+          "This is stricter than the 35%-of-take-home guideline used elsewhere on this site, and it is why the salary pages here can say a flat fits while a régie still turns you down. If you are anywhere near the line, the honest planning number is the régie rule rather than the affordability one.",
+          "A guarantor helps less than you would expect, because a guarantor resident outside Switzerland is frequently not accepted at all. Two salaries on one lease is the usual answer, and it is a large part of why so many arrivals share for the first year.",
+        ],
+        dataBlock: "salary-ladder",
+      },
+      {
+        heading: "What goes in the dossier",
+        paragraphs: [
+          "Assemble this once, as a single PDF, before you view anything. Régies routinely ask for the file at the viewing itself, and the people who hand it over on the spot are the people who get called back.",
+          "Two documents catch newcomers out. The extrait du registre des poursuites is a debt-enforcement certificate from the Office des poursuites — it costs a small fee, takes a few days, and a file without one is usually discarded unread. And a reference from a previous landlord is expected even though a British letting agent will have no idea what you are asking for.",
+        ],
+        list: {
+          title: "What a complete Geneva dossier contains",
+          items: [
+            "The régie's own formule de demande de location, completed for that specific flat",
+            "A copy of your passport, and of your permit or the employer letter that will produce one",
+            "Your three most recent payslips, or the signed employment contract if you have not started",
+            "An extrait du registre des poursuites dated within the last three months",
+            "A reference or attestation from your current landlord",
+            "Proof of third-party liability insurance, or a note that you will take it out on signature",
+          ],
+        },
+        callout:
+          "Order the extrait du registre des poursuites in your first week here, not in the week you find a flat. It is the item most likely to cost you a place and it is entirely within your control.",
+      },
+      {
+        heading: "The deposit, and where it actually sits",
+        paragraphs: [
+          "The deposit is capped at three months of net rent and, crucially, it does not go to the landlord. Swiss law requires it to be paid into a blocked account in your own name at a bank, released only on your signature or a court order.",
+          "That is a genuinely better arrangement than a British deposit scheme, because the money is legally yours throughout and any interest accrues to you. It also means the sum is large: on a CHF 2,400 flat you are finding roughly CHF 7,200 up front, on top of the first month.",
+          "Deposit-insurance products exist that replace the lump sum with an annual premium. They are legal and widely used, and over any tenancy longer than about three years they are expensive — the premium buys liquidity, not savings.",
+        ],
+      },
+      {
+        heading: "The état des lieux is the document that costs you money",
+        paragraphs: [
+          "The inventory inspection at move-in is carried out jointly and signed. Anything not written on it at that point is presumed to be your damage when you leave, and the standard applied at the end is stricter than most British tenants expect — repainting is routinely charged to a tenant after a few years even where nothing is marked.",
+          "Photograph every room on the day, note every scuff on the form however trivial it feels, and keep your copy. This is the one part of the process where an hour of pedantry is worth several thousand francs.",
+          "If a deduction later looks wrong, the cantonal conciliation authority for tenancy disputes is free to approach and handles a large volume of exactly these cases. Tenant associations such as ASLOCA will also review an inventory for members.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "Why do I keep getting rejected for flats I can afford?",
+        answer:
+          "Almost always the three-times-annual-rent screen rather than anything about you. With the vacancy rate below one per cent a régie can fill a flat from the files that clear its rule outright, so a borderline salary is filtered out before anyone reads the rest of the dossier. Two incomes on one lease is the usual fix.",
+      },
+      {
+        question: "How much do I need up front to move into a Geneva flat?",
+        answer:
+          "Budget three months of net rent for the blocked deposit account, plus the first month in advance. On a flat at CHF 2,400 that is roughly CHF 9,600 before you have bought a single piece of furniture. Furnished sublets ask for less up front and cost considerably more per month.",
+      },
+      {
+        question: "Is it easier to rent on the French side of the border?",
+        answer:
+          "Materially, yes. Vacancy in the Genevois français is far higher, deposits are one month rather than three, and the file asked for is lighter. The trade is a border crossing every morning and a different tax and healthcare position, which is a much larger decision than the flat itself.",
+      },
+    ],
+    related: [
+      { href: "/geneva/guides/living-in-france-working-in-geneva", label: "Living in France, working in Geneva" },
+      { href: "/geneva/guides/what-you-need-to-earn-in-geneva", label: "What you need to earn" },
+      { href: "/geneva/rent-index", label: "Every area by rent" },
+    ],
+    sources: [
+      "Swiss Code of Obligations, articles 253 to 274g, on residential tenancy and rent deposits",
+      "Office cantonal de la statistique (OCSTAT), Geneva vacancy rate series, 2026",
+      "Office des poursuites du canton de Genève, guidance on the extrait du registre",
+    ],
+  },
+
+  {
+    slug: "getting-around-geneva-without-a-car",
+    h1: "Getting around Geneva without a car",
+    metaTitle: "Getting around Geneva without a car: TPG, Léman Express and the border",
+    metaDescription:
+      "How Geneva's trams, the Léman Express and the Unireso and Léman Pass fares actually work, and which areas genuinely do not need a car.",
+    summary:
+      "The canton is small and the network is good, but it is built to funnel everyone through the centre — which matters enormously if you work at CERN or Plan-les-Ouates.",
+    category: "Transport",
+    published: PUBLISHED,
+    updated: PUBLISHED,
+    readMinutes: 7,
+    intro: [
+      "Geneva is unusually well served for a city of two hundred thousand people. Trams run every few minutes, buses are frequent enough that timetables barely matter in the centre, and since 2019 the Léman Express has given the region a proper cross-border suburban railway.",
+      "It is also a network with a very distinct shape, and the shape is radial. Almost everything funnels through Cornavin and Bel-Air, which is excellent if you work in the centre and awkward if you do not — and two of the canton's largest employers sit at opposite ends of it.",
+      "This guide covers what the network does well, where it fails, and what a season ticket actually costs once you account for which side of the border you live on.",
+    ],
+    sections: [
+      {
+        heading: "The network, in four parts",
+        paragraphs: [
+          "TPG runs the trams and buses inside the canton. The trams are the backbone: line 12 across the city and out to Carouge and Moillesulaz, lines 14 and 15 north to south, line 18 out towards CERN. If you live on a tram line, your transport question is largely answered.",
+          "The Léman Express is the railway — six lines running through the Genève–Annemasse tunnel and out into Vaud and Haute-Savoie. It is the reason Annemasse, Thonon, Coppet and Nyon function as commuter towns for Geneva at all, and the reason this section covers French communes.",
+          "The mouettes genevoises are the small yellow boats across the rade, included in the same ticket, and a genuinely faster way to cross between Eaux-Vives and Pâquis than going round. Cycling infrastructure is good and improving, and the city centre is flat enough that it works most of the year.",
+        ],
+      },
+      {
+        heading: "Fares, and the two systems you have to hold in your head",
+        paragraphs: [
+          "Inside the canton, Unireso is the integrated fare community: one ticket covers TPG, the trains within the zone and the boats. An annual all-zone Geneva pass costs a few hundred francs for an adult and is priced so that daily use pays it back well inside two months.",
+          "Cross the border and the Léman Pass takes over — a separate cross-border structure covering the French zones. If you commute from Annemasse or Saint-Julien you are buying a combined product, and it costs more than either half. Budget for that rather than assuming the Geneva pass covers you.",
+          "Many Geneva employers subsidise a season ticket in whole or in part, and the international organisations almost all do. Ask before you buy: it is a standard part of a package here in a way it is not in Britain.",
+        ],
+        callout:
+          "An annual Unireso pass is cheap enough that inside the canton it is almost never the wrong purchase. The cross-border Léman Pass is not, so price your exact origin and destination rather than the headline figure.",
+      },
+      {
+        heading: "Where the network genuinely fails",
+        paragraphs: [
+          "CERN and Plan-les-Ouates are the two problem destinations, and they sit at opposite corners of the canton. Both are well served from the centre and poorly served from each other's side, so a household with one person at each is close to unsolvable without a car.",
+          "The commute figures on this site show the pattern plainly. From Meyrin, CERN is ten minutes and Plan-les-Ouates is three-quarters of an hour; from Plan-les-Ouates the reverse holds. Check the direction that matters to you before choosing an area on the strength of a general reputation.",
+          "The other failure is late at night. TPG runs Noctambus services at weekends, but the weekday network thins sharply after midnight and the Léman Express stops well before the bars do. If you work shifts, that is a car or a taxi budget rather than an inconvenience.",
+        ],
+      },
+      {
+        heading: "Which areas actually do not need a car",
+        paragraphs: [
+          "Everywhere inside the Ville de Genève qualifies without argument. Pâquis, Eaux-Vives, Plainpalais, Jonction, Servette and Champel are all walkable to the centre and sit on multiple tram or bus routes, and parking in most of them is scarce and expensive enough to be an active argument against ownership.",
+          "Carouge, Lancy, Vernier, Meyrin and Grand-Saconnex are car-optional: fine for a central commute, worth checking against your actual workplace. Versoix, Coppet and Nyon work well on the railway and badly for anything off it.",
+          "In the French communes a car is close to assumed, with Annemasse the clear exception — it sits on the Léman Express and behaves like a proper rail suburb.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "Do I need a car in Geneva?",
+        answer:
+          "Not if you live in the city and work in the city, where owning one is mostly a parking problem. It becomes hard to avoid if you live in a French commune other than Annemasse, or if home and workplace sit at opposite corners of the canton — CERN and Plan-les-Ouates are the pair that most often forces the issue.",
+      },
+      {
+        question: "What is the Léman Express?",
+        answer:
+          "A cross-border suburban rail network opened in 2019, running six lines through a tunnel that links Geneva's main station to Annemasse in France and out into Vaud and Haute-Savoie. It is why several French and Vaudois towns now work as commuter suburbs of Geneva rather than as separate places.",
+      },
+      {
+        question: "Is public transport in Geneva expensive?",
+        answer:
+          "Inside the canton it is good value by Swiss standards and an annual pass pays for itself quickly. Cross-border travel is where the cost rises, because you are buying into two fare systems at once. Many employers subsidise the season ticket, which is worth asking about before you buy one.",
+      },
+    ],
+    related: [
+      { href: "/geneva/commute", label: "Journey times to every destination" },
+      { href: "/geneva/communes", label: "Where to live, commune by commune" },
+      { href: "/geneva/guides/living-in-france-working-in-geneva", label: "Living in France, working in Geneva" },
+    ],
+    sources: [
+      "Transports publics genevois (TPG) network maps and Unireso fare information, 2026",
+      "Léman Express service pattern and Léman Pass cross-border fare structure, 2026",
+    ],
+  },
 ];

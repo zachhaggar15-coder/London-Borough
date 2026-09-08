@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { money } from "@/lib/currency";
 import {
   CONTENT_CITY_IDS,
@@ -22,7 +22,16 @@ import {
 
 type Props = { params: Promise<{ city: string; slug: string }> };
 
-export const dynamicParams = false;
+/**
+ * Unlike every other cluster on this site, this one stays dynamic.
+ *
+ * Cutting the generated comparisons back to a curated set removed
+ * roughly 280 URLs that had already been live and may be indexed.
+ * A 404 throws that away; a 308 to the index hands the reader the
+ * curated pair list instead. Only real area pairs get that far --
+ * anything else still 404s, so the surface stays bounded.
+ */
+export const dynamicParams = true;
 
 export async function generateStaticParams() {
   return CONTENT_CITY_IDS.flatMap((city) =>
@@ -37,7 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!isContentCityId(city)) return {};
   const content = getCityContent(city);
   const data = content.getComparePageData(slug);
-  if (!data) return {};
+  if (!data || !content.compareSlugs().includes(slug)) return {};
   const currency = content.input.currency;
 
   const title = `${data.a.name} or ${data.b.name}? A straight comparison`;
@@ -146,6 +155,9 @@ export default async function CityComparePage({ params }: Props) {
   const currency = content.input.currency;
   const data = content.getComparePageData(slug);
   if (!data) notFound();
+  if (!content.compareSlugs().includes(slug)) {
+    permanentRedirect(content.path("/compare"));
+  }
 
   const { a, b } = data;
   const aCommutes = content.commuteTimesFor(a);

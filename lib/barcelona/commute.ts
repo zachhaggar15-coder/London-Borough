@@ -76,7 +76,18 @@ export const BARCELONA_COMMUTE_TIMES: Record<string, Record<string, number>> = {
   "gracia-guinardo":   { "placa-catalunya": 25, "22at": 30, diagonal: 22, "sants-estacio": 32, "zona-franca": 50, "hospital-clinic": 28, aeroport: 50, "sant-cugat": 45 },
   "nou-barris":        { "placa-catalunya": 32, "22at": 38, diagonal: 30, "sants-estacio": 38, "zona-franca": 55, "hospital-clinic": 35, aeroport: 55, "sant-cugat": 50 },
 
+  // ── Les Corts and Sant Andreu ──
+  "sagrada-familia":   { "placa-catalunya": 12, "22at": 20, diagonal: 15, "sants-estacio": 22, "zona-franca": 40, "hospital-clinic": 18, aeroport: 40, "sant-cugat": 40 },
+  "les-corts":         { "placa-catalunya": 18, "22at": 35, diagonal: 8,  "sants-estacio": 15, "zona-franca": 30, "hospital-clinic": 12, aeroport: 30, "sant-cugat": 30 },
+  pedralbes:           { "placa-catalunya": 25, "22at": 40, diagonal: 12, "sants-estacio": 22, "zona-franca": 35, "hospital-clinic": 18, aeroport: 25, "sant-cugat": 22 },
+  barceloneta:         { "placa-catalunya": 12, "22at": 15, diagonal: 22, "sants-estacio": 25, "zona-franca": 35, "hospital-clinic": 25, aeroport: 35, "sant-cugat": 50 },
+  vallcarca:           { "placa-catalunya": 22, "22at": 35, diagonal: 18, "sants-estacio": 30, "zona-franca": 48, "hospital-clinic": 25, aeroport: 48, "sant-cugat": 38 },
+  "la-marina":         { "placa-catalunya": 30, "22at": 45, diagonal: 30, "sants-estacio": 20, "zona-franca": 8,  "hospital-clinic": 28, aeroport: 20, "sant-cugat": 45 },
+  "sant-andreu":       { "placa-catalunya": 25, "22at": 22, diagonal: 30, "sants-estacio": 35, "zona-franca": 52, "hospital-clinic": 35, aeroport: 52, "sant-cugat": 50 },
+
   // ── Àrea metropolitana ──
+  "sant-cugat":        { "placa-catalunya": 40, "22at": 55, diagonal: 25, "sants-estacio": 40, "zona-franca": 50, "hospital-clinic": 30, aeroport: 50, "sant-cugat": 5 },
+  esplugues:           { "placa-catalunya": 30, "22at": 48, diagonal: 25, "sants-estacio": 20, "zona-franca": 25, "hospital-clinic": 25, aeroport: 25, "sant-cugat": 35 },
   hospitalet:          { "placa-catalunya": 25, "22at": 42, diagonal: 30, "sants-estacio": 15, "zona-franca": 20, "hospital-clinic": 25, aeroport: 20, "sant-cugat": 42 },
   badalona:            { "placa-catalunya": 35, "22at": 25, diagonal: 40, "sants-estacio": 45, "zona-franca": 60, "hospital-clinic": 42, aeroport: 60, "sant-cugat": 60 },
 };

@@ -82,7 +82,17 @@ export const PARIS_COMMUTE_TIMES: Record<string, Record<string, number>> = {
   belleville:          { "la-defense": 42, opera: 22, chatelet: 20, "saint-lazare": 28, "gare-de-lyon": 22, montparnasse: 35, issy: 45, cdg: 45 },
   "buttes-chaumont":   { "la-defense": 42, opera: 25, chatelet: 22, "saint-lazare": 30, "gare-de-lyon": 28, montparnasse: 38, issy: 48, cdg: 40 },
 
+  nation:              { "la-defense": 40, opera: 22, chatelet: 18, "saint-lazare": 28, "gare-de-lyon": 12, montparnasse: 30, issy: 42, cdg: 50 },
+  bercy:               { "la-defense": 30, opera: 18, chatelet: 15, "saint-lazare": 15, "gare-de-lyon": 8,  montparnasse: 25, issy: 38, cdg: 50 },
+  gobelins:            { "la-defense": 42, opera: 25, chatelet: 18, "saint-lazare": 30, "gare-de-lyon": 18, montparnasse: 18, issy: 32, cdg: 50 },
+  commerce:            { "la-defense": 25, opera: 25, chatelet: 25, "saint-lazare": 22, "gare-de-lyon": 35, montparnasse: 15, issy: 15, cdg: 60 },
+  ternes:              { "la-defense": 15, opera: 15, chatelet: 25, "saint-lazare": 12, "gare-de-lyon": 35, montparnasse: 28, issy: 35, cdg: 45 },
+  charonne:            { "la-defense": 45, opera: 25, chatelet: 22, "saint-lazare": 32, "gare-de-lyon": 20, montparnasse: 35, issy: 48, cdg: 50 },
+  jourdain:            { "la-defense": 45, opera: 28, chatelet: 22, "saint-lazare": 32, "gare-de-lyon": 28, montparnasse: 40, issy: 50, cdg: 42 },
+
   // ── Petite couronne ──
+  levallois:           { "la-defense": 15, opera: 22, chatelet: 30, "saint-lazare": 18, "gare-de-lyon": 40, montparnasse: 35, issy: 35, cdg: 50 },
+  ivry:                { "la-defense": 48, opera: 32, chatelet: 25, "saint-lazare": 38, "gare-de-lyon": 25, montparnasse: 28, issy: 40, cdg: 60 },
   montreuil:           { "la-defense": 50, opera: 30, chatelet: 25, "saint-lazare": 35, "gare-de-lyon": 25, montparnasse: 40, issy: 50, cdg: 55 },
   "saint-ouen":        { "la-defense": 35, opera: 20, chatelet: 20, "saint-lazare": 12, "gare-de-lyon": 30, montparnasse: 30, issy: 45, cdg: 45 },
   boulogne:            { "la-defense": 20, opera: 30, chatelet: 32, "saint-lazare": 28, "gare-de-lyon": 42, montparnasse: 25, issy: 12, cdg: 65 },

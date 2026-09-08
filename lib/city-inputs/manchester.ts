@@ -216,5 +216,56 @@ export const MANCHESTER_INPUT: CityInput = {
   takeHomeMonthly: rukTakeHomeMonthly,
   taxRegimeLabel: TAX_REGIME_LABELS.ruk,
 
-  comparisonsPerArea: 3,
+  /**
+   * Seventeen pairs for fifty-seven areas. The generated rule produced
+   * eighty-four, which is more comparison pages than Manchester has
+   * neighbourhoods and six times the ratio London was cut to.
+   */
+  comparePairs: [
+    {
+      title: "The classic Manchester decisions",
+      description:
+        "The close calls people actually agonise over, where rent, character and commute pull against each other.",
+      pairs: [
+        ["chorlton", "didsbury"],
+        ["ancoats", "northern-quarter"],
+        ["city-centre", "castlefield"],
+        ["salford-quays", "ancoats"],
+        ["withington", "fallowfield"],
+      ],
+    },
+    {
+      title: "Stretching the rent without wrecking the commute",
+      description:
+        "Pairs for anyone weighing a cheaper postcode against a longer morning.",
+      pairs: [
+        ["levenshulme", "burnage"],
+        ["stretford", "old-trafford"],
+        ["eccles", "monton"],
+        ["gorton", "cheetham-hill"],
+      ],
+    },
+    {
+      title: "Suburbs, schools and space",
+      description:
+        "The comparisons families make when the terrace stops being big enough.",
+      pairs: [
+        ["sale", "altrincham"],
+        ["urmston", "stretford"],
+        ["prestwich", "whitefield"],
+        ["heaton-moor", "didsbury"],
+        ["cheadle", "cheadle-hulme"],
+      ],
+    },
+    {
+      title: "The towns beyond the built-up core",
+      description:
+        "Greater Manchester is ten boroughs of towns, and these are the ones people choose between.",
+      pairs: [
+        ["bolton", "bury"],
+        ["oldham", "rochdale"],
+        ["wigan", "leigh"],
+      ],
+    },
+  ],
 };

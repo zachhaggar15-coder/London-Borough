@@ -285,4 +285,170 @@ export const BRISTOL_GUIDES: CityGuide[] = [
       "Department for Transport cycling and walking statistics by local authority",
     ],
   },
+
+  {
+    slug: "renting-in-bristol-first-time",
+    h1: "Renting in Bristol for the first time",
+    metaTitle: "Renting in Bristol for the first time: shares, viewings and deposits",
+    metaDescription:
+      "How Bristol's rental market actually works — the size of the shared sector, what a viewing looks like, deposit rules in England, and the traps in period stock.",
+    summary:
+      "A city with an unusually large shared market, an unusually old housing stock and a viewing culture that rewards being ready.",
+    category: "Renting",
+    published: PUBLISHED,
+    updated: PUBLISHED,
+    readMinutes: 7,
+    intro: [
+      "Bristol's rental market has two features that shape everything else about it. The shared sector is very large for a city of this size, extending well beyond students into people in their late twenties and thirties; and a great deal of the housing stock is Victorian or older, converted rather than purpose-built.",
+      "Both facts have consequences for what you should look at, what you should ask, and what the flat will cost you to run once you are in it.",
+      "This guide covers the practical side of finding and taking a tenancy here. The legal detail is England-only, and it assumes a private assured shorthold tenancy, which is what almost all of this market is.",
+    ],
+    sections: [
+      {
+        heading: "The shared market is the default, not the fallback",
+        paragraphs: [
+          "A room in a shared house is the normal entry point to this city and there is no stigma attached to it at any age. The stock is large, well-established, and spread right across the inner ring rather than confined to the student areas.",
+          "Rooms very often include bills and council tax in the advertised rent. That is worth between £120 and £200 a month you are not separately paying, which makes a direct comparison with a one-bed rent misleading unless you adjust for it.",
+          "Read the tenancy type carefully. Most shares are let on a joint tenancy where everyone is liable for the whole rent, which means a flatmate leaving becomes your problem. Individual room contracts exist, cost a little more, and remove that risk entirely.",
+        ],
+        dataBlock: "rent-spread",
+      },
+      {
+        heading: "Viewings move quickly and reward preparation",
+        paragraphs: [
+          "Good properties in the inner ring are often let within days, sometimes at a block viewing where a dozen people see the place in an hour. Turning up with references, proof of income and a guarantor's details already assembled is the single largest advantage available.",
+          "Agents will typically want to see identification, evidence of income at around thirty times the monthly rent annually, a previous landlord's reference and, for anyone whose income does not clear the threshold, a UK-based guarantor.",
+          "Holding deposits are capped at one week's rent in England, and there are strict rules about when they may be kept. A request for more than that, or for a non-refundable administration fee, is not lawful.",
+        ],
+        callout:
+          "Under the Tenant Fees Act 2019 a letting agent in England may not charge you for referencing, an inventory, a contract or admin. A holding deposit is capped at one week's rent and the tenancy deposit at five weeks' rent, where the annual rent is under £50,000.",
+      },
+      {
+        heading: "What to check in Bristol's period stock",
+        paragraphs: [
+          "Heating and glazing are the questions that matter most here. Clifton, Cotham, Montpelier and central Bath are full of large listed or conservation-area properties where the windows cannot legally be replaced, and heating a high-ceilinged Georgian flat through February is genuinely expensive. Ask to see the EPC and take the rating seriously.",
+          "Damp is the second. A lot of the city's Victorian terraces are cut into a hillside, and lower-ground-floor flats in particular are worth inspecting properly — look behind furniture, check the corners of external walls, and ask directly what has been done about it.",
+          "The third is the hill itself. Bristol is much steeper than its reputation suggests, and a flat that looks fifteen minutes from town on a map can be a serious climb home. Walk the route before you sign, not after.",
+        ],
+      },
+      {
+        heading: "Deposits, inventories and getting the money back",
+        paragraphs: [
+          "Your deposit must be protected in one of the government-approved schemes within thirty days, and you must be given the prescribed information telling you which. Check this actively rather than assuming; it is the most common landlord failure and it carries a statutory penalty.",
+          "The inventory is what decides the end of the tenancy. Go through it line by line on the day you move in, add everything the agent has not, photograph it all with dates, and email the lot so there is a record outside your own device.",
+          "Fair wear and tear is not damage, and the deposit schemes' own adjudication guidance is clear about the distinction. If a deduction looks unreasonable, the scheme's free dispute resolution service is the route, and the burden is on the landlord to justify the claim.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "How much deposit can a landlord ask for in Bristol?",
+        answer:
+          "Five weeks' rent, where the annual rent is under £50,000, plus a holding deposit of no more than one week's rent while referencing is done. Anything above that is not lawful in England, and neither are separate charges for referencing, inventories or administration.",
+      },
+      {
+        question: "Is house-sharing normal in Bristol beyond student age?",
+        answer:
+          "Very much so. The shared sector here is unusually large for the size of the city and extends well into people's thirties. Rooms frequently include bills and council tax, which makes them better value against a one-bed than the headline rents suggest.",
+      },
+      {
+        question: "What should I check before renting a period flat in Bristol?",
+        answer:
+          "The EPC rating and the heating first — a lot of the inner ring is listed or in a conservation area where the single glazing cannot be replaced, and winter running costs are correspondingly high. Then damp, particularly in lower-ground-floor conversions, and finally the walk home, because the city is much hillier than it looks.",
+      },
+    ],
+    related: [
+      { href: "/bristol/guides/how-much-do-i-need-to-earn-to-live-in-bristol", label: "What you need to earn" },
+      { href: "/bristol/guides/bristol-council-tax-explained", label: "Council tax explained" },
+      { href: "/bristol/rent-index", label: "Every area by rent" },
+    ],
+    sources: [
+      "Tenant Fees Act 2019, on permitted payments and deposit caps in England",
+      "Housing Act 2004, sections 213 to 215, on tenancy deposit protection",
+      "ONS Price Index of Private Rents, West of England local authority averages, July 2026",
+    ],
+  },
+
+  {
+    slug: "your-first-month-in-bristol",
+    h1: "Your first month in Bristol: the checklist",
+    metaTitle: "Your first month in Bristol: a practical checklist",
+    metaDescription:
+      "What to sort in your first four weeks in Bristol — deposit protection, council tax and the single-person discount, water, the GP, the bins and the bus.",
+    summary:
+      "The unglamorous list, in the order worth doing it. Two items are time-limited by law and one is worth 25% of your council tax.",
+    category: "Moving",
+    published: PUBLISHED,
+    updated: PUBLISHED,
+    readMinutes: 6,
+    intro: [
+      "The first month somewhere new is mostly administration, and it tends to get done in the wrong order. A couple of items have legal deadlines, one or two have real money attached, and the rest are simply cheaper to do early than late.",
+      "This is that list. The legal detail is England-only, and it assumes you are renting privately from a landlord or agent.",
+    ],
+    sections: [
+      {
+        heading: "Week one: the paperwork with deadlines",
+        paragraphs: [
+          "Confirm your deposit has been protected. In England it must go into one of the government-approved schemes within thirty days, and the prescribed information must reach you in the same window. Ask for the certificate; do not assume.",
+          "Take dated photographs of every room, the appliances and anything already marked, and email them to the agent so the record sits outside your phone. Add anything missing to the inventory before you sign it off.",
+          "Read your tenancy for the break clause, the notice period and whether liability is joint and several. Those three answers determine what your options are if anything changes, and they are much easier to establish now than in a hurry later.",
+        ],
+      },
+      {
+        heading: "Council tax, and the discount nobody applies for you",
+        paragraphs: [
+          "Register with the right authority. Bristol, South Gloucestershire, Bath and North East Somerset and North Somerset each run their own online move-in form, and which one you need depends on the address rather than the postal town.",
+          "Claim the single-person discount if you live alone. It is 25% off the entire bill and it is not applied automatically. Given Bristol has the highest Band D charge of the four authorities here, that is a substantial sum over a year.",
+          "Full-time students are exempt, and an all-student household pays nothing — but the exemption needs a council tax certificate from the university, which is worth requesting at the start of term rather than when the bill arrives.",
+        ],
+        dataBlock: "council-tax",
+        callout:
+          "Check which authority your address actually falls under before you register. The Bristol boundary is drawn tightly and a good deal of what people call Bristol is billed by South Gloucestershire at a different rate.",
+      },
+      {
+        heading: "Utilities, and the water bill that is bigger than you expect",
+        paragraphs: [
+          "Photograph the meters on the day you move in and send the readings to the existing supplier. That one action is what prevents you inheriting the previous tenant's usage, and it takes a minute.",
+          "Water is worth singling out here. The South West has historically had among the highest water bills in England, it is billed separately from council tax in most rented homes, and you have no choice of supplier. Budget for it properly rather than treating it as a rounding error.",
+          "Broadband takes the longest lead time of anything on this list, so order it in your first few days. Check what is available at the address first; parts of the city have full-fibre options that are both cheaper and faster than the incumbent network.",
+        ],
+      },
+      {
+        heading: "The rest of the month",
+        paragraphs: [
+          "Register with a GP practice near home. You do not need proof of address or immigration status to register with an NHS practice in England, whatever a receptionist may say, and the sooner it is done the less likely you are to be doing it while ill.",
+          "Register to vote at the new address, which also helps your credit file settle — a small administrative thing with a disproportionate effect if you later need a credit check.",
+          "Sort out how you are actually going to travel. Bristol is a city where a bike genuinely replaces a bus pass for a large share of journeys, and the Railway Path makes most of the east side effectively free to reach. If cycling is not for you, a monthly bus ticket is meaningfully cheaper than paying per journey.",
+          "Find your bin day and the recycling rules for your authority, which differ across the four councils covered here more than you would expect.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "Which council do I pay council tax to in Bristol?",
+        answer:
+          "It depends on the exact address rather than the postal town. Bristol City Council covers the tightly drawn city boundary; a great deal of what people think of as Bristol — Filton, Bradley Stoke, Kingswood — is South Gloucestershire, and Keynsham is Bath and North East Somerset. The rates differ, so check before you budget.",
+      },
+      {
+        question: "Is water billed separately from council tax in Bristol?",
+        answer:
+          "Yes, in almost all rented properties. The South West has historically had among the highest water bills in England, there is no supplier choice, and it is a real monthly cost rather than a rounding error. Budget around £40 a month for a single person unless you know otherwise.",
+      },
+      {
+        question: "How quickly do I need to tell the council I have moved?",
+        answer:
+          "As soon as you can. Every authority here takes it online in a few minutes. Delaying does not reduce the bill — it just arrives later as a larger lump, and any discount you are entitled to starts later too.",
+      },
+    ],
+    related: [
+      { href: "/bristol/guides/bristol-council-tax-explained", label: "Council tax explained" },
+      { href: "/bristol/guides/getting-around-bristol-without-a-car", label: "Getting around without a car" },
+      { href: "/bristol/councils", label: "Council tax by authority" },
+    ],
+    sources: [
+      "Housing Act 2004, sections 213 to 215, on tenancy deposit protection in England",
+      "Local Government Finance Act 1992 and the statutory single-person discount",
+      "NHS England primary medical care policy guidance on patient registration",
+    ],
+  },
 ];

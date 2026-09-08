@@ -215,5 +215,38 @@ export const LEEDS_INPUT: CityInput = {
   takeHomeMonthly: rukTakeHomeMonthly,
   taxRegimeLabel: TAX_REGIME_LABELS.ruk,
 
-  comparisonsPerArea: 3,
+  comparePairs: [
+    {
+      title: "The classic Leeds decisions",
+      description:
+        "Close calls in the inner ring, mostly along the north-western arc where most arrivals start.",
+      pairs: [
+        ["headingley", "hyde-park"],
+        ["chapel-allerton", "meanwood"],
+        ["burley", "kirkstall"],
+      ],
+    },
+    {
+      title: "Value inside the city",
+      description:
+        "For anyone weighing the cheapest inner postcodes against each other.",
+      pairs: [
+        ["armley", "beeston"],
+        ["cross-gates", "garforth"],
+        ["roundhay", "horsforth"],
+      ],
+    },
+    {
+      title: "Town against town",
+      description:
+        "West Yorkshire is five boroughs of separate places, and the rail network makes several of them genuinely interchangeable.",
+      pairs: [
+        ["morley", "wakefield-centre"],
+        ["saltaire", "bingley"],
+        ["halifax", "huddersfield-centre"],
+        ["hebden-bridge", "sowerby-bridge"],
+        ["otley", "ilkley"],
+      ],
+    },
+  ],
 };

@@ -486,9 +486,9 @@ export const BARCELONA_NEIGHBOURHOODS: BarcelonaNeighbourhood[] = [
   },
   {
     id: "clot",
-    name: "El Clot & Sant Andreu",
+    name: "El Clot & Camp de l'Arpa",
     borough: "Sant Martí",
-    centroid: { lat: 41.4110, lng: 2.1870 },
+    centroid: { lat: 41.4090, lng: 2.1870 },
     travelBand: "outer",
     rent: { oneBedMedianGbp: 900, twoBedMedianGbp: 1170, source: "market_review", asOf: AS_OF },
     roomDistrict: "clot",
@@ -501,11 +501,11 @@ export const BARCELONA_NEIGHBOURHOODS: BarcelonaNeighbourhood[] = [
       walkability: 8, foodScene: 7, youngProfessionalDensity: 6, safety: 7, connectivity: 9,
     },
     summary:
-      "Two former villages north-east of the centre with their own squares and markets, well served by metro and Rodalies and almost entirely untouched by tourism. The best value in the city for anyone who does not need to be central.",
+      "A former industrial village north-east of the centre with its own square, its own market and a park built on the old rail yards, well served by two metro lines and Rodalies and almost entirely untouched by tourism.",
     strengths: [
       "Among the cheapest rents on the metro network",
       "Two metro lines plus Rodalies at Clot",
-      "Real local squares and markets",
+      "A real local square and a covered market",
       "Sagrada Família and Glòries within walking distance",
     ],
     tradeoffs: [
@@ -583,6 +583,294 @@ export const BARCELONA_NEIGHBOURHOODS: BarcelonaNeighbourhood[] = [
     dataQuality: "sourceBacked",
   },
 
+  {
+    id: "sagrada-familia",
+    name: "Sagrada Família",
+    borough: "Eixample",
+    centroid: { lat: 41.4040, lng: 2.1740 },
+    travelBand: "inner",
+    rent: { oneBedMedianGbp: 1080, twoBedMedianGbp: 1400, source: "market_review", asOf: AS_OF },
+    roomDistrict: "eixample",
+    mainStations: [
+      { name: "Sagrada Família", lines: ["Metro L2", "Metro L5"] },
+      { name: "Verdaguer", lines: ["Metro L4", "Metro L5"] },
+    ],
+    lifestyle: {
+      livelyVsQuiet: 5, greenSpace: 4, nightlife: 4, cafeDensity: 8, gymDensity: 6,
+      walkability: 9, foodScene: 7, youngProfessionalDensity: 7, safety: 7, connectivity: 9,
+    },
+    summary:
+      "Ordinary residential Eixample wrapped around one of the most visited buildings on earth, which is a stranger daily experience than it sounds. Two streets from the basilica the coach parties vanish entirely and it becomes a quiet grid neighbourhood at a discount to the Dreta.",
+    strengths: [
+      "Cheaper than the Dreta for the same grid architecture",
+      "Two metro lines meeting at the basilica",
+      "Genuinely residential once you leave the tourist blocks",
+      "Well placed between the centre, Gràcia and Poblenou",
+    ],
+    tradeoffs: [
+      "The blocks immediately around the basilica are a crush",
+      "Construction on the towers continues and is noisy",
+      "Very little green space",
+      "Short-let pressure is heavy on the streets nearest the site",
+    ],
+    dataQuality: "sourceBacked",
+  },
+  {
+    id: "les-corts",
+    name: "Les Corts",
+    borough: "Les Corts",
+    centroid: { lat: 41.3840, lng: 2.1300 },
+    travelBand: "inner",
+    rent: { oneBedMedianGbp: 1180, twoBedMedianGbp: 1520, source: "market_review", asOf: AS_OF },
+    roomDistrict: "les-corts",
+    mainStations: [
+      { name: "Les Corts", lines: ["Metro L3"] },
+      { name: "Maria Cristina", lines: ["Metro L3"] },
+    ],
+    lifestyle: {
+      livelyVsQuiet: 4, greenSpace: 6, nightlife: 3, cafeDensity: 6, gymDensity: 7,
+      walkability: 8, foodScene: 6, youngProfessionalDensity: 6, safety: 9, connectivity: 8,
+    },
+    summary:
+      "The Camp Nou, the university campus at Diagonal and the business towers along it, with a surviving village core behind them. Les Corts is where a lot of Barcelona works and comparatively few people think to look for a flat.",
+    strengths: [
+      "Walk to the Diagonal business district and the university",
+      "Very low crime and quiet residential streets",
+      "Larger, newer flats than the old city",
+      "Metro L3 straight down to Plaça Catalunya",
+    ],
+    tradeoffs: [
+      "Match days at the Camp Nou dominate the area",
+      "Corporate and quiet in the evening",
+      "Expensive for what is not a central address",
+      "Little independent character outside the old core",
+    ],
+    dataQuality: "sourceBacked",
+  },
+  {
+    id: "pedralbes",
+    name: "Pedralbes & Zona Universitària",
+    borough: "Les Corts",
+    centroid: { lat: 41.3880, lng: 2.1160 },
+    travelBand: "outer",
+    rent: { oneBedMedianGbp: 1250, twoBedMedianGbp: 1620, source: "market_review", asOf: AS_OF },
+    roomDistrict: "les-corts",
+    mainStations: [
+      { name: "Zona Universitària", lines: ["Metro L3", "Metro L9", "Tram T1"] },
+      { name: "Palau Reial", lines: ["Metro L3"] },
+    ],
+    lifestyle: {
+      livelyVsQuiet: 2, greenSpace: 8, nightlife: 2, cafeDensity: 5, gymDensity: 7,
+      walkability: 7, foodScene: 5, youngProfessionalDensity: 5, safety: 10, connectivity: 8,
+    },
+    summary:
+      "The wealthiest residential quarter in Barcelona, on the upper slope with the Monestir de Pedralbes at its heart and the main university campuses beside it. Very green, very quiet, and the one part of the city where detached houses are normal.",
+    strengths: [
+      "The lowest crime and the most green space in the city",
+      "Metro L9 runs direct to the airport",
+      "Large flats and houses with terraces and parking",
+      "The university campuses and several international schools",
+    ],
+    tradeoffs: [
+      "Expensive, and the family houses rarely let",
+      "Almost nothing to walk to in the evening",
+      "A long way from the beach and the old city",
+      "Skews older and considerably wealthier",
+    ],
+    dataQuality: "sourceBacked",
+  },
+  {
+    id: "barceloneta",
+    name: "La Barceloneta",
+    borough: "Ciutat Vella",
+    centroid: { lat: 41.3800, lng: 2.1900 },
+    travelBand: "central",
+    rent: { oneBedMedianGbp: 1020, twoBedMedianGbp: 1320, source: "market_review", asOf: AS_OF },
+    roomDistrict: "ciutat-vella",
+    mainStations: [
+      { name: "Barceloneta", lines: ["Metro L4"] },
+      { name: "Ciutadella–Vila Olímpica", lines: ["Metro L4"] },
+    ],
+    lifestyle: {
+      livelyVsQuiet: 8, greenSpace: 5, nightlife: 7, cafeDensity: 7, gymDensity: 5,
+      walkability: 9, foodScene: 7, youngProfessionalDensity: 5, safety: 4, connectivity: 8,
+    },
+    summary:
+      "The eighteenth-century fishermen's quarter, laid out on a grid of very narrow streets between the port and the beach, and the single most tourism-affected neighbourhood in Barcelona. Residents have been protesting about it for a decade and the flats are tiny.",
+    strengths: [
+      "The beach is at the end of every street",
+      "Walk to the Born and the Gòtic in ten minutes",
+      "Genuine fishing-quarter character where it survives",
+      "Cheaper than the Born for a central address",
+    ],
+    tradeoffs: [
+      "Overwhelmed by tourism from May to September",
+      "Flats are famously small, often under 40 square metres",
+      "Recorded petty crime is among the highest in the city",
+      "Local feeling about short lets is strongest here",
+    ],
+    dataQuality: "sourceBacked",
+  },
+  {
+    id: "vallcarca",
+    name: "Vallcarca & Park Güell",
+    borough: "Gràcia",
+    centroid: { lat: 41.4140, lng: 2.1490 },
+    travelBand: "outer",
+    rent: { oneBedMedianGbp: 950, twoBedMedianGbp: 1230, source: "market_review", asOf: AS_OF },
+    roomDistrict: "gracia",
+    mainStations: [
+      { name: "Vallcarca", lines: ["Metro L3"] },
+      { name: "Lesseps", lines: ["Metro L3"] },
+    ],
+    lifestyle: {
+      livelyVsQuiet: 4, greenSpace: 8, nightlife: 3, cafeDensity: 6, gymDensity: 5,
+      walkability: 7, foodScene: 6, youngProfessionalDensity: 6, safety: 7, connectivity: 7,
+    },
+    summary:
+      "Above Gràcia on the way up to Park Güell, where the grid gives out and the streets start climbing in steps. It is the cheapest way to live within walking distance of Gràcia, and the outdoor escalators are not a joke — they are municipal infrastructure.",
+    strengths: [
+      "Park Güell and the Collserola paths above it",
+      "Meaningfully cheaper than Vila de Gràcia below",
+      "Metro L3 direct to the centre",
+      "Views over the whole city",
+    ],
+    tradeoffs: [
+      "Steep enough that the council installed escalators",
+      "Tourist coaches to Park Güell clog the approaches",
+      "Fewer shops and bars than Gràcia proper",
+      "Ageing housing stock in parts",
+    ],
+    dataQuality: "sourceBacked",
+  },
+  {
+    id: "la-marina",
+    name: "La Marina & Zona Franca",
+    borough: "Sants-Montjuïc",
+    centroid: { lat: 41.3540, lng: 2.1330 },
+    travelBand: "outer",
+    rent: { oneBedMedianGbp: 830, twoBedMedianGbp: 1080, source: "market_review", asOf: AS_OF },
+    roomDistrict: "sants",
+    mainStations: [
+      { name: "Foneria", lines: ["Metro L10 Sud"] },
+      { name: "Ciutat de la Justícia", lines: ["Metro L10 Sud"] },
+    ],
+    lifestyle: {
+      livelyVsQuiet: 3, greenSpace: 5, nightlife: 2, cafeDensity: 4, gymDensity: 5,
+      walkability: 6, foodScene: 4, youngProfessionalDensity: 5, safety: 6, connectivity: 7,
+    },
+    summary:
+      "The residential strip between Montjuïc and the port's industrial zone, reached by the newest stretch of metro in the city. It is plain, it is cheap, and for anyone working in the Zona Franca or at the Ciutat de la Justícia it is the shortest commute in Barcelona.",
+    strengths: [
+      "The cheapest rents inside the city boundary after Nou Barris",
+      "Metro L10 Sud opened here and is fast and empty",
+      "Walk or cycle to the Zona Franca employers",
+      "Montjuïc directly above",
+    ],
+    tradeoffs: [
+      "Industrial surroundings and lorry traffic",
+      "Very little in the way of shops or eating out",
+      "Thirty minutes to the centre",
+      "Air quality near the port and the Ronda Litoral",
+    ],
+    dataQuality: "sourceBacked",
+  },
+  {
+    id: "sant-andreu",
+    name: "Sant Andreu de Palomar",
+    borough: "Sant Andreu",
+    centroid: { lat: 41.4350, lng: 2.1900 },
+    travelBand: "outer",
+    rent: { oneBedMedianGbp: 880, twoBedMedianGbp: 1150, source: "market_review", asOf: AS_OF },
+    roomDistrict: "sant-andreu",
+    mainStations: [
+      { name: "Sant Andreu", lines: ["Metro L1", "Rodalies R2", "Rodalies R11"] },
+      { name: "Fabra i Puig", lines: ["Metro L1"] },
+    ],
+    lifestyle: {
+      livelyVsQuiet: 4, greenSpace: 6, nightlife: 3, cafeDensity: 7, gymDensity: 5,
+      walkability: 8, foodScene: 6, youngProfessionalDensity: 5, safety: 7, connectivity: 8,
+    },
+    summary:
+      "An independent town until 1897 with a genuine main square, a rambla and a strong Catalan identity that has survived a century of absorption. Cheap, entirely untouristed, and the future site of the new high-speed rail station.",
+    strengths: [
+      "A real town centre with a square, market and rambla",
+      "Metro L1 plus two Rodalies lines",
+      "Among the cheapest rents on the metro",
+      "Strong local identity and no tourism whatsoever",
+    ],
+    tradeoffs: [
+      "Twenty-five to thirty minutes to the centre",
+      "The rail corridor and Meridiana cut it up badly",
+      "Long-running construction around the new station",
+      "Few restaurants worth crossing the city for",
+    ],
+    dataQuality: "sourceBacked",
+  },
+  {
+    id: "sant-cugat",
+    name: "Sant Cugat del Vallès",
+    borough: "Àrea metropolitana",
+    centroid: { lat: 41.4720, lng: 2.0850 },
+    travelBand: "fringe",
+    rent: { oneBedMedianGbp: 1050, twoBedMedianGbp: 1380, source: "market_review", asOf: AS_OF },
+    roomDistrict: "metropolitana",
+    mainStations: [
+      { name: "Sant Cugat", lines: ["FGC S1", "FGC S2"] },
+      { name: "Volpelleres", lines: ["FGC S2"] },
+    ],
+    lifestyle: {
+      livelyVsQuiet: 3, greenSpace: 9, nightlife: 3, cafeDensity: 7, gymDensity: 7,
+      walkability: 8, foodScene: 7, youngProfessionalDensity: 5, safety: 10, connectivity: 6,
+    },
+    summary:
+      "On the far side of Collserola, reached through the FGC tunnel, and the single most popular destination for families leaving Barcelona. It has a Romanesque monastery, a large business park, several international schools and the highest average income in Catalonia.",
+    strengths: [
+      "Several international and bilingual schools",
+      "Collserola on one side and open Vallès country on the other",
+      "Houses with gardens, which the city does not offer",
+      "A substantial business park on the doorstep",
+    ],
+    tradeoffs: [
+      "The FGC tunnel is the only quick way in and out",
+      "Expensive — closer to city prices than suburban ones",
+      "Forty-five minutes to the beach or the old city",
+      "Quiet and residential to the point of dull",
+    ],
+    dataQuality: "sourceBacked",
+  },
+  {
+    id: "esplugues",
+    name: "Esplugues & Cornellà",
+    borough: "Àrea metropolitana",
+    centroid: { lat: 41.3760, lng: 2.0890 },
+    travelBand: "outer",
+    rent: { oneBedMedianGbp: 830, twoBedMedianGbp: 1090, source: "market_review", asOf: AS_OF },
+    roomDistrict: "metropolitana",
+    mainStations: [
+      { name: "Cornellà Centre", lines: ["Metro L5", "Rodalies R1", "Rodalies R4", "Tram T1"] },
+      { name: "Can Vidalet", lines: ["Metro L5"] },
+    ],
+    lifestyle: {
+      livelyVsQuiet: 3, greenSpace: 6, nightlife: 2, cafeDensity: 5, gymDensity: 6,
+      walkability: 7, foodScene: 5, youngProfessionalDensity: 5, safety: 7, connectivity: 8,
+    },
+    summary:
+      "West of the city across the Llobregat plain, with the Sant Joan de Déu children's hospital, a large office cluster and rents a third below the Eixample. Unglamorous, well connected and where a great many people who work in Barcelona actually live.",
+    strengths: [
+      "Metro L5, tram and two Rodalies lines",
+      "Substantially cheaper than any city district",
+      "Sant Joan de Déu and the Esplugues office cluster",
+      "Larger, newer flats than the old city",
+    ],
+    tradeoffs: [
+      "Post-industrial and functional in appearance",
+      "Twenty-five to thirty minutes to Plaça Catalunya",
+      "Very little to do locally in the evening",
+      "The Ronda de Dalt and the Llobregat corridor are noisy",
+    ],
+    dataQuality: "sourceBacked",
+  },
   // ── Àrea metropolitana ─────────────────────────────────────────────
   {
     id: "hospitalet",

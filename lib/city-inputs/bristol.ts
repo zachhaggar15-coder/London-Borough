@@ -218,5 +218,38 @@ export const BRISTOL_INPUT: CityInput = {
   takeHomeMonthly: rukTakeHomeMonthly,
   taxRegimeLabel: TAX_REGIME_LABELS.ruk,
 
-  comparisonsPerArea: 3,
+  comparePairs: [
+    {
+      title: "The classic Bristol decisions",
+      description:
+        "Close calls in the inner ring, where the hill between two areas often matters more than the rent.",
+      pairs: [
+        ["clifton", "redland"],
+        ["cotham", "montpelier"],
+        ["southville", "bedminster"],
+        ["bishopston", "redland"],
+      ],
+    },
+    {
+      title: "Value with a usable commute",
+      description:
+        "For anyone trying to stretch the rent while staying inside a sensible morning.",
+      pairs: [
+        ["easton", "st-george"],
+        ["totterdown", "knowle"],
+        ["fishponds", "kingswood"],
+      ],
+    },
+    {
+      title: "Quieter, greener and further out",
+      description:
+        "The separate towns and the north Bristol suburbs, weighed against each other.",
+      pairs: [
+        ["henleaze", "westbury-on-trym"],
+        ["bath-central", "bathwick"],
+        ["keynsham", "nailsea"],
+        ["portishead", "clevedon"],
+      ],
+    },
+  ],
 };

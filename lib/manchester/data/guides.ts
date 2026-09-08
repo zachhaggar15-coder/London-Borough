@@ -435,6 +435,181 @@ export const MANCHESTER_GUIDES: ManchesterGuide[] = [
     ],
   },
 
+
+  {
+    slug: "how-metrolink-shapes-what-you-pay",
+    h1: "How Metrolink shapes what you pay",
+    metaTitle: "How Metrolink shapes Manchester rents, line by line",
+    metaDescription:
+      "The tram map is also a rent map. Which Metrolink lines carry a premium, which do not, and where the two have come apart.",
+    summary:
+      "Eight lines, ninety-nine stops, and a rent gradient that follows them closely enough to be worth reading deliberately.",
+    category: "Transport",
+    published: PUBLISHED,
+    updated: PUBLISHED,
+    readMinutes: 7,
+    intro: [
+      "Metrolink is the largest light rail network in the UK and the single biggest thing shaping where in Greater Manchester it makes sense to live. It runs to eight of the ten boroughs, and where it runs the rent tends to follow.",
+      "That relationship is not uniform, though, and the places where it breaks down are the interesting ones. Some lines carry a clear premium at every stop; others reach places the market has not repriced at all.",
+      "This guide reads the network as a rent map rather than a transport one, because for most people choosing an area that is what it actually is.",
+    ],
+    sections: [
+      {
+        heading: "The lines that carry a premium",
+        paragraphs: [
+          "The Altrincham line through south Manchester is the clearest case. Sale, Timperley and Altrincham all price at a level their distance from the centre does not explain on its own, and the tram is most of the reason — a fast, frequent, all-day service into the middle of town without a change.",
+          "The Eccles and MediaCityUK branch works the same way for a different reason. Salford Quays repriced sharply when the BBC moved, and the tram is what makes the whole waterfront function as an extension of the city centre rather than a separate place.",
+          "The Didsbury line has probably had the largest effect of any single extension. It converted a string of south Manchester suburbs from bus-dependent to tram-served, and rents across Withington, Didsbury and Burton Road moved in step.",
+        ],
+      },
+      {
+        heading: "The lines that have not repriced",
+        paragraphs: [
+          "The Oldham and Rochdale line is the outstanding example. It threads through the town centres of both boroughs on a genuinely useful service, and rents along it remain among the lowest in the conurbation. The journey is long — three-quarters of an hour or more from Rochdale — but it is direct, frequent and reliable.",
+          "The Ashton line has a similar profile through Droylsden and Ashton-under-Lyne. East Manchester has seen a great deal of regeneration spending and comparatively little rent movement, which for a tenant is the useful direction for that gap to run.",
+          "The Bury line sits somewhere between the two. Prestwich and Whitefield have repriced noticeably; Bury itself much less so, despite being on the same line with a decent journey time.",
+        ],
+        dataBlock: "rent-spread",
+        callout:
+          "The general rule in Greater Manchester is that the south and west of the tram network is priced and the north and east is not. If you are optimising for rent against journey time, that is where to start looking.",
+      },
+      {
+        heading: "What the tram does not reach",
+        paragraphs: [
+          "Stockport is the significant gap. It is one of the largest towns in the conurbation, it has an excellent mainline station with fast trains into Piccadilly, and it has no tram at all. That combination has kept Heaton Moor, Heaton Chapel and Stockport centre well served and comparatively well priced.",
+          "Wigan and Leigh are outside the network entirely, and it shows in both the rents and the journey times. Wigan has good mainline rail, Leigh has the guided busway, and neither is a substitute for the tram in frequency terms.",
+          "Chorlton, Levenshulme and Fallowfield are all inside the city and off the network, and each behaves differently for it. Chorlton has repriced on character alone; Levenshulme sits on a train line that runs less often than its rent implies it should.",
+        ],
+      },
+      {
+        heading: "What a season ticket costs, and what it saves",
+        paragraphs: [
+          "Metrolink fares are zonal and a travelcard covering the zones you actually use is materially cheaper than daily tickets. Bee Network integration has brought bus and tram under one capped fare arrangement, which has made bus-plus-tram journeys considerably better value than they were.",
+          "The comparison worth doing is against running a car. Once you add insurance, tax, fuel, servicing and — in the city centre — parking, an all-zone travelcard is a fraction of the cost. On the tram network that trade is usually clear-cut.",
+          "Off the network it is not. From Wigan, Leigh, or the parts of Stockport and Bolton that the buses serve thinly, a car stops being an indulgence and becomes an operating requirement, and the monthly cost of that belongs in the rent calculation.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "Does living on a Metrolink line cost more?",
+        answer:
+          "In the south and west, usually yes — the Altrincham, Didsbury and Eccles lines all carry a visible premium. In the north and east it very often does not: the Oldham, Rochdale and Ashton lines run through some of the cheapest rents in the conurbation despite a direct service into the centre.",
+      },
+      {
+        question: "Where is the best value on the tram network?",
+        answer:
+          "The Oldham and Rochdale line and the Ashton line, on the numbers. Both give you a direct, frequent, all-day service into the city centre at rents well below the south Manchester equivalent. The cost is journey time rather than reliability.",
+      },
+      {
+        question: "Can I live in Greater Manchester without a car?",
+        answer:
+          "Comfortably, if you live on the tram network or on one of the better rail corridors such as Stockport. It becomes much harder in Wigan, Leigh and the outer parts of Bolton and Rochdale, where bus frequency drops away and a car turns into a running cost you should budget alongside rent.",
+      },
+    ],
+    related: [
+      { href: "/manchester/commute", label: "Journey times to every destination" },
+      { href: "/manchester/guides/getting-around-greater-manchester-without-a-car", label: "Getting around without a car" },
+      { href: "/manchester/rent-index", label: "Every area by rent" },
+    ],
+    sources: [
+      "Transport for Greater Manchester Metrolink network map and Bee Network fare information, 2026",
+      "ONS Price Index of Private Rents, Greater Manchester local authority averages, July 2026",
+    ],
+  },
+
+  {
+    slug: "your-first-month-in-manchester",
+    h1: "Your first month in Manchester: the checklist",
+    metaTitle: "Your first month in Manchester: a practical checklist",
+    metaDescription:
+      "What to sort in your first four weeks in Greater Manchester — the tenancy paperwork, council tax, the deposit scheme, GP registration and the bin round.",
+    summary:
+      "The unglamorous list. Most of it is quick, and the two or three items that are not will cost you if they slip.",
+    category: "Moving",
+    published: PUBLISHED,
+    updated: PUBLISHED,
+    readMinutes: 6,
+    intro: [
+      "Moving is mostly logistics, and the logistics of a first month have a habit of being handled in the wrong order. A few items are time-limited by law, a couple have real money attached, and the rest are simply easier done early.",
+      "This is the list, in roughly the order it is worth doing. It is England-only in its legal detail, and it assumes you are renting privately, which is what the great majority of arrivals here are doing.",
+    ],
+    sections: [
+      {
+        heading: "The first week: money and paperwork",
+        paragraphs: [
+          "Check your deposit has been protected. In England a landlord must place a tenancy deposit in one of the government-approved schemes within thirty days of receiving it, and must give you the prescribed information about where it sits. If neither has happened by day thirty, that is a serious failure with a statutory penalty attached, and it also blocks the landlord from serving a section 21 notice.",
+          "Read the tenancy agreement properly before you need it rather than after. The clauses that matter most are the break clause, whether the liability is joint and several, what the notice period is, and what you are responsible for maintaining.",
+          "Take dated photographs of every room, including the things you would not think to photograph — the oven, the seals round the bath, any marks on the carpet. Send them to the letting agent by email so that there is a timestamped record outside your own phone.",
+        ],
+        list: {
+          title: "Documents your landlord must give you in England",
+          items: [
+            "Deposit protection certificate and prescribed information, within 30 days",
+            "A current gas safety certificate, where there is gas",
+            "An Energy Performance Certificate for the property",
+            "The government's How to Rent guide, in its current version",
+            "An electrical installation condition report, on request",
+          ],
+        },
+      },
+      {
+        heading: "Council tax, and the discount people forget",
+        paragraphs: [
+          "Tell the council you have moved in. Every Greater Manchester authority does this online and it takes a few minutes; leave it and the bill arrives later as a lump sum covering the period you did not pay.",
+          "If you live alone, claim the single-person discount. It is 25% off the whole bill, it is not applied automatically, and across a year it is worth a meaningful amount at any band.",
+          "Full-time students are exempt entirely, and a household of all full-time students pays nothing — but the exemption has to be evidenced with a certificate from the university, so ask for it early in the term rather than when the reminder arrives.",
+        ],
+        dataBlock: "council-tax",
+        callout:
+          "Register with the council in your first week and claim any discount at the same time. The single-person discount is the most commonly missed 25% in British household budgeting.",
+      },
+      {
+        heading: "Utilities, and the meter reading that protects you",
+        paragraphs: [
+          "Take a meter reading on the day you move in — photograph the meter, note the date — and give it to whichever supplier the property is with. That single reading is what stops you being billed for the previous tenant's usage, and it is the cheapest insurance available.",
+          "You are free to switch supplier from day one; you are not obliged to stay with whoever the landlord left in place. Water is different: in this region you have no choice of supplier, and in most rented properties it is billed separately from council tax.",
+          "Broadband is the one to start early, because an engineer appointment can be two or three weeks out. Check what infrastructure the building has before you order — several parts of Greater Manchester have full-fibre alternatives to the incumbent network that are cheaper and faster.",
+        ],
+      },
+      {
+        heading: "The rest of the first month",
+        paragraphs: [
+          "Register with a GP practice near where you live. You do not need proof of address or immigration status to register with an NHS practice in England, though many practices ask for it anyway; if you are turned away for lack of documents, that is not the rule and it is worth pushing back politely.",
+          "Register to vote, which also builds your credit file at the new address — a small thing that matters disproportionately if you later apply for anything requiring a credit check.",
+          "Find out your bin day and which bin is which. Greater Manchester's collection arrangements vary by borough and the recycling rules are more specific than most people assume, so the leaflet is worth the two minutes.",
+          "Get a travelcard rather than paying daily. Whatever your commute looks like, the capped and season options under the Bee Network are cheaper than buying as you go, and the saving compounds quietly all year.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "How long does my landlord have to protect my deposit?",
+        answer:
+          "Thirty days from receiving it, in England. Within that window the deposit must be placed in one of the government-approved schemes and you must be given the prescribed information about it. If that does not happen, you may be entitled to compensation and the landlord cannot serve a valid section 21 notice.",
+      },
+      {
+        question: "Do I have to tell the council I have moved in?",
+        answer:
+          "Yes, and it is in your interest to do it promptly. Every Greater Manchester authority takes the notification online. Registering late does not reduce the bill, it just delays it, and it delays any discount you are entitled to as well.",
+      },
+      {
+        question: "Can I register with a GP without proof of address?",
+        answer:
+          "Yes. NHS England guidance is clear that a practice cannot refuse registration because you lack proof of address, identification or immigration status. Practices often ask anyway, so it is worth knowing the position before you are turned away.",
+      },
+    ],
+    related: [
+      { href: "/manchester/guides/renting-in-greater-manchester-first-time", label: "Renting here for the first time" },
+      { href: "/manchester/guides/greater-manchester-council-tax-explained", label: "Council tax explained" },
+      { href: "/manchester/boroughs", label: "Council tax by borough" },
+    ],
+    sources: [
+      "Housing Act 2004, sections 213 to 215, on tenancy deposit protection in England",
+      "Local Government Finance Act 1992 and the statutory single-person discount",
+      "NHS England primary medical care policy guidance on patient registration",
+    ],
+  },
 ];
 
 export function getManchesterGuide(slug: string): ManchesterGuide | null {

@@ -65,12 +65,21 @@ export const GENEVA_COMMUTE_TIMES: Record<string, Record<string, number>> = {
   "grand-saconnex":   { cornavin: 18, banking: 25, nations: 8,  cern: 22, "plan-les-ouates": 42, hug: 35, airport: 8,  "annemasse-centre": 45 },
   versoix:            { cornavin: 20, banking: 28, nations: 25, cern: 35, "plan-les-ouates": 45, hug: 38, airport: 22, "annemasse-centre": 45 },
 
+  acacias:            { cornavin: 15, banking: 15, nations: 25, cern: 32, "plan-les-ouates": 15, hug: 12, airport: 28, "annemasse-centre": 30 },
+  grottes:            { cornavin: 5,  banking: 12, nations: 15, cern: 28, "plan-les-ouates": 32, hug: 22, airport: 18, "annemasse-centre": 30 },
+  onex:               { cornavin: 25, banking: 30, nations: 32, cern: 30, "plan-les-ouates": 20, hug: 28, airport: 30, "annemasse-centre": 45 },
+  "plan-les-ouates":  { cornavin: 25, banking: 28, nations: 38, cern: 45, "plan-les-ouates": 5,  hug: 20, airport: 40, "annemasse-centre": 40 },
+  cologny:            { cornavin: 25, banking: 18, nations: 30, cern: 50, "plan-les-ouates": 35, hug: 25, airport: 35, "annemasse-centre": 20 },
+  cointrin:           { cornavin: 20, banking: 28, nations: 12, cern: 18, "plan-les-ouates": 45, hug: 38, airport: 5,  "annemasse-centre": 48 },
+
   // ── Canton de Vaud ──
+  coppet:             { cornavin: 25, banking: 32, nations: 32, cern: 42, "plan-les-ouates": 48, hug: 42, airport: 22, "annemasse-centre": 50 },
   nyon:               { cornavin: 35, banking: 42, nations: 42, cern: 50, "plan-les-ouates": 58, hug: 52, airport: 32, "annemasse-centre": 60 },
 
   // ── France voisine ──
   annemasse:          { cornavin: 25, banking: 22, nations: 38, cern: 55, "plan-les-ouates": 45, hug: 32, airport: 40, "annemasse-centre": 5 },
   "saint-julien":     { cornavin: 35, banking: 38, nations: 45, cern: 50, "plan-les-ouates": 20, hug: 38, airport: 45, "annemasse-centre": 45 },
   "ferney-voltaire":  { cornavin: 30, banking: 35, nations: 20, cern: 15, "plan-les-ouates": 55, hug: 45, airport: 12, "annemasse-centre": 55 },
+  divonne:            { cornavin: 45, banking: 50, nations: 40, cern: 35, "plan-les-ouates": 65, hug: 55, airport: 32, "annemasse-centre": 60 },
   thonon:             { cornavin: 55, banking: 52, nations: 65, cern: 80, "plan-les-ouates": 70, hug: 60, airport: 70, "annemasse-centre": 30 },
 };

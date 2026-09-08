@@ -41,10 +41,19 @@ export default async function CityCompareIndexPage({ params }: Props) {
   const content = getCityContent(city);
   const currency = content.input.currency;
 
-  const comparisons = content
-    .compareSlugs()
-    .map((slug) => content.getComparePageData(slug))
-    .filter((c): c is NonNullable<typeof c> => c !== null);
+  const card = (slug: string) => content.getComparePageData(slug);
+
+  const sections = content
+    .compareSections()
+    .map((section) => ({
+      ...section,
+      cards: section.slugs
+        .map(card)
+        .filter((c): c is NonNullable<ReturnType<typeof card>> => c !== null),
+    }))
+    .filter((section) => section.cards.length > 0);
+
+  const total = sections.reduce((n, section) => n + section.cards.length, 0);
 
   return (
     <PageShell>
@@ -54,28 +63,34 @@ export default async function CityCompareIndexPage({ params }: Props) {
         Compare {content.copy.regionLabel} areas
       </h1>
       <p className="mt-4 max-w-3xl text-lg leading-relaxed text-slate-300">
-        {comparisons.length} side-by-side comparisons. {content.copy.compareIntro}
+        {total} comparisons, each one a decision somebody is actually making.{" "}
+        {content.copy.compareIntro}
       </p>
 
-      <Section title="Every comparison">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {comparisons.map((c) => (
-            <Link
-              key={c.slug}
-              href={content.path(`/compare/${c.slug}`)}
-              className="rounded-lg border border-slate-800 bg-slate-900 px-4 py-3 transition-colors hover:border-slate-600"
-            >
-              <p className="text-sm font-medium">
-                {c.a.name} vs {c.b.name}
-              </p>
-              <p className="mt-1 text-xs text-slate-500">
-                {money(c.a.rent.oneBedMedianGbp, currency)} vs{" "}
-                {money(c.b.rent.oneBedMedianGbp, currency)} for a one-bed
-              </p>
-            </Link>
-          ))}
-        </div>
-      </Section>
+      {sections.map((section) => (
+        <Section key={section.title} title={section.title}>
+          <p className="mb-4 max-w-3xl text-sm leading-relaxed text-slate-400">
+            {section.description}
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {section.cards.map((c) => (
+              <Link
+                key={c.slug}
+                href={content.path(`/compare/${c.slug}`)}
+                className="rounded-lg border border-slate-800 bg-slate-900 px-4 py-3 transition-colors hover:border-slate-600"
+              >
+                <p className="text-sm font-medium">
+                  {c.a.name} vs {c.b.name}
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  {money(c.a.rent.oneBedMedianGbp, currency)} vs{" "}
+                  {money(c.b.rent.oneBedMedianGbp, currency)} for a one-bed
+                </p>
+              </Link>
+            ))}
+          </div>
+        </Section>
+      ))}
 
       <DataNote>
         Each comparison sets the same figures against each other: rent at three

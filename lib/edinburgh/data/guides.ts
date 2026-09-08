@@ -302,4 +302,170 @@ export const EDINBURGH_GUIDES: CityGuide[] = [
       "Council Tax (Substitution of Proportion) (Scotland) Order 2016, for the band E to H multipliers",
     ],
   },
+
+  {
+    slug: "getting-around-edinburgh-without-a-car",
+    h1: "Getting around Edinburgh without a car",
+    metaTitle: "Getting around Edinburgh without a car: buses, the tram and ScotRail",
+    metaDescription:
+      "How Lothian Buses, the tram to Newhaven and the Lothian rail lines actually work, and which parts of Edinburgh genuinely do not need a car.",
+    summary:
+      "One of the best bus networks in Britain, one tram line, and a compact centre that makes both less necessary than you would think.",
+    category: "Transport",
+    published: PUBLISHED,
+    updated: PUBLISHED,
+    readMinutes: 7,
+    intro: [
+      "Edinburgh is a small city pretending to be a large one. The built-up area is compact, the centre is dense, and a great many journeys people expect to make by vehicle turn out to be a twenty-minute walk.",
+      "What fills the gaps is a bus network that is genuinely among the best in the UK — municipally owned, frequent, and covering the city comprehensively rather than only the profitable corridors. The tram adds one high-capacity spine and the rail lines reach the Lothian towns.",
+      "This guide covers what each layer is for, what it costs, and where the network stops working.",
+    ],
+    sections: [
+      {
+        heading: "The buses do most of the work",
+        paragraphs: [
+          "Lothian Buses is council-owned and runs the great majority of services in the city. Frequencies on the main corridors are high enough that timetables are largely irrelevant, coverage extends well beyond the bypass, and the night network is genuinely useful rather than nominal.",
+          "Fares are flat rather than distance-based, which is unusual in Britain and means a long journey costs the same as a short one. Contactless capping means you cannot easily overpay in a day, and a season ticket is cheaper still if you travel most days.",
+          "The practical consequence is that bus quality is not a strong argument between areas in Edinburgh the way it is in most English cities. Almost everywhere in the city is well served, so the real variable is journey time rather than availability.",
+        ],
+      },
+      {
+        heading: "One tram line, and what it changed",
+        paragraphs: [
+          "The tram runs from the airport through the west of the city, along Princes Street, down Leith Walk and on to Newhaven since the extension opened. It is one line, and it is the busiest transport corridor in the city.",
+          "The Newhaven extension is the part that matters for where to live. It converted Leith Walk, Leith and the shore from bus-dependent to tram-served, and it is a substantial part of why that whole corridor has repriced over the last few years.",
+          "For everyone not on that axis the tram is mostly an airport service. It is excellent for that — a fixed, frequent, luggage-friendly run into the centre — and largely irrelevant to a daily commute.",
+        ],
+        dataBlock: "rent-spread",
+        callout:
+          "Lothian's flat fare and daily cap make the city unusually cheap to move around in. The bus is rarely the reason to choose one Edinburgh area over another; the walk at each end usually is.",
+      },
+      {
+        heading: "Rail, and the Lothian towns",
+        paragraphs: [
+          "ScotRail's Lothian services are what make Musselburgh, Dalkeith's neighbours, Linlithgow and Livingston work as places to live. Waverley and Haymarket are both central, and journey times from the nearer towns are short enough to compete with a cross-city bus.",
+          "The Borders Railway reopened the line south through Midlothian, which changed the position of Newtongrange and Galashiels considerably and pulled the southern edge of the region into commuting range.",
+          "The gap is orbital travel. Like most British networks this one is radial, so getting from one outer suburb to another without going through the centre is slow — and that is where a car starts to earn its keep.",
+        ],
+      },
+      {
+        heading: "Walking, cycling and the hills",
+        paragraphs: [
+          "The centre is small enough that walking beats everything for a large share of journeys. From the New Town you can reach most of the Old Town, Stockbridge, Bruntsfield and the West End on foot in under half an hour, and the buses are often no faster in traffic.",
+          "Cycling is good on the off-road network and mixed on the roads. The city has an extensive set of former railway paths — the Innocent Railway, the North Edinburgh path network — which make several cross-city routes genuinely pleasant and traffic-free.",
+          "The hills are real and they are not evenly distributed. Anything involving the Old Town, Arthur's Seat or the climb up to Morningside is harder work than the map suggests, and the wind off the Forth in winter is a factor people underestimate exactly once.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "Do I need a car in Edinburgh?",
+        answer:
+          "Almost certainly not inside the bypass. The bus network is comprehensive and flat-fared, the centre is walkable, and parking is scarce and expensive in most of the areas people want to live in. A car becomes useful for orbital journeys between outer suburbs, and for the Lothian villages that the rail lines miss.",
+      },
+      {
+        question: "Is the Edinburgh tram worth living near?",
+        answer:
+          "On the Leith Walk and Newhaven section, yes — it is a genuine high-frequency commuting spine and the corridor has repriced accordingly. Elsewhere it is mainly an excellent airport link, which is worth something but not usually worth a rent premium.",
+      },
+      {
+        question: "How much does public transport cost in Edinburgh?",
+        answer:
+          "Lothian Buses charges a flat fare regardless of distance, with a daily cap on contactless, and season tickets that reduce it further for regular travel. It is one of the cheaper city networks in Britain to use daily, and the flat fare means living further out costs no more in fares.",
+      },
+    ],
+    related: [
+      { href: "/edinburgh/commute", label: "Journey times to every destination" },
+      { href: "/edinburgh/neighbourhoods", label: "Where to live, area by area" },
+      { href: "/edinburgh/rent-index", label: "Every area by rent" },
+    ],
+    sources: [
+      "Lothian Buses network and fare information, 2026",
+      "Edinburgh Trams service pattern following the Newhaven extension",
+      "ScotRail published timetables for the Lothian and Borders services, 2026",
+    ],
+  },
+
+  {
+    slug: "renting-in-edinburgh-during-the-festival",
+    h1: "Edinburgh in August: what the Festival does to renting",
+    metaTitle: "Edinburgh in August: what the Festival does to renting",
+    metaDescription:
+      "Why August distorts the Edinburgh rental market, what short-term let licensing changed, and how to time a move so the Festival does not cost you.",
+    summary:
+      "For one month a year a large part of the housing stock is worth more to a tourist than to you. Here is what that does, and what changed.",
+    category: "Renting",
+    published: PUBLISHED,
+    updated: PUBLISHED,
+    readMinutes: 6,
+    intro: [
+      "Every August Edinburgh's population swells by a substantial fraction and the city hosts the largest arts festival in the world. It is the best month to be here and the worst month to be looking for somewhere to live.",
+      "The reason is straightforward economics: for four weeks a flat is worth far more to visitors than to a tenant, which historically pulled a real share of the long-term stock out of the market every summer and pushed it back in every September.",
+      "Two things have changed that picture — short-term let licensing and a control area covering the whole city — and the effect is real but partial. This guide covers what actually happens, what the rules now are, and how to time a move around it.",
+    ],
+    sections: [
+      {
+        heading: "What August does to the market",
+        paragraphs: [
+          "The visible effect is on availability rather than headline rent. Long-term listings thin out through the early summer in the areas closest to the venues, and viewings become more competitive because the same stock is chased by students arriving for the academic year at the same time.",
+          "The areas most affected are the ones nearest the main venue clusters: the Old Town, Newington, Marchmont, Bruntsfield and the West End. Leith, Gorgie and the outer suburbs feel it much less.",
+          "September is the other pressure point, because the Festival stock returns to the market at the same moment as the university intake. If you can move in October or in the spring, you are shopping in a materially calmer market.",
+        ],
+        dataBlock: "rent-spread",
+      },
+      {
+        heading: "What short-term let licensing changed",
+        paragraphs: [
+          "Scotland introduced a licensing scheme for short-term lets, and Edinburgh designated the whole council area as a short-term let control area — which means changing the use of a whole flat to a short-term let requires planning permission as well as a licence.",
+          "The practical effect has been to reduce the number of whole-property holiday lets in the city and to push some of that stock back towards long-term renting. The market is still tight, but the annual August evacuation is less pronounced than it was.",
+          "It has also made the sublet question sharper for tenants. Letting your flat out during the Festival is not the casual arrangement it once was: it will usually breach your tenancy, and it may require a licence you do not have.",
+        ],
+        callout:
+          "If a landlord offers you a lease that conveniently ends in July, ask directly what happens in August. A tenancy shaped around the Festival calendar is a warning about how the property is really being used.",
+      },
+      {
+        heading: "Your tenancy is more protected here than you may expect",
+        paragraphs: [
+          "Scotland abolished the fixed-term assured shorthold tenancy. A private residential tenancy is open-ended: there is no end date, no automatic expiry, and a landlord can only end it on one of the statutory grounds set out in the 2016 Act.",
+          "That matters enormously in a Festival city, because it means a landlord cannot simply decline to renew you in July in order to let the flat to visitors in August. Ending the tenancy requires a ground and, if you do not leave, a First-tier Tribunal decision.",
+          "Rent increases are also constrained: no more than once in twelve months, with formal notice, and a tenant can refer a proposed increase to Rent Service Scotland for adjudication. Neither of these protections exists in the same form in England.",
+        ],
+      },
+      {
+        heading: "Timing a move",
+        paragraphs: [
+          "The calmest windows are late autumn and the period from February to April. Stock is normal, competition is ordinary, and landlords who have had a property empty are more willing to negotiate.",
+          "The hardest window is mid-August to late September, when the Festival tail and the student intake overlap. If you must move then, have your paperwork assembled in advance and expect to decide quickly.",
+          "If you are arriving for a job with a fixed start date in the autumn, a short let for the first few weeks is often the cheaper mistake — it lets you view in person, in the right areas, without signing for a year on the strength of photographs.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "Do rents actually go up in Edinburgh during the Festival?",
+        answer:
+          "Long-term rents do not spike for a month; what changes is availability and competition. Stock near the main venues thins out over the summer and the September return of that stock collides with the student intake, so August and September are the hardest weeks of the year to find somewhere.",
+      },
+      {
+        question: "Can my landlord evict me so they can let the flat during the Festival?",
+        answer:
+          "No. A Scottish private residential tenancy is open-ended and can only be ended on one of the statutory grounds, with notice, and ultimately by a First-tier Tribunal decision if you do not leave. Wanting to let the property to visitors is not among those grounds.",
+      },
+      {
+        question: "Can I sublet my Edinburgh flat during the Festival?",
+        answer:
+          "Very probably not. Most tenancies prohibit subletting without written consent, and since Edinburgh became a short-term let control area, letting a whole property to visitors generally requires both a licence and planning permission. It is not the informal arrangement it used to be.",
+      },
+    ],
+    related: [
+      { href: "/edinburgh/guides/renting-in-scotland-what-is-different", label: "Renting in Scotland: what is different" },
+      { href: "/edinburgh/guides/how-much-do-i-need-to-earn-to-live-in-edinburgh", label: "What you need to earn" },
+      { href: "/edinburgh/rent-index", label: "Every area by rent" },
+    ],
+    sources: [
+      "Private Housing (Tenancies) (Scotland) Act 2016, on private residential tenancies and grounds for eviction",
+      "Civic Government (Scotland) Act 1982 (Licensing of Short-term Lets) Order 2022",
+      "City of Edinburgh Council short-term let control area designation, in force since 2022",
+    ],
+  },
 ];

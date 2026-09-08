@@ -212,5 +212,36 @@ export const BARCELONA_INPUT: CityInput = {
   takeHomeMonthly: cataloniaTakeHomeMonthly,
   taxRegimeLabel: INTERNATIONAL_TAX_LABELS.barcelona,
 
-  comparisonsPerArea: 3,
+  comparePairs: [
+    {
+      title: "The classic Barcelona decisions",
+      description:
+        "Close calls in the old city and the grid, where tourism pressure is often the deciding factor.",
+      pairs: [
+        ["gotic", "born"],
+        ["raval", "sant-antoni"],
+        ["eixample-dreta", "esquerra-eixample"],
+        ["vila-de-gracia", "camp-den-grassot"],
+      ],
+    },
+    {
+      title: "Value and the beach",
+      description:
+        "For anyone weighing the cheaper barris, or the two very different ways to live near the sea.",
+      pairs: [
+        ["poble-sec", "sants"],
+        ["poblenou", "vila-olimpica"],
+        ["clot", "sant-andreu"],
+      ],
+    },
+    {
+      title: "Up the hill and out of the city",
+      description:
+        "The Zona Alta and the metropolitan belt, where Collserola decides the commute.",
+      pairs: [
+        ["sarria", "sant-gervasi"],
+        ["hospitalet", "esplugues"],
+      ],
+    },
+  ],
 };

@@ -213,5 +213,37 @@ export const PARIS_INPUT: CityInput = {
   takeHomeMonthly: franceTakeHomeMonthly,
   taxRegimeLabel: INTERNATIONAL_TAX_LABELS.paris,
 
-  comparisonsPerArea: 3,
+  comparePairs: [
+    {
+      title: "The classic Paris decisions",
+      description:
+        "Close calls inside the boundary, where the difference is usually floor area and which floor you are on.",
+      pairs: [
+        ["marais", "les-halles"],
+        ["oberkampf", "bastille"],
+        ["canal-saint-martin", "south-pigalle"],
+        ["montmartre", "batignolles"],
+      ],
+    },
+    {
+      title: "Value in the east and south",
+      description:
+        "For anyone weighing the cheaper arrondissements against each other.",
+      pairs: [
+        ["belleville", "charonne"],
+        ["butte-aux-cailles", "gobelins"],
+        ["montparnasse", "commerce"],
+      ],
+    },
+    {
+      title: "Across the périphérique",
+      description:
+        "The boundary is a road and the métro crosses it, which makes these the most consequential comparisons on the page.",
+      pairs: [
+        ["montreuil", "pantin"],
+        ["saint-ouen", "levallois"],
+        ["vincennes", "boulogne"],
+      ],
+    },
+  ],
 };

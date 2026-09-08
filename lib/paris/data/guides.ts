@@ -285,4 +285,178 @@ export const PARIS_GUIDES: CityGuide[] = [
       "Île-de-France Mobilités Navigo tariffs and the statutory employer reimbursement",
     ],
   },
+
+  {
+    slug: "the-paris-rental-dossier",
+    h1: "The dossier and the guarantor: how to actually get a Paris flat",
+    metaTitle: "The Paris rental dossier and guarantor, explained",
+    metaDescription:
+      "What a French landlord may ask for, why the guarantor rule blocks so many British arrivals, and how Visale, paid guarantors and the caution bancaire work.",
+    summary:
+      "The flat is rarely the hard part. The dossier is, and the guarantor rule is the single thing most likely to stop you.",
+    category: "Renting",
+    published: PUBLISHED,
+    updated: PUBLISHED,
+    readMinutes: 8,
+    intro: [
+      "Paris does not have Geneva's vacancy problem, but it has a paperwork problem that is at least as effective at keeping people out. Flats are let on the strength of a dossier, and the dossier carries one requirement that most people arriving from Britain cannot meet.",
+      "That requirement is the garant: a French-resident third party who signs to cover the rent if you do not, and who is generally expected to earn three to four times it. Without one, a large share of the private market is closed to you regardless of what you earn.",
+      "There are three real ways round it, and knowing which one applies to you before you start viewing is worth more than any amount of searching.",
+    ],
+    sections: [
+      {
+        heading: "What the dossier contains, and what may not be asked for",
+        paragraphs: [
+          "French law limits what a landlord may demand. The permitted list is set out in decree, and anything outside it — a bank statement, a photograph, a medical record, proof of a French bank account before signature — is not lawfully required, however routinely it is asked for.",
+          "In practice you will be competing against files that include the extras anyway. The pragmatic position is to have a complete lawful dossier ready as a single PDF, and to decline the requests that go beyond it, which most agents drop when challenged.",
+          "Income evidence is the part that decides it. Landlords look for roughly three times the rent in net monthly income, and they apply the same test to the guarantor.",
+        ],
+        list: {
+          title: "What a landlord may lawfully ask for",
+          items: [
+            "One piece of photo identification",
+            "Proof of your current address: a utility bill, or your last three rent receipts",
+            "Proof of activity: an employment contract, a school or university certificate, or company registration",
+            "Proof of income: your last three payslips, or your most recent tax assessment",
+            "The same documents again for your guarantor, where you have one",
+          ],
+        },
+        callout:
+          "Charges are quoted separately from rent and they are not small. A flat advertised at €1,200 hors charges can cost €1,320 in practice once heating, water, building maintenance and the household waste charge are provisioned.",
+      },
+      {
+        heading: "The guarantor problem, and the three ways round it",
+        paragraphs: [
+          "Visale is the state-backed free guarantee scheme run by Action Logement. It covers anyone aged 18 to 30 whatever their employment status, and older tenants in defined situations including a recent job change. It is free, landlords accept it, and it is the first thing to check — a great many British arrivals qualify on age alone and never find out.",
+          "Paid guarantor services such as GarantMe and Unkle charge a percentage of the annual rent, typically in the region of three to five per cent, and issue a guarantee a landlord will take. It is a real cost, and a small one next to an extra month in temporary accommodation.",
+          "The third route is a caution bancaire: a sum frozen in a French bank account as security. It works, it ties up a lot of money, and it requires a French bank account — which is its own small ordeal for someone who has just arrived.",
+        ],
+      },
+      {
+        heading: "Furnished, unfurnished and the mobility lease",
+        paragraphs: [
+          "The distinction matters more here than in Britain because it changes the length of the contract. An unfurnished lease runs three years; a furnished one runs a year, renewable. Furnished flats cost more per month and are far more common at the small end of the market.",
+          "The bail mobilité is a furnished lease of one to ten months, non-renewable, aimed at people on a course, a secondment or a fixed assignment. It carries no deposit at all, and Visale covers it. For a first few months while you find something permanent it is often the cleanest option available.",
+          "Deposits are capped: one month for unfurnished, two for furnished, nothing on a mobility lease. Agency fees charged to the tenant are capped by area too, so a Paris agent may not charge you an open-ended finder's fee.",
+        ],
+      },
+      {
+        heading: "The colocation route, and what it changes",
+        paragraphs: [
+          "Sharing is normal here well beyond student age, and it solves two problems at once: the rent per head falls, and several products aimed at sharers apply lighter guarantor requirements.",
+          "Read the clause de solidarité. Most colocation leases make every tenant jointly liable for the whole rent, so if a flatmate leaves you carry their share until they are replaced. A lease with an individual contract per room avoids that, and is usually worth paying slightly more for.",
+          "Charges in a share are generally pooled and settled annually against the building's real costs, so expect an adjustment in one direction or the other some months after the year ends.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "Can I rent in Paris without a French guarantor?",
+        answer:
+          "Yes, but not by default. Check Visale first: it is free, state-backed, and covers everyone aged 18 to 30 whatever their job. Failing that, a paid guarantor service charges a few per cent of the annual rent, or you can freeze a sum in a French bank account as a caution bancaire.",
+      },
+      {
+        question: "How much do I need to earn to be accepted for a Paris flat?",
+        answer:
+          "Landlords generally look for around three times the rent in net monthly income and apply the same test to a guarantor. That is a screening rule rather than an affordability one, so it is entirely possible to be turned down for a flat you could comfortably pay for.",
+      },
+      {
+        question: "What is a bail mobilité?",
+        answer:
+          "A furnished lease of between one and ten months, non-renewable, for people on a course, a secondment or a temporary assignment. It requires no deposit, Visale covers it, and it is often the most realistic first contract for someone who has just arrived and cannot yet assemble a full dossier.",
+      },
+    ],
+    related: [
+      { href: "/paris/guides/renting-in-paris-rent-control", label: "Rent control and charges" },
+      { href: "/paris/guides/moving-to-paris-from-the-uk", label: "Visas and the 90-day rule" },
+      { href: "/paris/rent-index", label: "Every area by rent" },
+    ],
+    sources: [
+      "Loi n° 89-462 du 6 juillet 1989 on residential tenancies, as amended by the loi ALUR and loi ÉLAN",
+      "Décret n° 2015-1437 listing the documents a landlord may require of a tenant or guarantor",
+      "Action Logement guidance on the Visale guarantee, 2026",
+    ],
+  },
+
+  {
+    slug: "getting-around-paris",
+    h1: "Getting around Paris: Navigo, zones and the périphérique",
+    metaTitle: "Getting around Paris: Navigo, zones and crossing the périphérique",
+    metaDescription:
+      "How the Navigo pass, the métro and the RER actually work, why the fare zones stopped mattering, and what the périphérique still costs you.",
+    summary:
+      "The flat-fare Navigo changed where it makes sense to live. The métro extensions are changing it again.",
+    category: "Transport",
+    published: PUBLISHED,
+    updated: PUBLISHED,
+    readMinutes: 7,
+    intro: [
+      "Paris has the densest urban rail network in Europe and a fare system to match. Understanding it properly is worth real money, because the biggest single decision — whether to live inside the boundary or outside it — turns almost entirely on how the network treats the crossing.",
+      "Two changes matter more than anything else. In 2015 the Navigo season pass went flat-fare across every zone, which removed the financial penalty for living further out. And the Grand Paris Express and the métro extensions are steadily connecting the inner suburbs to each other rather than only to the centre.",
+      "Together they mean the commuter calculation here looks nothing like it did a decade ago, and nothing like a British one.",
+    ],
+    sections: [
+      {
+        heading: "The network, in four layers",
+        paragraphs: [
+          "The métro is the dense inner layer: sixteen lines, stops every five hundred metres or so, and inside the boundary you are almost never more than a short walk from one. It is slow over distance and unbeatable over two miles.",
+          "The RER is the fast layer — five lines running underneath central Paris and out into the suburbs with far wider stop spacing. An RER trip from the inner suburbs to the centre is often quicker than a métro trip across Paris, which is the fact that makes Vincennes, Boulogne and their equivalents work.",
+          "Trams run mostly around the outside, including the T3 orbital along the boundary, and the Transilien network covers the wider Île-de-France. Above all of it sits a bus network that is genuinely useful outside the peaks and genuinely slow inside them.",
+        ],
+      },
+      {
+        heading: "Navigo is flat-fare, and that redraws the map",
+        paragraphs: [
+          "A monthly or annual Navigo pass costs the same whether you travel within Paris or from the outer edge of Île-de-France. There is no zonal ladder to climb, so unlike London or the South East, moving further out does not raise your travel cost at all.",
+          "The consequence is that outer living is priced in time rather than money, which is a far more forgiving trade for anyone whose journey is genuinely fast. The suburbs sitting on a métro extension are the obvious winners, and Montreuil, Pantin and Saint-Ouen have all repriced accordingly.",
+          "Employers are legally required to reimburse at least half the cost of a season ticket used for commuting, which puts the effective price of unlimited regional travel low enough that owning a car in Paris is very hard to justify.",
+        ],
+        callout:
+          "There is no zone premium on a Navigo season ticket. Living twenty kilometres out costs the same in fares as living in the Marais, so the whole trade is journey time — which is why the commute figures on this site matter more here than the map does.",
+      },
+      {
+        heading: "The périphérique is a road, not a wall",
+        paragraphs: [
+          "Rents inside the boundary and rents immediately outside it differ by considerably more than the transport difference justifies, and the métro crosses the ring in a dozen places. That gap is the most exploitable fact in the Paris market.",
+          "Line 11 out to Rosny, line 12 to Aubervilliers, line 14 north to Saint-Denis and south towards Orly, line 4 to Bagneux: each extension has pulled a commune into the effective city. The pattern to look for is a place where a terminus opened recently and rents have not fully caught up.",
+          "The counterpart is that the crossing is not uniform. A commune ten minutes' walk from a métro station is a different proposition from one on top of it, and a bus at each end turns a nominally short trip into a long one.",
+        ],
+      },
+      {
+        heading: "Cycling, and the thing that changed fastest",
+        paragraphs: [
+          "Paris has built protected cycle lanes at a pace few European cities have matched, and the rue de Rivoli axis and the north-south routes are now genuinely usable. Cycling has gone from a minority activity to a mainstream commute in about six years.",
+          "Vélib' is the docked hire scheme, cheap on a subscription and useful precisely because you can ride one way and take the métro back. It is the standard answer to a journey the rail network handles badly.",
+          "Car ownership has been made steadily harder on purpose: parking is expensive and scarce, low-emission rules keep tightening, and several central axes are closed to through traffic. If your plan involves a car in Paris, price the parking before you price the flat.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "Does it cost more to commute from the suburbs in Paris?",
+        answer:
+          "Not in fares. The Navigo season pass has been flat-fare across every zone since 2015, so a journey from the outer edge of Île-de-France costs exactly what a journey within Paris costs. The cost of living further out is journey time, and your employer must reimburse at least half the pass either way.",
+      },
+      {
+        question: "Is it worth living just outside the périphérique?",
+        answer:
+          "Very often, yes. Rents drop sharply at the boundary while the métro crosses it in a dozen places, so a commune on a recent line extension can put you fifteen minutes from the centre at a materially lower rent. Check the walk to the station rather than the name of the commune.",
+      },
+      {
+        question: "Do I need a car in Paris?",
+        answer:
+          "No, and the city has spent a decade making sure of it. Parking is scarce and expensive, low-emission rules keep tightening, and the rail network reaches almost everything. A car makes sense only for regular travel outside the region, and even then hiring usually beats owning.",
+      },
+    ],
+    related: [
+      { href: "/paris/commute", label: "Journey times to every destination" },
+      { href: "/paris/arrondissements", label: "Where to live, arrondissement by arrondissement" },
+      { href: "/paris/rent-index", label: "Every area by rent" },
+    ],
+    sources: [
+      "Île-de-France Mobilités Navigo fare information and network maps, 2026",
+      "Société du Grand Paris published opening dates for the Grand Paris Express and métro extensions",
+      "Code du travail article R3261-1 on employer reimbursement of season tickets",
+    ],
+  },
 ];

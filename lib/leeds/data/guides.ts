@@ -280,4 +280,170 @@ export const LEEDS_GUIDES: CityGuide[] = [
       "West Yorkshire Combined Authority mass transit and bus franchising programme documentation",
     ],
   },
+
+  {
+    slug: "renting-in-leeds-first-time",
+    h1: "Renting in Leeds for the first time",
+    metaTitle: "Renting in Leeds for the first time: shares, city-centre flats and deposits",
+    metaDescription:
+      "How the Leeds rental market works — the student effect on the north-west corridor, the city-centre new-build boom, deposit rules and what to check at a viewing.",
+    summary:
+      "Two very different markets in one city: a large student-shaped share sector to the north-west, and a new-build city centre that behaves nothing like it.",
+    category: "Renting",
+    published: PUBLISHED,
+    updated: PUBLISHED,
+    readMinutes: 7,
+    intro: [
+      "Leeds has one of the largest student populations in the country and one of the fastest-growing city-centre residential markets, and those two things have produced a rental market that is really two markets with very little in common.",
+      "The north-western corridor — Hyde Park, Headingley, Burley, Woodhouse — is shaped almost entirely by the academic year. The city centre is shaped by a decade of build-to-rent development and behaves like a different city: professionally managed, furnished, expensive per square foot, and available all year round.",
+      "Knowing which of the two you are shopping in changes what you should look for and when you should look. The legal detail below is England-only and assumes a private assured shorthold tenancy.",
+    ],
+    sections: [
+      {
+        heading: "The student cycle sets the calendar",
+        paragraphs: [
+          "In the north-west corridor the letting year runs well ahead of itself. A large share of the stock for the following September is signed in the winter before, which means that if you look in July you are looking at what is left.",
+          "That has an upside for anyone not tied to the academic year. Outside the corridor — and in the corridor itself in late spring — landlords who have missed the cycle are considerably more willing to negotiate on rent and on terms.",
+          "It also means the shared market is huge and cheap by national standards. Rooms very often include bills, which is worth £100 to £180 a month you are not separately paying, and is the reason the shared route dominates at lower salaries.",
+        ],
+        dataBlock: "rent-spread",
+      },
+      {
+        heading: "The city centre is a different product",
+        paragraphs: [
+          "A decade of build-to-rent has given central Leeds a large stock of professionally managed apartments with concierges, gyms and on-site maintenance. They are furnished, they let all year, and the process is more corporate and less negotiable than dealing with a small landlord.",
+          "Check what the service charge and amenities actually add. A rent quoted inclusive of a gym you will not use is still a rent you are paying, and parking in a central block is usually a separate monthly charge on top.",
+          "The other thing to check is the council tax band, because a new-build one-bed in the centre is frequently banded higher than an older and larger flat a mile out. That difference runs to well over a hundred pounds a month at the top end.",
+        ],
+        callout:
+          "Under the Tenant Fees Act 2019 an agent in England may not charge you for referencing, inventories, contracts or admin. Holding deposits are capped at one week's rent, tenancy deposits at five weeks' where the annual rent is under £50,000.",
+      },
+      {
+        heading: "What to check at a viewing",
+        paragraphs: [
+          "In the older terraced stock, ask about heating and insulation before anything else. A great deal of West Yorkshire's back-to-back and through-terrace housing is solid-walled, and the winter running cost of a poorly insulated one is the difference between two areas' rents several times over. The EPC is the first document to ask for.",
+          "In the corridor specifically, ask whether the property is licensed. Leeds operates selective and mandatory HMO licensing across parts of the city, and a licensed property has been inspected against standards an unlicensed one has not.",
+          "Everywhere, check the tenancy type. Most shares are joint and several, which means a departing flatmate's rent becomes yours until they are replaced. Individual room contracts remove that risk and are worth a small premium.",
+        ],
+      },
+      {
+        heading: "Deposits and the end of the tenancy",
+        paragraphs: [
+          "Your deposit must be protected in an approved scheme within thirty days and you must be given the prescribed information. This is the most commonly missed landlord obligation, and failing it carries a statutory penalty and blocks a section 21 notice.",
+          "Do the inventory carefully on day one. Photograph everything with a date, add whatever the agent left off, and email it in so there is a record you do not control alone. This is what decides the deposit return a year or two later.",
+          "Fair wear and tear is not damage. If a deduction looks unreasonable, the deposit scheme's free adjudication service is the route, and it is the landlord who has to evidence the claim rather than you who has to disprove it.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "When should I start looking for a flat in Leeds?",
+        answer:
+          "It depends which market you are in. In the north-western student corridor the following September's stock is largely signed by the previous winter, so looking in summer means looking at leftovers. City-centre apartments and most of the rest of the city let all year round, and late spring is often the best time to negotiate.",
+      },
+      {
+        question: "Are bills usually included in a Leeds house share?",
+        answer:
+          "Very often, yes — it is much more common here than in many English cities. That is worth roughly £100 to £180 a month you are not separately paying, so a room advertised at £500 all-in is not comparable with a £500 room where bills are extra.",
+      },
+      {
+        question: "Is a city-centre flat in Leeds better value than an older flat further out?",
+        answer:
+          "Rarely on price per square foot, and the council tax band on a new-build is often higher than on a larger older flat a mile away. What you buy is management quality, insulation and a walk to work. Whether that is worth it depends mostly on how much you would otherwise spend on travel.",
+      },
+    ],
+    related: [
+      { href: "/leeds/guides/how-much-do-i-need-to-earn-to-live-in-leeds", label: "What you need to earn" },
+      { href: "/leeds/guides/west-yorkshire-council-tax-explained", label: "Council tax explained" },
+      { href: "/leeds/rent-index", label: "Every area by rent" },
+    ],
+    sources: [
+      "Tenant Fees Act 2019, on permitted payments and deposit caps in England",
+      "Housing Act 2004, sections 213 to 215, on tenancy deposit protection",
+      "Leeds City Council selective and HMO licensing designations, 2026",
+    ],
+  },
+
+  {
+    slug: "your-first-month-in-leeds",
+    h1: "Your first month in Leeds: the checklist",
+    metaTitle: "Your first month in Leeds: a practical checklist",
+    metaDescription:
+      "What to sort in your first four weeks in Leeds and West Yorkshire — deposit protection, council tax and the single-person discount, meters, the GP and the bus.",
+    summary:
+      "The unglamorous list, in the order worth doing it. Two items have legal deadlines and one is worth a quarter of your council tax.",
+    category: "Moving",
+    published: PUBLISHED,
+    updated: PUBLISHED,
+    readMinutes: 6,
+    intro: [
+      "A first month somewhere new is mostly administration, and it usually gets done in the wrong order. A couple of items are time-limited by law, one or two have real money attached, and the rest simply cost less trouble if you do them early.",
+      "This is that list. The legal detail is England-only and it assumes you are renting privately, which covers most people arriving here.",
+    ],
+    sections: [
+      {
+        heading: "Week one: the things with deadlines",
+        paragraphs: [
+          "Check the deposit is protected. In England it must be placed in one of the government-approved schemes within thirty days of the landlord receiving it, and the prescribed information must reach you inside the same window. Ask for the certificate rather than assuming it exists.",
+          "Photograph every room, appliance and existing mark, with dates, and email the set to the agent. That record is what decides the deposit argument at the end, and it is worth twenty minutes now.",
+          "Read the tenancy for the break clause, the notice period and whether liability is joint and several. Those three answers set your options if anything changes, and they are far easier to find out calmly than urgently.",
+        ],
+      },
+      {
+        heading: "Council tax, and the discount that is not automatic",
+        paragraphs: [
+          "Register with the right authority. West Yorkshire is five councils — Leeds, Bradford, Kirklees, Calderdale and Wakefield — and each runs its own move-in form. Which one you need depends on the address, not on how people describe the area.",
+          "Claim the single-person discount if you live alone: 25% off the whole bill, never applied for you, and worth a few hundred pounds a year at any band.",
+          "Students are exempt, and an all-student household pays nothing, but the exemption needs a certificate from the university. Ask for it at the start of term rather than when the reminder arrives.",
+        ],
+        dataBlock: "council-tax",
+        callout:
+          "The five West Yorkshire authorities charge materially different amounts at the same band. If you are choosing between two addresses on either side of a boundary, that difference belongs in the comparison alongside the rent.",
+      },
+      {
+        heading: "Utilities and the meter reading",
+        paragraphs: [
+          "Photograph the meters on move-in day and send the readings to whichever supplier the property is with. It is the cheapest protection available against inheriting the last tenant's usage.",
+          "You can switch supplier immediately; you are not obliged to stay with whoever the landlord left in place. Water is different — there is no supplier choice, and in most rented properties it is billed separately from council tax.",
+          "Order broadband early, because the engineer appointment is the long pole. Check what infrastructure the building has first; several parts of Leeds have full-fibre alternatives that beat the incumbent network on both price and speed.",
+        ],
+      },
+      {
+        heading: "The rest of the month",
+        paragraphs: [
+          "Register with a GP near home. You do not need proof of address or immigration status to register with an NHS practice in England, whatever you may be told at the desk, and it is much better done before you need one.",
+          "Register to vote at the new address, which also helps settle your credit file — small, quick and disproportionately useful later.",
+          "Work out your actual travel arrangement. Leeds has no tram and no metro, so this is buses and heavy rail, and both reward a season or capped ticket over paying per journey. If your commute is a West Yorkshire rail line, price the season ticket against the flexible option before you assume.",
+          "Find your bin day and the recycling rules for your authority, which vary across the five councils more than most people expect.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "Which council do I pay in West Yorkshire?",
+        answer:
+          "Whichever authority the address itself sits in — Leeds, Bradford, Kirklees, Calderdale or Wakefield. Their Band D charges differ noticeably, so on an address near a boundary the council tax difference is a real part of the comparison rather than a detail.",
+      },
+      {
+        question: "How long does my landlord have to protect my deposit?",
+        answer:
+          "Thirty days from receipt, in England, along with giving you the prescribed information about which scheme holds it. If that does not happen you may be entitled to compensation, and the landlord cannot serve a valid section 21 notice until it is put right.",
+      },
+      {
+        question: "Do I need a car in Leeds?",
+        answer:
+          "Not in the city itself, where buses are frequent and much of the inner ring is walkable. Further out it depends entirely on whether you are on a rail corridor — the West Yorkshire lines are good where they run and sparse where they do not, and the gaps are where a car stops being optional.",
+      },
+    ],
+    related: [
+      { href: "/leeds/guides/west-yorkshire-council-tax-explained", label: "Council tax explained" },
+      { href: "/leeds/guides/commuting-in-west-yorkshire", label: "Commuting in West Yorkshire" },
+      { href: "/leeds/boroughs", label: "Council tax by authority" },
+    ],
+    sources: [
+      "Housing Act 2004, sections 213 to 215, on tenancy deposit protection in England",
+      "Local Government Finance Act 1992 and the statutory single-person discount",
+      "NHS England primary medical care policy guidance on patient registration",
+    ],
+  },
 ];

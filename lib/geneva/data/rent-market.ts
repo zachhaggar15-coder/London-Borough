@@ -48,6 +48,11 @@ export const GENEVA_RENT_CHF: Record<string, BedroomBaseline> = {
   Vernier: { oneBed: 1650, twoBed: 2150, threeBed: 2750, allProperties: 2250 },
   Meyrin: { oneBed: 1700, twoBed: 2200, threeBed: 2850, allProperties: 2300 },
   "Chêne-Bougeries": { oneBed: 2000, twoBed: 2700, threeBed: 3550, allProperties: 2850 },
+  // The lowest communal tax multipliers in the canton sit here, which on
+  // a high salary is worth more than the rent difference.
+  Cologny: { oneBed: 2150, twoBed: 2900, threeBed: 3900, allProperties: 3100 },
+  Onex: { oneBed: 1600, twoBed: 2100, threeBed: 2700, allProperties: 2200 },
+  "Plan-les-Ouates": { oneBed: 1750, twoBed: 2300, threeBed: 3000, allProperties: 2400 },
   "Le Grand-Saconnex": { oneBed: 1800, twoBed: 2400, threeBed: 3100, allProperties: 2500 },
   Versoix: { oneBed: 1700, twoBed: 2250, threeBed: 2900, allProperties: 2350 },
   // Converted from euros. Roughly half the cantonal level, which is the
@@ -73,6 +78,8 @@ export type GenevaRoomDistrict =
   | "vernier-meyrin"
   | "chenes"
   | "versoix-saconnex"
+  | "onex-bernex"
+  | "plan-les-ouates"
   | "france-annemasse"
   | "france-gex"
   | "vaud-nyon";
@@ -85,6 +92,8 @@ export const GENEVA_ROOM_DISTRICT_LABELS: Record<GenevaRoomDistrict, string> = {
   "vernier-meyrin": "Vernier and Meyrin",
   chenes: "Chêne-Bougeries, Thônex and Cologny",
   "versoix-saconnex": "Versoix and Le Grand-Saconnex",
+  "onex-bernex": "Onex, Bernex and Confignon",
+  "plan-les-ouates": "Plan-les-Ouates and Troinex",
   "france-annemasse": "Haute-Savoie — Annemasse and Saint-Julien",
   "france-gex": "Ain — Ferney-Voltaire and the Pays de Gex",
   "vaud-nyon": "Vaud — Nyon",
@@ -98,6 +107,8 @@ export const GENEVA_ROOM_AVERAGE_CHF: Record<GenevaRoomDistrict, number> = {
   "vernier-meyrin": 1000,
   chenes: 1200,
   "versoix-saconnex": 1050,
+  "onex-bernex": 950,
+  "plan-les-ouates": 1000,
   "france-annemasse": 600,
   "france-gex": 650,
   "vaud-nyon": 950,

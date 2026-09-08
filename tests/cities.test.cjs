@@ -249,14 +249,31 @@ for (const [id, content] of CITIES) {
 
   test(`${id}: comparison pages stay a curated set, not every pair`, () => {
     const slugs = content.compareSlugs();
-    // Thirty areas would allow over four hundred pairs. A cluster of
-    // interchangeable pages is what got earlier clusters pulled in
-    // AdSense review, so this cap is deliberate rather than incidental.
-    assert.ok(slugs.length > 20, `too few comparisons: ${slugs.length}`);
+    // London was cut to 24 pairs for 95 areas after two AdSense
+    // rejections for low-value content. Every other city is now held to
+    // roughly the same ratio: a comparison earns a page when it is a
+    // decision somebody is making, not because two areas are adjacent.
+    assert.ok(slugs.length >= 8, `too few comparisons: ${slugs.length}`);
     assert.ok(
-      slugs.length < content.areas.length * 3,
-      `comparison cluster has grown to ${slugs.length}`,
+      slugs.length <= content.areas.length * 0.45,
+      `comparison cluster has grown to ${slugs.length} for ` +
+        `${content.areas.length} areas`,
     );
+  });
+
+  test(`${id}: every comparison sits in a themed section on the index`, () => {
+    const sectioned = content
+      .compareSections()
+      .flatMap((section) => section.slugs);
+    assert.deepEqual(
+      [...new Set(sectioned)].sort(),
+      content.compareSlugs(),
+      "compare slugs and the index sections have drifted apart",
+    );
+    for (const section of content.compareSections()) {
+      assert.ok(section.title.length > 0);
+      assert.ok(section.description.length > 30, section.title);
+    }
   });
 
   test(`${id}: every comparison slug resolves to two distinct areas`, () => {

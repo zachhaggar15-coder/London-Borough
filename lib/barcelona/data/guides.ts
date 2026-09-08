@@ -267,4 +267,179 @@ export const BARCELONA_GUIDES: CityGuide[] = [
       "Autoritat del Transport Metropolità published T-usual tariff",
     ],
   },
+
+  {
+    slug: "getting-around-barcelona-without-a-car",
+    h1: "Getting around Barcelona without a car",
+    metaTitle: "Getting around Barcelona without a car: metro, T-usual and Rodalies",
+    metaDescription:
+      "How Barcelona's metro, FGC and Rodalies fit together, what the integrated T-usual travelcard covers, and which areas genuinely work without a car.",
+    summary:
+      "A compact grid, a dense metro and one integrated ticket. The only real question is whether the hill or the port is between you and work.",
+    category: "Transport",
+    published: PUBLISHED,
+    updated: PUBLISHED,
+    readMinutes: 7,
+    intro: [
+      "Barcelona is one of the easiest large cities in Europe to live in without a car. The built-up area is hemmed in by the sea, two rivers and the Collserola ridge, which has kept it dense; the Eixample grid makes almost everything walkable; and the metro reaches nearly all of it.",
+      "The fare system is integrated across every operator in the metropolitan area under a single authority, so a metro, a bus, a tram and a suburban train count as one journey rather than four tickets. That is worth understanding properly, because it is what makes the outer belt viable.",
+      "This guide covers what runs, what it costs, and the places where the network genuinely lets you down.",
+    ],
+    sections: [
+      {
+        heading: "The operators, and why you can mostly ignore them",
+        paragraphs: [
+          "TMB runs the metro and the city buses, and is what most people mean by the network: eight metro lines, high frequency, and the automated L9 and L10 serving the airport and the northern edge.",
+          "FGC runs a separate set of lines out of Plaça Catalunya and Plaça Espanya towards Sarrià, Sant Cugat, Terrassa and Sabadell. Inside the city they behave like extra metro lines; beyond it they are the fastest way through the Collserola tunnel.",
+          "Rodalies is the Renfe suburban network, the layer that reaches the wider region — Badalona, El Prat, Castelldefels, Mataró. It is the least reliable of the three and the most necessary if you live outside the metropolitan core.",
+          "The trams fill in the diagonal gaps, T4 to T6 in the east and T1 to T3 in the west. All of it sits under one fare authority, so which operator you are on matters far less than which zone you are in.",
+        ],
+      },
+      {
+        heading: "The ticket you want is the T-usual",
+        paragraphs: [
+          "The integrated fare system is zonal, and almost the whole city and its immediate neighbours sit in zone 1. Within that, the T-usual is an unlimited thirty-day travelcard for one named person, and it is the default purchase for anybody living here.",
+          "The T-casual is the alternative — ten journeys, transferable between operators inside a time window, and better value only if you genuinely travel a few times a week rather than daily. Under-25s get a substantially discounted T-jove, which is a large enough saving to be worth checking eligibility for.",
+          "Fares in Catalonia have been heavily subsidised in recent years and the discounts have been extended repeatedly, so check the current price rather than an older figure. This is one number that has moved a lot.",
+        ],
+        callout:
+          "L'Hospitalet, Badalona, Santa Coloma, Sant Adrià, Esplugues and Cornellà are all inside zone 1. Living in one of them costs nothing extra in fares, which is a large part of why the metropolitan belt is the best value in this section.",
+      },
+      {
+        heading: "Where the network fails",
+        paragraphs: [
+          "The Collserola ridge is the first problem. Anything on the far side — Sant Cugat, Cerdanyola, Sabadell — depends on the FGC tunnel or the C-16, and both are single points of failure. The FGC service is good, but a job in the Zona Franca reached from Sant Cugat is a genuinely bad commute whatever the map suggests.",
+          "The second is the Zona Franca and the port, which the metro reached only recently and still serves thinly relative to the number of people who work there. Check the specific journey rather than assuming the metro covers it.",
+          "Rodalies reliability is the third. Punctuality on the C-lines has been a live political issue for years, and if your commute depends on a single Rodalies line it is sensible to treat the timetable as optimistic.",
+        ],
+      },
+      {
+        heading: "Bikes, scooters and the superblocks",
+        paragraphs: [
+          "The city has built protected cycle lanes along the main axes, and the flat half of Barcelona is easy riding. Bicing is the municipal hire scheme, cheap on an annual subscription, though joining requires municipal registration.",
+          "The superblock programme has closed sections of the Eixample grid to through traffic and turned junctions into squares. It has made the affected streets far pleasanter to live on and made driving across the district slower, deliberately.",
+          "Where the city stops being flat it stops being cyclable. Gràcia is fine; Vallcarca, Horta and anything on the lower slopes of Collserola involve a climb that no amount of infrastructure fixes. An electric bike changes that answer completely, and a great many people here have made exactly that calculation.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "Do I need a car in Barcelona?",
+        answer:
+          "Almost certainly not if you live inside the metropolitan core. The metro, FGC and tram cover the city densely, the whole inner area is a single fare zone, and parking is scarce and expensive. A car starts to make sense only beyond the Collserola ridge, or for regular travel outside the region.",
+      },
+      {
+        question: "What is the T-usual and should I buy one?",
+        answer:
+          "An unlimited thirty-day travelcard for one named person, valid across metro, bus, tram and suburban rail within your zone. If you commute daily it is the right purchase almost without calculation. If you travel only a few times a week, the ten-journey T-casual works out cheaper.",
+      },
+      {
+        question: "Is it cheaper to live outside Barcelona and commute in?",
+        answer:
+          "Yes, and unusually the fares do not claw the saving back: L'Hospitalet, Badalona, Cornellà and Esplugues sit in the same fare zone as the city itself. The trade is journey time and, on the Rodalies lines, reliability.",
+      },
+    ],
+    related: [
+      { href: "/barcelona/commute", label: "Journey times to every destination" },
+      { href: "/barcelona/districts", label: "Where to live, district by district" },
+      { href: "/barcelona/rent-index", label: "Every area by rent" },
+    ],
+    sources: [
+      "Autoritat del Transport Metropolità (ATM) integrated fare zones and ticket range, 2026",
+      "TMB, FGC and Rodalies de Catalunya published network maps and service patterns, 2026",
+    ],
+  },
+
+  {
+    slug: "the-paperwork-you-need-in-barcelona",
+    h1: "The paperwork you need first: NIE, empadronament and the rest",
+    metaTitle: "NIE, empadronament and the Spanish paperwork for Barcelona",
+    metaDescription:
+      "The order to do Spanish bureaucracy in — NIE, padrón, social security, bank account and healthcare — and why the padrón matters more than anyone tells you.",
+    summary:
+      "Spanish administration is not harder than anywhere else. It is strictly ordered, and doing it out of order costs weeks.",
+    category: "Moving",
+    published: PUBLISHED,
+    updated: PUBLISHED,
+    readMinutes: 7,
+    intro: [
+      "The complaint you hear most often from people who have moved here is not about cost or housing. It is about paperwork — specifically about turning up to an appointment with the wrong document and being sent away to book another one six weeks out.",
+      "Almost all of that is avoidable, because the system is not arbitrary. It is a dependency chain: each step needs the output of the one before it, and the whole thing runs smoothly in order and painfully out of it.",
+      "This guide sets out that order. It is general information rather than immigration advice, and the rules for non-EU nationals have moved repeatedly since Brexit, so confirm the current position with the consulate or a lawyer before relying on any of it.",
+    ],
+    sections: [
+      {
+        heading: "The order to do it in",
+        paragraphs: [
+          "The NIE comes first, because everything else references it. It is your foreigner identification number, it is permanent, and it is required to sign a lease, open a bank account, start a job or take out a phone contract on anything but a prepaid basis.",
+          "The padrón — the empadronament, the municipal population register — comes next, and it is the step people underestimate. It needs an address, so in practice it waits for a lease, and it is what unlocks municipal and regional services including the public health card and school places.",
+          "Social security registration and a Spanish bank account follow, and both are straightforward once the first two exist. Healthcare registration comes last, and depends on the padrón and, for most people, on being inside the social security system.",
+        ],
+        list: {
+          title: "The chain, in order",
+          items: [
+            "NIE, the foreigner identification number, from a police station here or a Spanish consulate before you travel",
+            "A lease, or another address the register will accept as proof",
+            "Empadronament at your local Oficina d'Atenció Ciutadana",
+            "Número de la Seguridad Social, once you have an employer or have registered as autónomo",
+            "A Spanish bank account, which will want the NIE and often the padrón certificate",
+            "The CatSalut health card, which needs the padrón and your social security position",
+          ],
+        },
+        callout:
+          "Register on the padrón in the week your lease starts. It is free, it takes one appointment, and it is the document that unlocks healthcare, school places and most municipal services.",
+      },
+      {
+        heading: "Why the padrón matters more than it sounds",
+        paragraphs: [
+          "The padrón is simply a list of who lives at which address in the municipality, and it is used for far more than statistics. Municipal funding is allocated on it, so the city has every incentive to register you, and a great many entitlements are conditioned on it.",
+          "It is also the document most often required as proof of residence where nothing else will do: enrolling a child in school, accessing the regional health service, certain residency renewals, and registering to vote in municipal elections where you are eligible.",
+          "Landlords occasionally resist providing the paperwork for it. That is a warning sign about the tenancy rather than a normal feature of the market, and it is worth raising before you sign rather than after.",
+        ],
+      },
+      {
+        heading: "Residency, and what changed",
+        paragraphs: [
+          "British citizens are third-country nationals for Spanish immigration purposes and have been since the end of the transition period. The allowance of ninety days in any hundred and eighty covers visits, not living here, and overstaying it has consequences that are enforced.",
+          "Living here means a visa obtained before arrival, in almost every case from the Spanish consulate in the UK. The categories most people use are the work visa tied to an employer, the self-employment route, the student visa, and the non-lucrative visa for those living on their own means without working.",
+          "Spain's digital nomad visa, introduced under the startups law, has changed the picture most for remote workers and carries a distinct tax treatment. It is also the route whose detail has moved most since introduction, so check the current requirements rather than a summary written a year ago.",
+        ],
+      },
+      {
+        heading: "Tax residence creeps up on people",
+        paragraphs: [
+          "Spend more than 183 days in Spain in a calendar year and you are generally tax resident, which means Spain taxes your worldwide income. That catches people who moved mid-year expecting the first year not to count.",
+          "The UK-Spain double taxation treaty prevents the same income being taxed twice, but it does not remove the obligation to file, and the two tax years do not align — Spain runs on the calendar year, the UK to April.",
+          "Catalonia sets its own rates for part of the income tax, so the effective rate here differs from other Spanish regions. The salary pages in this section model the Catalan position for a single person; anything more complicated is a conversation with an accountant, and a cheap one relative to getting it wrong.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "What is the NIE and when do I need it?",
+        answer:
+          "The Número de Identidad de Extranjero, a permanent identification number for foreigners. You need it before you can sign a lease, open a bank account, start a job or take out most contracts, so arrange it first — and it can often be obtained from the Spanish consulate before you travel.",
+      },
+      {
+        question: "What is the empadronament and do I have to do it?",
+        answer:
+          "It is registration on the municipal population register at your address. It is free, it is a legal expectation for residents, and it is the key that unlocks the regional health service, school enrolment and a range of municipal services. Do it as soon as you have a lease.",
+      },
+      {
+        question: "Can I move to Barcelona on the 90-day visa-free allowance?",
+        answer:
+          "No. Ninety days in any hundred and eighty covers visits only, and does not permit living or working here. British citizens now need a visa obtained before arrival — most commonly a work, self-employment, student, digital nomad or non-lucrative visa — and the rules have changed repeatedly, so check the current position with the consulate.",
+      },
+    ],
+    related: [
+      { href: "/barcelona/guides/moving-to-barcelona-from-the-uk", label: "Visas, the NIE and tax residence" },
+      { href: "/barcelona/guides/renting-in-barcelona", label: "Renting, and the rent cap" },
+      { href: "/barcelona/salary", label: "What your salary rents" },
+    ],
+    sources: [
+      "Ajuntament de Barcelona guidance on the padró municipal d'habitants, 2026",
+      "Ministerio del Interior guidance on the NIE and residency for third-country nationals",
+      "Agencia Tributaria residence rules, and the UK-Spain double taxation convention",
+    ],
+  },
 ];

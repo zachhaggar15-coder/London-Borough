@@ -215,5 +215,36 @@ export const GENEVA_INPUT: CityInput = {
   takeHomeMonthly: genevaTakeHomeMonthly,
   taxRegimeLabel: INTERNATIONAL_TAX_LABELS.geneva,
 
-  comparisonsPerArea: 3,
+  comparePairs: [
+    {
+      title: "The border decision",
+      description:
+        "The comparison almost everyone arriving here actually makes, and the one with a permit, a tax return and a healthcare election attached.",
+      pairs: [
+        ["annemasse", "vernier"],
+        ["ferney-voltaire", "meyrin"],
+        ["annemasse", "saint-julien"],
+      ],
+    },
+    {
+      title: "Inside the city",
+      description:
+        "Close calls within the Ville de Genève and the communes that run straight into it.",
+      pairs: [
+        ["eaux-vives", "champel"],
+        ["paquis", "grottes"],
+        ["carouge", "jonction"],
+        ["lancy", "acacias"],
+      ],
+    },
+    {
+      title: "Out along the lake",
+      description:
+        "The Vaud and lakeside options, where a lower tax multiplier is often the real argument.",
+      pairs: [
+        ["nyon", "coppet"],
+        ["versoix", "cologny"],
+      ],
+    },
+  ],
 };

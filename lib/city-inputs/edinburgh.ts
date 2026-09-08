@@ -218,5 +218,37 @@ export const EDINBURGH_INPUT: CityInput = {
   takeHomeMonthly: scotlandTakeHomeMonthly,
   taxRegimeLabel: TAX_REGIME_LABELS.scotland,
 
-  comparisonsPerArea: 3,
+  comparePairs: [
+    {
+      title: "The classic Edinburgh decisions",
+      description:
+        "Close calls inside the city, where the Festival, the hill and the tenement stock all bear on the answer.",
+      pairs: [
+        ["leith", "leith-walk"],
+        ["marchmont", "newington"],
+        ["stockbridge", "new-town"],
+        ["morningside", "colinton"],
+      ],
+    },
+    {
+      title: "Value inside the bypass",
+      description:
+        "For anyone weighing the cheaper city postcodes against each other.",
+      pairs: [
+        ["gorgie-dalry", "abbeyhill"],
+        ["corstorphine", "sighthill"],
+        ["liberton", "craigmillar"],
+      ],
+    },
+    {
+      title: "Coast and county",
+      description:
+        "The Lothian towns, which are separate places rather than suburbs of Edinburgh.",
+      pairs: [
+        ["portobello", "musselburgh"],
+        ["dalkeith", "bonnyrigg"],
+        ["linlithgow", "livingston"],
+      ],
+    },
+  ],
 };
