@@ -899,12 +899,12 @@ export type ComparePageData = {
   a: Neighbourhood;
   b: Neighbourhood;
   rentDiff: number;
-  rentWinner: string;
-  lifestyleWinner: string;
-  connectivityWinner: string;
-  safetyWinner: string;
-  greenWinner: string;
-  nightlifeWinner: string;
+  rentWinner: string | null;
+  lifestyleWinner: string | null;
+  connectivityWinner: string | null;
+  safetyWinner: string | null;
+  greenWinner: string | null;
+  nightlifeWinner: string | null;
   overallRecommendation: string;
 };
 
@@ -916,6 +916,16 @@ export type CompareIndexSection = {
 
 function lifestyleTotal(s: LifestyleScores): number {
   return Object.values(s).reduce((sum, v) => sum + v, 0);
+}
+
+function winnerId(
+  aValue: number,
+  bValue: number,
+  aId: string,
+  bId: string,
+): string | null {
+  if (aValue === bValue) return null;
+  return aValue > bValue ? aId : bId;
 }
 
 export function getComparePageData(slug: string): ComparePageData | null {
@@ -930,18 +940,42 @@ export function getComparePageData(slug: string): ComparePageData | null {
   if (!a || !b) return null;
 
   const rentDiff = b.rent.oneBedMedianGbp - a.rent.oneBedMedianGbp;
-  const rentWinner =
-    a.rent.oneBedMedianGbp <= b.rent.oneBedMedianGbp ? a.id : b.id;
-  const lifestyleWinner =
-    lifestyleTotal(a.lifestyle) >= lifestyleTotal(b.lifestyle) ? a.id : b.id;
-  const connectivityWinner =
-    a.lifestyle.connectivity >= b.lifestyle.connectivity ? a.id : b.id;
-  const safetyWinner =
-    a.lifestyle.safety >= b.lifestyle.safety ? a.id : b.id;
-  const greenWinner =
-    a.lifestyle.greenSpace >= b.lifestyle.greenSpace ? a.id : b.id;
-  const nightlifeWinner =
-    a.lifestyle.nightlife >= b.lifestyle.nightlife ? a.id : b.id;
+  const rentWinner = winnerId(
+    b.rent.oneBedMedianGbp,
+    a.rent.oneBedMedianGbp,
+    a.id,
+    b.id,
+  );
+  const lifestyleWinner = winnerId(
+    lifestyleTotal(a.lifestyle),
+    lifestyleTotal(b.lifestyle),
+    a.id,
+    b.id,
+  );
+  const connectivityWinner = winnerId(
+    a.lifestyle.connectivity,
+    b.lifestyle.connectivity,
+    a.id,
+    b.id,
+  );
+  const safetyWinner = winnerId(
+    a.lifestyle.safety,
+    b.lifestyle.safety,
+    a.id,
+    b.id,
+  );
+  const greenWinner = winnerId(
+    a.lifestyle.greenSpace,
+    b.lifestyle.greenSpace,
+    a.id,
+    b.id,
+  );
+  const nightlifeWinner = winnerId(
+    a.lifestyle.nightlife,
+    b.lifestyle.nightlife,
+    a.id,
+    b.id,
+  );
 
   // Simple overall recommendation
   const aScore =
@@ -950,9 +984,15 @@ export function getComparePageData(slug: string): ComparePageData | null {
     (b.lifestyle.connectivity + b.lifestyle.safety + b.lifestyle.youngProfessionalDensity) / 3;
 
   let overallRecommendation: string;
-  if (a.rent.oneBedMedianGbp <= b.rent.oneBedMedianGbp && aScore >= bScore - 0.5) {
+  if (rentDiff === 0 && Math.abs(aScore - bScore) < 0.05) {
+    overallRecommendation = `${a.name} and ${b.name} are closely matched on price and the core decision scores; the better choice depends on your priorities.`;
+  } else if (rentDiff === 0 && aScore > bScore) {
+    overallRecommendation = `${a.name} scores higher on the core decision measures while average one-bed rent is the same.`;
+  } else if (rentDiff === 0) {
+    overallRecommendation = `${b.name} scores higher on the core decision measures while average one-bed rent is the same.`;
+  } else if (a.rent.oneBedMedianGbp < b.rent.oneBedMedianGbp && aScore >= bScore - 0.5) {
     overallRecommendation = `${a.name} offers better value — similar or better scores at a lower rent.`;
-  } else if (b.rent.oneBedMedianGbp <= a.rent.oneBedMedianGbp && bScore >= aScore - 0.5) {
+  } else if (b.rent.oneBedMedianGbp < a.rent.oneBedMedianGbp && bScore >= aScore - 0.5) {
     overallRecommendation = `${b.name} offers better value — similar or better scores at a lower rent.`;
   } else if (aScore > bScore) {
     overallRecommendation = `${a.name} scores higher overall, though it comes at a rent premium over ${b.name}.`;

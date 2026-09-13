@@ -3,9 +3,9 @@ import type { Neighbourhood, Provenance } from "@/lib/types";
 export function dataQualityLabel(quality: Neighbourhood["dataQuality"]): string {
   switch (quality) {
     case "full":
-      return "Verified";
+      return "Reviewed sources";
     case "sourceBacked":
-      return "Source-backed";
+      return "Source-backed model";
   }
 }
 
@@ -14,9 +14,9 @@ export function dataQualityDescription(
 ): string {
   switch (quality) {
     case "full":
-      return "Backed by live or curated real-world sources.";
+      return "Reviewed against named real-world sources; values can still age or change.";
     case "sourceBacked":
-      return "Curated from public transport, rent, listings, and neighbourhood source checks.";
+      return "A model built from public transport, rent, listings, and neighbourhood source checks; not a live quote.";
   }
 }
 

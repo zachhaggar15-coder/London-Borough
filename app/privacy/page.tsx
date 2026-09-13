@@ -103,8 +103,9 @@ export default function PrivacyPage() {
                 Your shortlist is saved in your own browser, not in a database.
               </li>
               <li>
-                Advertising cookies are only set if you accept them, and you can
-                change your mind at any time.
+                Optional analytics and advertising storage are only used for
+                the categories you accept, and you can change your mind at any
+                time.
               </li>
               <li>Your data is never sold.</li>
             </ul>
@@ -123,7 +124,7 @@ export default function PrivacyPage() {
                 browser data removes it.
               </p>
               <p>
-                <strong className="text-slate-100">Your cookie choice.</strong>{" "}
+                <strong className="text-slate-100">Your privacy choices.</strong>{" "}
                 Your answer to the consent banner is stored locally so you are
                 not asked on every page. This is strictly necessary to honour
                 your preference and cannot be switched off.
@@ -211,14 +212,51 @@ export default function PrivacyPage() {
 
           <section className="mb-10">
             <h2 className="mb-3 text-xl font-semibold">Analytics</h2>
-            <p className="text-slate-300">
-              The site uses Vercel Web Analytics to count page views and see
-              which guides are useful. It is privacy-focused: it does not set
-              cookies, does not use a persistent cross-site identifier, and does
-              not track you across other websites. It reports aggregate figures
-              such as page paths, referrers, country and device type. There is no
-              Google Analytics on this site.
-            </p>
+            <div className="space-y-4 text-slate-300">
+              <p>
+                The site uses Vercel Web Analytics to count page views and see
+                which guides are useful. It does not set analytics cookies or
+                use a persistent cross-site identifier. It reports aggregate
+                information such as page path, referrer, country and device type.
+              </p>
+              <p>
+                If you accept <strong className="text-slate-100">Anonymous analytics</strong>,
+                Google Analytics also records a small set of finder milestones:
+                starting and completing the finder, viewing a recommendation,
+                changing or viewing a shortlist, sharing results, and viewing or
+                submitting the reviewed-shortlist offer. It also records the
+                entry page, broad source type, city, broad price band and counts
+                of recommendations or saved areas where relevant.
+              </p>
+              <p>
+                Exact addresses, postcodes, salary, email address and free-text
+                form answers are not sent to analytics. Google Analytics is not
+                loaded until you accept that category. Testing traffic marked by
+                the operator is labelled as internal so it can be excluded from
+                reporting.
+              </p>
+            </div>
+          </section>
+
+          <section className="mb-10">
+            <h2 className="mb-3 text-xl font-semibold">Reviewed-shortlist requests</h2>
+            <div className="space-y-4 text-slate-300">
+              <p>
+                If the reviewed-shortlist experiment is available and you submit
+                its form, the site sends the information you provide to the
+                operator&rsquo;s configured request receiver. This includes your
+                email, budget, approximate workplace, travel pattern, household,
+                moving timescale, selected priorities, deal-breakers and any
+                areas carried over from your shortlist.
+              </p>
+              <p>
+                That information is used only to assess and respond to your
+                request and, if you proceed, fulfil the review. It is not sent to
+                analytics or sold. Enquiries that do not proceed will be deleted
+                within 90 days; fulfilment and payment records may need to be
+                retained longer where tax or legal rules require it.
+              </p>
+            </div>
           </section>
 
           <section className="mb-10">
@@ -294,8 +332,10 @@ export default function PrivacyPage() {
               What is never collected
             </h2>
             <p className="text-slate-300">
-              There is no account system, so no names, passwords or email
-              addresses are collected by the site itself. The salary, commute and
+              There is no account system, so no names or passwords are collected.
+              An email address and planning details are collected only if you
+              deliberately submit the reviewed-shortlist request described above.
+              The salary, commute and
               lifestyle inputs you enter into the neighbourhood finder are not
               stored against you. Location search and coordinate processing are
               described above. If you use the contact form, it composes a message
@@ -309,13 +349,15 @@ export default function PrivacyPage() {
             <h2 className="mb-3 text-xl font-semibold">Legal bases</h2>
             <ul className="space-y-2 text-slate-300 list-disc pl-5">
               <li>
-                <strong className="text-slate-100">Consent</strong> — advertising
-                cookies and any non-essential storage. Withdrawable at any time.
+                <strong className="text-slate-100">Consent</strong> — optional
+                Google Analytics, advertising cookies and any non-essential
+                storage. Withdrawable at any time.
               </li>
               <li>
                 <strong className="text-slate-100">Legitimate interests</strong>{" "}
-                — cookieless aggregate analytics, abuse prevention, and keeping
-                the site secure and available.
+                — Vercel&rsquo;s cookieless aggregate page analytics, responding
+                to shortlist enquiries, abuse prevention, and keeping the site
+                secure and available.
               </li>
               <li>
                 <strong className="text-slate-100">
@@ -333,8 +375,8 @@ export default function PrivacyPage() {
             <p className="text-slate-300">
               Use the <strong className="text-slate-100">Cookie settings</strong>{" "}
               link in the footer of any page to reopen the banner and change your
-              answer. Declining stops the advertising script loading on
-              subsequent pages. To remove cookies already set by Google, clear
+              answer. Declining stops optional analytics and advertising scripts
+              loading on subsequent pages. To remove cookies already set by Google, clear
               cookies for this site in your browser settings, and use the Google
               opt-out links above.
             </p>

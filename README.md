@@ -82,6 +82,18 @@ Neighbourhoods use launch footprints from `lib/data/polygons.ts`. If a neighbour
 
 Rent assumptions are centralised in `lib/data/rent-market.ts`, with the review workflow in `docs/rent-data-maintenance.md`.
 
+## Analytics and shortlist experiment
+
+The optional GA4 product funnel and the human-reviewed shortlist request flow
+are both disabled by default. Their environment variables, privacy constraints,
+event names, test procedure, launch gate, and weekly checks are documented in
+`docs/measurement-and-shortlist-experiment.md`.
+
+The shortlist flow intentionally has no checkout or payment collection. Do not
+enable it until a private receiver is configured and the production hosting
+plan permits commercial use. Referral providers in `lib/monetisation.ts` also
+remain inactive until a provider and disclosure have been approved.
+
 ## Adding accounts and saved shortlists
 
 1. Install Convex: `npm install convex`

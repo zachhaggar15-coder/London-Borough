@@ -6,6 +6,7 @@ import { SITE_URL } from "@/lib/seo-data";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import CookieConsent from "@/components/CookieConsent";
+import OptionalAnalytics from "@/components/OptionalAnalytics";
 import {
   CITIES_COVERED,
   CONTACT_EMAIL,
@@ -115,6 +116,9 @@ export default function RootLayout({
           above, which is unaffected by the consent state.
         */}
         <CookieConsent />
+        <OptionalAnalytics
+          measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? null}
+        />
         <Analytics />
       </body>
     </html>

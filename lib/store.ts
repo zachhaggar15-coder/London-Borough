@@ -71,6 +71,7 @@ type Actions = {
   setLoadingIsochrone: (loading: boolean) => void;
   selectNeighbourhood: (id: string | null) => void;
   toggleShortlist: (id: string) => void;
+  setShortlist: (ids: string[]) => void;
   removeFromShortlist: (id: string) => void;
   clearShortlist: () => void;
   setTopN: (n: number) => void;
@@ -168,6 +169,12 @@ export const useStore = create<State & Actions>((set) => ({
       } else {
         next = [id, ...s.shortlistedNeighbourhoodIds].slice(0, 4);
       }
+      writeShortlistToStorage(s.cityId, next);
+      return { shortlistedNeighbourhoodIds: next };
+    }),
+  setShortlist: (ids) =>
+    set((s) => {
+      const next = [...new Set(ids)].slice(0, 4);
       writeShortlistToStorage(s.cityId, next);
       return { shortlistedNeighbourhoodIds: next };
     }),

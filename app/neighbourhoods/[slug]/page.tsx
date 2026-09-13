@@ -15,6 +15,7 @@ import {
 import { LIFESTYLE_LABELS, type Neighbourhood } from "@/lib/types";
 import {
   RENT_MARKET_REVIEW_AS_OF,
+  RENT_MARKET_SOURCE_DETAILS,
   RENT_MARKET_SOURCES,
 } from "@/lib/data/rent-market";
 import type { SimilarArea } from "@/lib/similarity";
@@ -25,8 +26,16 @@ import { COUNCIL_TAX_YEAR } from "@/lib/data/council-tax";
 import { zonesOf } from "@/lib/centrality";
 import { DESTINATIONS } from "@/lib/data/destinations";
 import { STATIC_COMMUTE_TIMES } from "@/lib/commute";
+import { COMMUTE_MODEL_REVIEW_AS_OF } from "@/lib/commute-details";
 
 type Props = { params: Promise<{ slug: string }> };
+
+const SEARCH_INTENT_TITLES: Record<string, string> = {
+  archway: `Living in Archway: rent, Tube & area guide (${CONTENT_YEAR})`,
+  bermondsey: `Living in Bermondsey: rent, commute & area guide (${CONTENT_YEAR})`,
+  chiswick: `Living in Chiswick: rent, transport & is it posh? (${CONTENT_YEAR})`,
+  putney: `Living in Putney: rent, transport & is it posh? (${CONTENT_YEAR})`,
+};
 
 export const dynamicParams = false;
 
@@ -44,7 +53,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     zonesOf(n).length > 1
       ? `Zones ${zonesOf(n).join("–")}`
       : `Zone ${zonesOf(n)[0]}`;
-  const title = `Living in ${n.name}: rent & is it worth it? (${CONTENT_YEAR})`;
+  const title =
+    SEARCH_INTENT_TITLES[slug] ??
+    `Living in ${n.name}: rent & is it worth it? (${CONTENT_YEAR})`;
   const description = `Living in ${n.name}? One-bed rent averages £${n.rent.oneBedMedianGbp.toLocaleString()}/month, ${zoneStr}. Is ${n.name} a nice place to live? See transport, lifestyle scores and the verdict.`;
 
   return {
@@ -292,8 +303,8 @@ export default async function NeighbourhoodPage({ params }: Props) {
 
       <div className="min-h-screen bg-slate-950 text-slate-100">
         {/* Nav */}
-        <nav className="border-b border-slate-800 px-6 py-4">
-          <div className="mx-auto max-w-5xl flex items-center gap-2 text-sm text-slate-400">
+        <nav className="border-b border-slate-800 px-4 py-4 sm:px-6">
+          <div className="mx-auto flex max-w-5xl min-w-0 flex-wrap items-center gap-2 text-sm text-slate-400">
             <Link href="/" className="hover:text-white transition-colors">
               Where in London
             </Link>
@@ -305,11 +316,11 @@ export default async function NeighbourhoodPage({ params }: Props) {
               Neighbourhoods
             </Link>
             <span>/</span>
-            <span className="text-slate-200">{n.name}</span>
+            <span className="min-w-0 break-words text-slate-200">{n.name}</span>
           </div>
         </nav>
 
-        <main className="mx-auto max-w-5xl px-6 py-12">
+        <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-12">
           {/* Header */}
           <header className="mb-10">
             <div className="flex flex-wrap gap-2 mb-3">
@@ -320,7 +331,7 @@ export default async function NeighbourhoodPage({ params }: Props) {
                 {zoneStr}
               </span>
             </div>
-            <h1 className="text-4xl font-bold tracking-tight mb-4">
+            <h1 className="mb-4 break-words text-3xl font-bold tracking-tight sm:text-4xl">
               Living in {n.name}
             </h1>
             <p className="text-lg text-slate-300 max-w-2xl">{n.summary}</p>
@@ -776,7 +787,31 @@ export default async function NeighbourhoodPage({ params }: Props) {
               Rent estimates use {provenanceLabel(n.rent)}. Commute estimates
               combine reviewed static journey times for common destinations with
               distance-based fallback estimates where no reviewed pair exists.
+              The commute method was last audited on{" "}
+              <time dateTime={COMMUTE_MODEL_REVIEW_AS_OF}>{COMMUTE_MODEL_REVIEW_AS_OF}</time>.
             </p>
+            <ul className="mt-3 space-y-1 text-xs text-slate-400">
+              {RENT_MARKET_SOURCE_DETAILS.map((source) => (
+                <li key={source.label}>
+                  <a
+                    href={source.url}
+                    target={source.url.startsWith("http") ? "_blank" : undefined}
+                    rel={source.url.startsWith("http") ? "noopener noreferrer nofollow" : undefined}
+                    className="underline decoration-slate-700 underline-offset-2 hover:text-white"
+                  >
+                    {source.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <a
+              href="https://tfl.gov.uk/plan-a-journey/"
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="mt-3 inline-block text-xs text-sky-300 underline underline-offset-2 hover:text-sky-100"
+            >
+              Verify an exact journey with TfL
+            </a>
           </section>
 
           {/* CTA */}
@@ -789,7 +824,7 @@ export default async function NeighbourhoodPage({ params }: Props) {
               personalised neighbourhood ranking that includes {n.name}.
             </p>
             <Link
-              href="/"
+              href={`/?source=neighbourhood&compare=${n.id}#finder`}
               className="inline-block rounded-lg bg-emerald-600 hover:bg-emerald-500 px-6 py-3 font-medium transition-colors"
             >
               Open the discovery tool →

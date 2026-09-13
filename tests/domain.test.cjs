@@ -104,6 +104,7 @@ const {
   getAllCommuteSlugs,
   getAllNeighbourhoodSlugs,
   getCompareIndexSections,
+  getComparePageData,
   getCompareStaticParams,
   getFeaturedCompareSlugs,
   getIndexableCompareSlugs,
@@ -113,6 +114,27 @@ const {
   SALARY_LEVELS,
   ukTakeHomeMonthly,
 } = jiti("../lib/seo-data.ts");
+
+test("comparison pages describe exact ties without inventing a winner", () => {
+  const comparison = getComparePageData("wimbledon-vs-richmond");
+  assert.ok(comparison);
+  assert.equal(comparison.rentWinner, null);
+  assert.equal(comparison.connectivityWinner, null);
+  assert.equal(comparison.safetyWinner, null);
+  assert.equal(comparison.greenWinner, null);
+  assert.match(comparison.overallRecommendation, /same/i);
+  assert.doesNotMatch(comparison.overallRecommendation, /lower rent/i);
+});
+
+test("comparison rent winner is always the cheaper area", () => {
+  const comparison = getComparePageData("mayfair-vs-chelsea");
+  assert.ok(comparison);
+  const expected =
+    comparison.a.rent.oneBedMedianGbp < comparison.b.rent.oneBedMedianGbp
+      ? comparison.a.id
+      : comparison.b.id;
+  assert.equal(comparison.rentWinner, expected);
+});
 const {
   MONETISATION_PROVIDERS,
   activeProvidersForSlot,

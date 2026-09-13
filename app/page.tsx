@@ -117,7 +117,7 @@ export default function HomePage() {
       />
 
       {/* ── Interactive tool ─────────────────────────────────────────── */}
-      <div className="h-[85vh] min-h-[560px] w-full overflow-hidden">
+      <div id="finder" className="h-[85vh] min-h-[560px] w-full overflow-hidden">
         <HomeClient />
       </div>
 

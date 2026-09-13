@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS, trackEvent, trackEventOnce } from "@/lib/analytics";
 import { gbp } from "@/lib/affordability";
 import {
   personalResultsSummary,
@@ -54,6 +54,7 @@ export default function ResultsSummaryPanel() {
       }
       trackEvent(ANALYTICS_EVENTS.resultsShared, {
         top_area: sharedIds[0] ?? summary.bestOverall?.neighbourhood.id,
+        surface: shortlistedIds.length > 0 ? "shortlist" : "finder_results",
       });
     } catch {
       await navigator.clipboard.writeText(url);
@@ -171,10 +172,11 @@ function MiniPick({
     <button
       type="button"
       onClick={() => {
-        trackEvent(ANALYTICS_EVENTS.recommendationClicked, {
-          area: scored.neighbourhood.id,
-          surface: "results_summary",
-        });
+        trackEventOnce(
+          ANALYTICS_EVENTS.recommendationViewed,
+          { area: scored.neighbourhood.id, surface: "results_summary" },
+          `recommendation:${scored.neighbourhood.id}:detail-drawer`,
+        );
         onClick();
       }}
       className="rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-left hover:border-slate-600"

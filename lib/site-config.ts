@@ -36,7 +36,7 @@ export const NETWORK_DESCRIPTION =
   "An independent, data-driven guide to choosing where to live — five British city regions, plus Geneva, Paris and Barcelona for anyone moving abroad — by commute, rent and lifestyle.";
 
 /** Last substantive review of the Privacy Policy and Terms. */
-export const POLICY_LAST_UPDATED = "2026-08-30";
+export const POLICY_LAST_UPDATED = "2026-09-13";
 
 /**
  * The year used in year-stamped page titles ("… (2026 guide)").

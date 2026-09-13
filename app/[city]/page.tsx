@@ -128,7 +128,7 @@ export default async function CityHomePage({ params }: Props) {
       />
 
       {/* ── Interactive tool ─────────────────────────────────────────── */}
-      <div className="h-[85vh] min-h-[560px] w-full overflow-hidden">
+      <div id="finder" className="h-[85vh] min-h-[560px] w-full overflow-hidden">
         <CityToolClient city={city} />
       </div>
 

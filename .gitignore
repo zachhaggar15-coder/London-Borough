@@ -5,6 +5,7 @@ node_modules/
 
 # Next.js
 .next/
+.next-prebuild-cache/
 out/
 build/
 
@@ -31,3 +32,6 @@ next-env.d.ts
 
 # Convex
 .convex/
+
+.vercel
+.env*

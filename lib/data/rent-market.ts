@@ -11,11 +11,24 @@ export const ROOM_SOURCE: Provenance = {
   asOf: RENT_MARKET_REVIEW_AS_OF,
 };
 
-export const RENT_MARKET_SOURCES = [
-  "ONS Price Index of Private Rents, borough averages by bedroom count, July 2026",
-  "Rightmove, Zoopla, OpenRent, and SpareRoom visible listing samples",
-  "Manual neighbourhood review for local premium or discount against the borough baseline",
+export const RENT_MARKET_SOURCE_DETAILS = [
+  {
+    label: "ONS Price Index of Private Rents, borough averages by bedroom count, July 2026",
+    url: "https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/privaterentandhousepricesuk",
+  },
+  {
+    label: "Rightmove, Zoopla, OpenRent, and SpareRoom visible listing samples",
+    url: "https://www.rightmove.co.uk/property-to-rent.html",
+  },
+  {
+    label: "Manual neighbourhood review for local premium or discount against the borough baseline",
+    url: "/methodology",
+  },
 ] as const;
+
+export const RENT_MARKET_SOURCES = RENT_MARKET_SOURCE_DETAILS.map(
+  (source) => source.label,
+);
 
 export const RENT_REVIEW_FIELDS = [
   "oneBedMedianGbp",

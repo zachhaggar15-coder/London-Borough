@@ -16,10 +16,14 @@ import {
 import { LIFESTYLE_LABELS } from "@/lib/types";
 import {
   RENT_MARKET_REVIEW_AS_OF,
+  RENT_MARKET_SOURCE_DETAILS,
   RENT_MARKET_SOURCES,
 } from "@/lib/data/rent-market";
 import { CONTENT_YEAR } from "@/lib/site-config";
 import { zonesOf } from "@/lib/centrality";
+import CommercialOffer from "@/components/CommercialOffer";
+import { REVIEWED_SHORTLIST_ENABLED } from "@/lib/commercial";
+import { COMMUTE_MODEL_REVIEW_AS_OF } from "@/lib/commute-details";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -147,17 +151,18 @@ export default async function ComparePage({ params }: Props) {
       : rentDiff > 0
       ? `${a.name} is cheaper by about £${Math.abs(rentDiff).toLocaleString()} per month.`
       : `${b.name} is cheaper by about £${Math.abs(rentDiff).toLocaleString()} per month.`;
-  const lifestyleArea = lifestyleWinner === a.id ? a.name : b.name;
-  const transportWinner =
-    connectivityWinner === a.id ? a.name : b.name;
-  const greenSpaceWinner = greenWinner === a.id ? a.name : b.name;
-  const nightlifeArea = nightlifeWinner === a.id ? a.name : b.name;
-  const safetyArea = safetyWinner === a.id ? a.name : b.name;
+  const winnerName = (winner: string | null): string | null =>
+    winner === a.id ? a.name : winner === b.id ? b.name : null;
+  const lifestyleArea = winnerName(lifestyleWinner);
+  const transportWinner = winnerName(connectivityWinner);
+  const greenSpaceWinner = winnerName(greenWinner);
+  const nightlifeArea = winnerName(nightlifeWinner);
+  const safetyArea = winnerName(safetyWinner);
 
   // ── Data-driven copy (unique per pair, no fabricated numbers) ──────
   const rentGap = Math.abs(rentDiff);
-  const cheaperN = rentWinner === a.id ? a : b;
-  const dearerN = rentWinner === a.id ? b : a;
+  const cheaperN = rentWinner === b.id ? b : a;
+  const dearerN = rentWinner === b.id ? a : b;
 
   const zoneLabel = (n: typeof a): string =>
     zonesOf(n).length > 1
@@ -203,11 +208,18 @@ export default async function ComparePage({ params }: Props) {
 
   // Winner sentence — collapses when one area leads several dimensions so the
   // copy doesn't repeat the same name three times.
-  const dimSweep =
-    transportWinner === greenSpaceWinner && greenSpaceWinner === nightlifeArea;
-  const winnerSentence = dimSweep
-    ? `${transportWinner} leads on transport, green space and nightlife`
-    : `${transportWinner} has the stronger transport score, ${greenSpaceWinner} the better green space and ${nightlifeArea} the livelier nights`;
+  const metricSentence = (
+    winner: string | null,
+    metric: string,
+  ): string =>
+    winner ? `${winner} scores higher for ${metric}` : `they are tied for ${metric}`;
+  const winnerSentence = `${metricSentence(
+    transportWinner,
+    "transport",
+  )}, ${metricSentence(greenSpaceWinner, "green space")}, and ${metricSentence(
+    nightlifeArea,
+    "nightlife",
+  )}`;
 
   // Unique intro — structure varies by whether rents diverge.
   const introParagraph =
@@ -303,8 +315,8 @@ export default async function ComparePage({ params }: Props) {
       />
 
       <div className="min-h-screen bg-slate-950 text-slate-100">
-        <nav className="border-b border-slate-800 px-6 py-4">
-          <div className="mx-auto max-w-5xl flex items-center gap-2 text-sm text-slate-400">
+        <nav className="border-b border-slate-800 px-4 py-4 sm:px-6">
+          <div className="mx-auto flex max-w-5xl min-w-0 flex-wrap items-center gap-2 text-sm text-slate-400">
             <Link href="/" className="hover:text-white transition-colors">
               Where in London
             </Link>
@@ -313,16 +325,16 @@ export default async function ComparePage({ params }: Props) {
               Compare
             </Link>
             <span>/</span>
-            <span className="text-slate-200">
+            <span className="min-w-0 break-words text-slate-200">
               {a.name} vs {b.name}
             </span>
           </div>
         </nav>
 
-        <main className="mx-auto max-w-5xl px-6 py-12">
+        <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-12">
           {/* Header */}
           <header className="mb-10">
-            <h1 className="text-4xl font-bold tracking-tight mb-4">
+            <h1 className="break-words text-3xl font-bold tracking-tight mb-4 sm:text-4xl">
               {a.name} vs {b.name}
             </h1>
             <p className="text-lg text-slate-300 max-w-2xl">{introParagraph}</p>
@@ -362,8 +374,18 @@ export default async function ComparePage({ params }: Props) {
             <div className="grid gap-3 sm:grid-cols-3">
               {[
                 ["Rent", rentSummary],
-                ["Transport", `${transportWinner} has the stronger transport score.`],
-                ["Lifestyle", `${lifestyleArea} has the stronger overall lifestyle profile.`],
+                [
+                  "Transport",
+                  transportWinner
+                    ? `${transportWinner} has the stronger transport score.`
+                    : `Both areas have the same transport score.`,
+                ],
+                [
+                  "Lifestyle",
+                  lifestyleArea
+                    ? `${lifestyleArea} has the stronger overall lifestyle profile.`
+                    : `Both areas have the same overall lifestyle score.`,
+                ],
               ].map(([label, value]) => (
                 <div
                   key={label}
@@ -376,6 +398,10 @@ export default async function ComparePage({ params }: Props) {
             </div>
           </section>
 
+          {REVIEWED_SHORTLIST_ENABLED && (
+            <CommercialOffer surface="comparison" areas={[a.id, b.id]} />
+          )}
+
           {/* Rent comparison */}
           <section className="mb-10">
             <h2 className="text-xl font-semibold mb-4">Rent comparison</h2>
@@ -384,7 +410,7 @@ export default async function ComparePage({ params }: Props) {
                 <div
                   key={n.id}
                   className={`rounded-lg border p-5 ${
-                    n.id === rentWinner
+                    rentWinner !== null && n.id === rentWinner
                       ? "border-emerald-700/60 bg-emerald-950/20"
                       : "border-slate-800 bg-slate-900"
                   }`}
@@ -397,7 +423,7 @@ export default async function ComparePage({ params }: Props) {
                       >
                         {n.name}
                       </Link>
-                      <Winner isWinner={n.id === rentWinner} />
+                      <Winner isWinner={rentWinner !== null && n.id === rentWinner} />
                     </h3>
                     <Link
                       href={`/boroughs/${boroughSlug(
@@ -511,7 +537,17 @@ export default async function ComparePage({ params }: Props) {
                 </p>
                 <p className="mt-2 text-xs text-slate-500">
                   Straight-line estimate at an average transit speed; real
-                  journeys with interchanges may take longer.
+                  journeys with interchanges may take longer. Estimate method
+                  reviewed <time dateTime={COMMUTE_MODEL_REVIEW_AS_OF}>{COMMUTE_MODEL_REVIEW_AS_OF}</time>.{" "}
+                  <a
+                    href="https://tfl.gov.uk/plan-a-journey/"
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    className="text-sky-300 underline underline-offset-2 hover:text-sky-100"
+                  >
+                    Check the current route with TfL
+                  </a>
+                  .
                 </p>
               </div>
             )}
@@ -616,9 +652,15 @@ export default async function ComparePage({ params }: Props) {
               </div>
             </div>
             <p className="mt-5 text-sm text-slate-400">
-              For green space, {greenSpaceWinner} scores better. For nightlife,
-              {nightlifeArea} has the edge. On safety, {safetyArea} scores
-              higher in the current model.
+              {greenSpaceWinner
+                ? `For green space, ${greenSpaceWinner} scores higher.`
+                : "The areas are tied for green space."}{" "}
+              {nightlifeArea
+                ? `For nightlife, ${nightlifeArea} has the edge.`
+                : "They are tied for nightlife."}{" "}
+              {safetyArea
+                ? `On safety, ${safetyArea} scores higher in the current model.`
+                : "They have the same safety score in the current model."}
             </p>
           </section>
 
@@ -721,10 +763,17 @@ export default async function ComparePage({ params }: Props) {
               .
             </p>
             <ul className="space-y-2 text-sm text-slate-400">
-              {RENT_MARKET_SOURCES.map((source) => (
-                <li key={source} className="flex gap-2">
+              {RENT_MARKET_SOURCE_DETAILS.map((source) => (
+                <li key={source.label} className="flex gap-2">
                   <span className="text-emerald-400">-</span>
-                  {source}
+                  <a
+                    href={source.url}
+                    target={source.url.startsWith("http") ? "_blank" : undefined}
+                    rel={source.url.startsWith("http") ? "noopener noreferrer nofollow" : undefined}
+                    className="underline decoration-slate-700 underline-offset-2 hover:text-white"
+                  >
+                    {source.label}
+                  </a>
                 </li>
               ))}
             </ul>
@@ -741,7 +790,7 @@ export default async function ComparePage({ params }: Props) {
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <Link
-                href="/"
+                href={`/?source=comparison&compare=${a.id},${b.id}#finder`}
                 className="inline-block rounded-lg bg-emerald-600 hover:bg-emerald-500 px-6 py-3 font-medium transition-colors"
               >
                 Open the discovery tool →

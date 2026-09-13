@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS, trackEvent, trackEventOnce } from "@/lib/analytics";
 import { gbp } from "@/lib/affordability";
 import { comparisonDecision } from "@/lib/decision";
 import { formatApproxMinutes } from "@/lib/format";
@@ -12,6 +12,8 @@ import { useStore } from "@/lib/store";
 import { useCityData } from "@/components/CityDataProvider";
 import type { ScoredNeighbourhood } from "@/lib/types";
 import DataQualityBadge from "@/components/DataQualityBadge";
+import CommercialOffer from "@/components/CommercialOffer";
+import { REVIEWED_SHORTLIST_ENABLED } from "@/lib/commercial";
 
 export default function ShortlistPanel() {
   const ids = useStore((s) => s.shortlistedNeighbourhoodIds);
@@ -40,6 +42,8 @@ export default function ShortlistPanel() {
     () => (scored.length >= 2 ? comparisonDecision(scored, query) : null),
     [scored, query],
   );
+  const shortlistAreaKey = scored.map((item) => item.neighbourhood.id).join(",");
+  const shortlistCount = scored.length;
 
   async function shareShortlist() {
     const url = shareUrlForState(window.location.origin, query, ids);
@@ -66,13 +70,14 @@ export default function ShortlistPanel() {
   }
 
   useEffect(() => {
-    if (scored.length >= 2) {
-      trackEvent(ANALYTICS_EVENTS.comparisonStarted, {
-        count: scored.length,
-        areas: scored.map((item) => item.neighbourhood.id).join(","),
-      });
+    if (shortlistCount >= 2) {
+      trackEventOnce(
+        ANALYTICS_EVENTS.shortlistViewed,
+        { shortlist_count: shortlistCount },
+        `shortlist-viewed:${shortlistAreaKey}`,
+      );
     }
-  }, [scored]);
+  }, [shortlistAreaKey, shortlistCount]);
 
   if (scored.length === 0) {
     return (
@@ -107,7 +112,13 @@ export default function ShortlistPanel() {
           </button>
           <button
             type="button"
-            onClick={clearShortlist}
+            onClick={() => {
+              clearShortlist();
+              trackEvent(ANALYTICS_EVENTS.shortlistChanged, {
+                action: "clear",
+                shortlist_count: 0,
+              });
+            }}
             className="text-[11px] text-slate-500 hover:text-slate-200"
           >
             Clear
@@ -143,7 +154,14 @@ export default function ShortlistPanel() {
               </button>
               <button
                 type="button"
-                onClick={() => removeFromShortlist(s.neighbourhood.id)}
+                onClick={() => {
+                  removeFromShortlist(s.neighbourhood.id);
+                  trackEvent(ANALYTICS_EVENTS.shortlistChanged, {
+                    area: s.neighbourhood.id,
+                    action: "remove",
+                    shortlist_count: Math.max(0, scored.length - 1),
+                  });
+                }}
                 className="shrink-0 text-xs text-slate-500 hover:text-slate-200"
                 aria-label={`Remove ${s.neighbourhood.name} from compare`}
               >
@@ -163,12 +181,6 @@ export default function ShortlistPanel() {
             <Link
               href={links.compare}
               className="text-[11px] text-slate-500 hover:text-slate-200"
-              onClick={() =>
-                trackEvent(ANALYTICS_EVENTS.comparisonCompleted, {
-                  surface: "shortlist_panel",
-                  count: scored.length,
-                })
-              }
             >
               More guides
             </Link>
@@ -229,6 +241,13 @@ export default function ShortlistPanel() {
             ))}
           </div>
         </div>
+      )}
+      {decision && REVIEWED_SHORTLIST_ENABLED && (
+        <CommercialOffer
+          surface="finder_shortlist"
+          areas={scored.map((item) => item.neighbourhood.id)}
+          compact
+        />
       )}
     </div>
   );

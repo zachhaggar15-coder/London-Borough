@@ -147,8 +147,8 @@ export default function ContactPage() {
               >
                 privacy policy
               </Link>{" "}
-              sets out what is and is not collected, and how to withdraw
-              consent for advertising cookies.
+              sets out what is and is not collected, and how to change analytics
+              or advertising consent.
             </p>
           </section>
 

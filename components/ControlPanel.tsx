@@ -35,7 +35,7 @@ import {
   RENT_BASIS_OPTIONS,
   rentBasisLabel,
 } from "@/lib/rent";
-import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
+import { markFinderStarted } from "@/lib/analytics";
 
 export default function ControlPanel() {
   const cityData = useCityData();
@@ -95,7 +95,7 @@ export default function ControlPanel() {
       centroid: { lat: r.lat, lng: r.lng },
     };
     setDestination(dest);
-    trackEvent(ANALYTICS_EVENTS.filtersChanged, {
+    markFinderStarted(cityData.city.id, {
       field: "destination",
       destination_type: "custom",
     });
@@ -201,7 +201,7 @@ export default function ControlPanel() {
               const dest = destinations.find((d) => d.id === e.target.value);
               if (dest) {
                 setDestination(dest);
-                trackEvent(ANALYTICS_EVENTS.filtersChanged, {
+                markFinderStarted(cityData.city.id, {
                   field: "destination",
                   destination: dest.id,
                 });
@@ -243,7 +243,7 @@ export default function ControlPanel() {
           onChange={(e) => {
             const minutes = parseInt(e.target.value, 10);
             setMaxCommute(minutes);
-            trackEvent(ANALYTICS_EVENTS.filtersChanged, {
+            markFinderStarted(cityData.city.id, {
               field: "max_commute",
               value: minutes,
             });
@@ -276,7 +276,7 @@ export default function ControlPanel() {
             value={query.annualSalaryGbp ?? ""}
             onChange={(e) => {
               setSalary(e.target.value === "" ? null : parseInt(e.target.value, 10));
-              trackEvent(ANALYTICS_EVENTS.filtersChanged, {
+              markFinderStarted(cityData.city.id, {
                 field: "salary_present",
                 value: e.target.value !== "",
               });
@@ -307,7 +307,7 @@ export default function ControlPanel() {
                   const budget =
                     e.target.value === "" ? null : parseInt(e.target.value, 10);
                   setRentBudget(budget);
-                  trackEvent(ANALYTICS_EVENTS.filtersChanged, {
+                  markFinderStarted(cityData.city.id, {
                     field: "rent_budget",
                     value: budget == null ? "cleared" : "set",
                   });
@@ -336,7 +336,7 @@ export default function ControlPanel() {
           value={query.rentBasis}
           onChange={(e) => {
             setRentBasis(e.target.value as RentBasis);
-            trackEvent(ANALYTICS_EVENTS.filtersChanged, {
+            markFinderStarted(cityData.city.id, {
               field: "rent_basis",
               value: e.target.value,
             });
@@ -369,7 +369,7 @@ export default function ControlPanel() {
                 type="button"
                 onClick={() => {
                   setPersonality(isActive ? null : p.key);
-                  trackEvent(ANALYTICS_EVENTS.filtersChanged, {
+                  markFinderStarted(cityData.city.id, {
                     field: "personality",
                     value: isActive ? "cleared" : p.key,
                   });
@@ -416,7 +416,7 @@ export default function ControlPanel() {
                 onChange={(e) => {
                   const share = parseInt(e.target.value, 10) / 100;
                   setRentBudgetShareOfTakeHome(share);
-                  trackEvent(ANALYTICS_EVENTS.filtersChanged, {
+                  markFinderStarted(cityData.city.id, {
                     field: "rent_budget_share",
                     value: Math.round(share * 100),
                   });
@@ -447,7 +447,7 @@ export default function ControlPanel() {
                     onChange={(e) => {
                       const value = parseFloat(e.target.value);
                       setLifestyleWeight(key, value);
-                      trackEvent(ANALYTICS_EVENTS.filtersChanged, {
+                      markFinderStarted(cityData.city.id, {
                         field: "lifestyle_weight",
                         dimension: key,
                         value,

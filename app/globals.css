@@ -9,6 +9,12 @@ html, body, #__next {
   height: 100%;
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 /* A clean, opinionated range slider used in the ControlPanel. */
 input[type="range"] {
   -webkit-appearance: none;

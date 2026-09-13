@@ -10,7 +10,11 @@ import ResultsSummaryPanel from "@/components/ResultsSummaryPanel";
 import ShortlistPanel from "@/components/ShortlistPanel";
 import DetailDrawer from "@/components/DetailDrawer";
 import { CityDataProvider, type CityData } from "@/components/CityDataProvider";
-import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
+import {
+  ANALYTICS_EVENTS,
+  hasFinderStarted,
+  trackEventOnce,
+} from "@/lib/analytics";
 
 /**
  * The interactive tool, for whichever city it is handed.
@@ -55,6 +59,7 @@ function FinderShell({ cityData }: { cityData: CityData }) {
   const setLoadingCommute = useStore((s) => s.setLoadingCommute);
   const setIsochrone = useStore((s) => s.setIsochrone);
   const setLoadingIsochrone = useStore((s) => s.setLoadingIsochrone);
+  const setShortlist = useStore((s) => s.setShortlist);
   const isPanelCollapsed = useStore((s) => s.isPanelCollapsed);
   const togglePanelCollapsed = useStore((s) => s.togglePanelCollapsed);
 
@@ -66,8 +71,14 @@ function FinderShell({ cityData }: { cityData: CityData }) {
   }
 
   useEffect(() => {
-    trackEvent(ANALYTICS_EVENTS.finderStarted);
-  }, []);
+    if (city.id !== "london") return;
+    const params = new URLSearchParams(window.location.search);
+    const compared = (params.get("compare") ?? "")
+      .split(",")
+      .filter((id) => Boolean(cityData.neighbourhoodsById[id]))
+      .slice(0, 4);
+    if (compared.length >= 1) setShortlist(compared);
+  }, [city.id, cityData.neighbourhoodsById, setShortlist]);
 
   useEffect(() => {
     if (!destination) {
@@ -82,10 +93,19 @@ function FinderShell({ cityData }: { cityData: CityData }) {
         if (cancelled) return;
         setCommute(minutes);
         setCommuteSources(sources);
-        trackEvent(ANALYTICS_EVENTS.finderCompleted, {
-          destination: destination.id,
-          result_count: Object.keys(minutes).length,
-        });
+        if (hasFinderStarted(city.id)) {
+          trackEventOnce(
+            ANALYTICS_EVENTS.finderCompleted,
+            {
+              surface: city.id,
+              destination_type: destination.id.startsWith("custom-")
+                ? "custom"
+                : "preset",
+              result_count: Object.keys(minutes).length,
+            },
+            `finder-completed:${city.id}:${destination.id}:${useStore.getState().query.maxCommuteMinutes}`,
+          );
+        }
       })
       .catch((err) => {
         console.error("Commute lookup failed", err);
@@ -100,7 +120,14 @@ function FinderShell({ cityData }: { cityData: CityData }) {
     return () => {
       cancelled = true;
     };
-  }, [destination, fetchCommute, setCommute, setCommuteSources, setLoadingCommute]);
+  }, [
+    city.id,
+    destination,
+    fetchCommute,
+    setCommute,
+    setCommuteSources,
+    setLoadingCommute,
+  ]);
 
   useEffect(() => {
     if (!destination) {

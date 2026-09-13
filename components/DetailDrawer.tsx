@@ -6,12 +6,12 @@
 
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useStore } from "@/lib/store";
 import { useCityData } from "@/components/CityDataProvider";
 import { LIFESTYLE_KEYS, LIFESTYLE_LABELS } from "@/lib/types";
 import { gbp } from "@/lib/affordability";
-import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS, trackEvent, trackEventOnce } from "@/lib/analytics";
 import { recommendationExplanation } from "@/lib/decision";
 import { formatApproxMinutes } from "@/lib/format";
 import { strengthInsights, tradeoffInsights } from "@/lib/insights";
@@ -51,6 +51,16 @@ export default function DetailDrawer() {
     () => scoreAll(neighbourhoods, commute, query, scoringAdapters),
     [neighbourhoods, commute, query, scoringAdapters],
   );
+  const viewedAreaId = data?.neighbourhood.id;
+
+  useEffect(() => {
+    if (!viewedAreaId) return;
+    trackEventOnce(
+      ANALYTICS_EVENTS.recommendationViewed,
+      { area: viewedAreaId, surface: "detail_drawer" },
+      `recommendation:${viewedAreaId}:detail-drawer`,
+    );
+  }, [viewedAreaId]);
 
   if (!data) return null;
 
@@ -90,9 +100,12 @@ export default function DetailDrawer() {
                 type="button"
                 onClick={() => {
                   toggleShortlist(n.id);
-                  trackEvent(ANALYTICS_EVENTS.neighbourhoodShortlisted, {
+                  trackEvent(ANALYTICS_EVENTS.shortlistChanged, {
                     area: n.id,
                     action: isCompared ? "remove" : "add",
+                    shortlist_count: isCompared
+                      ? Math.max(0, shortlistedIds.length - 1)
+                      : Math.min(4, shortlistedIds.length + 1),
                   });
                 }}
                 className={[
@@ -226,6 +239,14 @@ export default function DetailDrawer() {
               </div>
             ))}
           </div>
+          <a
+            href="https://tfl.gov.uk/plan-a-journey/"
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            className="mt-3 inline-block text-xs text-sky-300 underline underline-offset-2 hover:text-sky-100"
+          >
+            Verify this journey with TfL before booking a viewing
+          </a>
           {route.destinationLines.length > 0 && (
             <div className="mt-2 text-[11px] text-slate-500">
               Destination station lines: {route.destinationLines.join(", ")}
@@ -296,7 +317,7 @@ export default function DetailDrawer() {
       </div>
 
       <div className="mt-3 text-[10px] uppercase tracking-wider text-slate-600">
-        Sources: TfL journey data, ONS rent baseline, listing samples, and curated area review
+        Sources: TfL where live routing is enabled; otherwise reviewed or distance estimates, ONS rent baseline, listing samples, and curated area review
       </div>
     </div>
   );

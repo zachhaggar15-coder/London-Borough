@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
+import {
+  ANALYTICS_EVENTS,
+  hasFinderStarted,
+  markFinderStarted,
+  trackEventOnce,
+} from "@/lib/analytics";
 import { gbp } from "@/lib/affordability";
 import { rankCouplesNeighbourhoods } from "@/lib/couples";
 import { COUPLES_CONFIGS } from "@/lib/couples-config";
@@ -65,16 +70,19 @@ export default function CouplesClient({ city }: { city: CityId }) {
       .then(([a, b]) => {
         if (cancelled) return;
         setCommuteState({ key: commuteRequestKey, commuteA: a, commuteB: b });
-        trackEvent(ANALYTICS_EVENTS.finderCompleted, {
-          surface: "couples",
-          destination_a: destinationAId,
-          destination_b: destinationBId,
-        });
+        if (hasFinderStarted(`couples:${city}`)) {
+          trackEventOnce(
+            ANALYTICS_EVENTS.finderCompleted,
+            { surface: "couples", city },
+            `finder-completed:couples:${city}:${commuteRequestKey}`,
+          );
+        }
       });
     return () => {
       cancelled = true;
     };
   }, [
+    city,
     commuteRequestKey,
     destinationAId,
     destinationBId,
@@ -135,7 +143,10 @@ export default function CouplesClient({ city }: { city: CityId }) {
   const visible = ranked.filter((item) => !item.isExcluded).slice(0, 8);
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
+    <div
+      className="grid gap-8 lg:grid-cols-[360px_1fr]"
+      onChangeCapture={() => markFinderStarted(`couples:${city}`, { surface: "couples" })}
+    >
       <aside className="rounded-lg border border-slate-800 bg-slate-900 p-5">
         <h2 className="mb-4 text-lg font-semibold">Two-person priorities</h2>
         <div className="space-y-4">

@@ -1,6 +1,6 @@
 "use client";
 
-import { OPEN_COOKIE_SETTINGS_EVENT } from "@/components/CookieConsent";
+import { OPEN_COOKIE_SETTINGS_EVENT } from "@/lib/consent";
 
 /** Footer control that reopens the consent banner so a choice can be changed. */
 export default function CookieSettingsLink() {

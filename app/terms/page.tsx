@@ -83,6 +83,25 @@ export default function TermsPage() {
           </section>
 
           <section className="mb-10">
+            <h2 className="mb-3 text-xl font-semibold">Reviewed-shortlist experiment</h2>
+            <div className="space-y-4 text-slate-300">
+              <p>
+                When available, the reviewed-shortlist form is an invitation to
+                request a manual research service. Submitting it is not a
+                purchase, does not charge you and does not guarantee that the
+                request can be accepted. Availability, delivery timing and any
+                payment step will be confirmed separately before work begins.
+              </p>
+              <p>
+                A reviewed shortlist is tailored decision support, not a
+                property search, letting service or guarantee that a home or
+                transport route will remain available. Current listings and
+                journey planners should still be checked before committing.
+              </p>
+            </div>
+          </section>
+
+          <section className="mb-10">
             <h2 className="mb-3 text-xl font-semibold">
               Accuracy and limits of the data
             </h2>

@@ -3,60 +3,22 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { GOOGLE_ADSENSE_SCRIPT_URL } from "@/lib/monetisation";
+import {
+  getConsentServerSnapshot,
+  getConsentSnapshot,
+  legacyAdvertisingConsent,
+  OPEN_COOKIE_SETTINGS_EVENT,
+  parseConsentSnapshot,
+  storeConsent,
+  subscribeToConsent,
+  type ConsentPreferences,
+} from "@/lib/consent";
 
-const STORAGE_KEY = "wil-cookie-consent";
 const ADSENSE_SCRIPT_ID = "wil-adsense";
-
-/** Fired by the footer's "Cookie settings" link to reopen the banner. */
-export const OPEN_COOKIE_SETTINGS_EVENT = "wil:open-cookie-settings";
-
-type Choice = "accepted" | "declined";
 
 type AdSenseQueue = unknown[] & {
   requestNonPersonalizedAds?: number;
 };
-
-// ──────────────────────────────────────────────────────────────────
-// The stored choice lives in localStorage, which is an external store as far
-// as React is concerned — so it is read through useSyncExternalStore rather
-// than mirrored into state inside an effect.
-// ──────────────────────────────────────────────────────────────────
-
-const listeners = new Set<() => void>();
-
-function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
-  // Keep tabs in sync when the choice is changed in another one.
-  window.addEventListener("storage", listener);
-  return () => {
-    listeners.delete(listener);
-    window.removeEventListener("storage", listener);
-  };
-}
-
-function getSnapshot(): Choice | null {
-  try {
-    const v = window.localStorage.getItem(STORAGE_KEY);
-    return v === "accepted" || v === "declined" ? v : null;
-  } catch {
-    // Private mode / storage blocked: treat as "not yet answered".
-    return null;
-  }
-}
-
-/** No stored choice exists during SSR, so the banner is never in the HTML. */
-function getServerSnapshot(): Choice | null {
-  return null;
-}
-
-function storeChoice(choice: Choice): void {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, choice);
-  } catch {
-    // Non-fatal: the banner will simply ask again next visit.
-  }
-  listeners.forEach((l) => l());
-}
 
 /**
  * Injects the Google AdSense tag. Only ever called once the visitor has
@@ -84,36 +46,66 @@ function loadAdSense(): void {
 }
 
 export default function CookieConsent() {
-  const choice = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const rawConsent = useSyncExternalStore(
+    subscribeToConsent,
+    getConsentSnapshot,
+    getConsentServerSnapshot,
+  );
+  const preferences = parseConsentSnapshot(rawConsent);
   const [reopened, setReopened] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [draft, setDraft] = useState<ConsentPreferences>({
+    analytics: false,
+    advertising: false,
+  });
+
+  // Preserve the old advertising choice without silently opting anybody into
+  // the newly introduced analytics category.
+  useEffect(() => {
+    if (preferences) return;
+    const legacy = legacyAdvertisingConsent();
+    if (legacy !== null) {
+      storeConsent({ analytics: false, advertising: legacy });
+    }
+  }, [preferences]);
 
   // Synchronising an external system (the ad script) with the current choice.
   useEffect(() => {
-    if (choice === "accepted") loadAdSense();
-  }, [choice]);
+    if (preferences?.advertising) loadAdSense();
+  }, [preferences?.advertising]);
 
   useEffect(() => {
-    const onOpen = () => setReopened(true);
+    const onOpen = () => {
+      setDraft(preferences ?? { analytics: false, advertising: false });
+      setShowSettings(true);
+      setReopened(true);
+    };
     window.addEventListener(OPEN_COOKIE_SETTINGS_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_COOKIE_SETTINGS_EVENT, onOpen);
-  }, []);
+  }, [preferences]);
 
-  const decide = useCallback((next: Choice) => {
-    storeChoice(next);
+  const decide = useCallback((next: ConsentPreferences) => {
+    const shouldReload = preferences?.advertising === true && !next.advertising;
+    storeConsent(next);
     setReopened(false);
-  }, []);
+    setShowSettings(false);
+    // AdSense can inject its own frames after the script has loaded. A reload
+    // is the only reliable way to make a withdrawal take effect immediately.
+    if (shouldReload) window.location.reload();
+  }, [preferences?.advertising]);
 
-  const visible = reopened || choice === null;
+  const visible = reopened || preferences === null;
   if (!visible) return null;
 
   return (
     <div
       role="dialog"
       aria-labelledby="cookie-consent-title"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-700 bg-slate-900/98 px-6 py-5 shadow-2xl backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-700 bg-slate-900/98 px-4 py-3 shadow-2xl backdrop-blur sm:px-6 sm:py-4"
     >
-      <div className="mx-auto flex max-w-5xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="max-w-2xl">
+      <div className="mx-auto max-w-5xl">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-2xl">
           {/*
             Deliberately unbranded. Consent is stored once and applies to
             both the London and Manchester sections, so naming either one
@@ -125,12 +117,10 @@ export default function CookieConsent() {
           >
             Cookies on this site
           </h2>
-          <p className="text-sm text-slate-300">
-            This site is free and funded by advertising. With your permission,
-            Google would set cookies to show and measure contextual ads. These
-            ads are not based on your activity on other sites. Analytics here
-            are cookieless, and declining keeps the advertising scripts from
-            loading at all — the site works exactly the same either way. See the{" "}
+          <p className="text-xs leading-relaxed text-slate-300 sm:text-sm">
+            Optional analytics help improve the finder. Advertising cookies
+            may fund the free site. Nothing optional loads before you choose,
+            and the finder works either way. See the{" "}
             <Link
               href="/privacy"
               className="text-emerald-400 underline underline-offset-2 hover:text-emerald-300"
@@ -139,32 +129,88 @@ export default function CookieConsent() {
             </Link>
             .
           </p>
-          {reopened && choice !== null && (
-            <p className="mt-2 text-xs text-slate-400">
-              You currently have advertising cookies{" "}
-              <strong className="text-slate-200">
-                {choice === "accepted" ? "accepted" : "declined"}
-              </strong>
-              .
-            </p>
-          )}
-        </div>
-        <div className="flex shrink-0 flex-wrap gap-3">
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => decide("declined")}
-            className="rounded-lg border border-slate-600 px-5 py-2.5 text-sm font-medium text-slate-200 transition-colors hover:border-slate-400 hover:text-white"
+            onClick={() => decide({ analytics: false, advertising: false })}
+            className="rounded-lg border border-slate-600 px-3 py-2 text-xs font-medium text-slate-200 transition-colors hover:border-slate-400 hover:text-white sm:px-4 sm:text-sm"
           >
-            Decline
+            Reject optional
           </button>
           <button
             type="button"
-            onClick={() => decide("accepted")}
-            className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
+            onClick={() => decide({ analytics: true, advertising: false })}
+            className="rounded-lg border border-emerald-700 px-3 py-2 text-xs font-medium text-emerald-200 transition-colors hover:border-emerald-500 sm:px-4 sm:text-sm"
           >
-            Accept cookies
+            Analytics only
           </button>
+          <button
+            type="button"
+            onClick={() => decide({ analytics: true, advertising: true })}
+            className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-emerald-500 sm:px-4 sm:text-sm"
+          >
+            Allow all
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setDraft(preferences ?? draft);
+              setShowSettings((value) => !value);
+            }}
+            aria-expanded={showSettings}
+            className="px-2 py-2 text-xs text-slate-400 underline hover:text-white"
+          >
+            Settings
+          </button>
+          </div>
         </div>
+
+        {showSettings && (
+          <div className="mt-3 grid gap-2 border-t border-slate-800 pt-3 text-xs sm:grid-cols-2">
+            <label className="flex items-start gap-2 rounded-md bg-slate-950/50 p-3">
+              <input
+                type="checkbox"
+                checked={draft.analytics}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    analytics: event.target.checked,
+                  }))
+                }
+                className="mt-0.5"
+              />
+              <span>
+                <strong className="block text-slate-200">Anonymous analytics</strong>
+                <span className="text-slate-400">Finder and shortlist actions; never form answers or exact addresses.</span>
+              </span>
+            </label>
+            <label className="flex items-start gap-2 rounded-md bg-slate-950/50 p-3">
+              <input
+                type="checkbox"
+                checked={draft.advertising}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    advertising: event.target.checked,
+                  }))
+                }
+                className="mt-0.5"
+              />
+              <span>
+                <strong className="block text-slate-200">Contextual advertising</strong>
+                <span className="text-slate-400">Loads Google AdSense in non-personalised mode.</span>
+              </span>
+            </label>
+            <button
+              type="button"
+              onClick={() => decide(draft)}
+              className="rounded-md bg-slate-700 px-4 py-2 font-medium text-white hover:bg-slate-600 sm:col-span-2 sm:justify-self-end"
+            >
+              Save choices
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

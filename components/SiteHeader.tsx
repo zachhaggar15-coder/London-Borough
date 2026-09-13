@@ -30,7 +30,7 @@ export default function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/95 backdrop-blur">
-      <div className="mx-auto flex h-11 max-w-5xl items-center gap-4 px-6">
+      <div className="mx-auto flex h-11 max-w-5xl items-center gap-3 px-4 sm:gap-4 sm:px-6">
         <Link
           href="/"
           className="shrink-0 text-xs font-semibold uppercase tracking-widest text-slate-500 transition-colors hover:text-white"

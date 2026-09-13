@@ -7,6 +7,9 @@ import type {
 import { LONDON_TRANSIT_KMH } from "@/lib/isochrone";
 import { DESTINATIONS_BY_ID } from "@/lib/data/destinations";
 
+/** Date the estimate labels and fallback behavior were last audited. */
+export const COMMUTE_MODEL_REVIEW_AS_OF = "2026-09-10";
+
 export const LONDON_BOROUGHS = [
   "Barking and Dagenham",
   "Barnet",
