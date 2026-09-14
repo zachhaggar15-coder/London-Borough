@@ -125,7 +125,7 @@ The cleanest path is Vercel:
 AdSense has rejected this site three times for "Low value content", each time because of pages generated from one template. Before ticking "I confirm I have fixed the issues":
 
 1. Build and serve the site (`npm run build`, then `npx next start -p 3210`), and run `npm run audit:content -- http://localhost:3210`. It must exit cleanly: no sitemap cluster over 60% shared text, no page under 200 words of its own, no internal link that redirects or 404s.
-2. Run the same audit against production once the deploy is live.
+2. Run the same audit against production once the deploy is live. It throttles itself there, but repeated runs from one IP can still trip Vercel's bot mitigation; if it aborts with a challenge message, wait and try later, and confirm Googlebot sees the pages with Search Console's URL Inspection → Test live URL.
 3. Check that the sitemap count is what you expect. New city sections stay switched off in `lib/published-city-sections.json` until their pages carry writing of their own.
 4. Wait until Search Console's Pages report shows retired URLs as "Page with redirect" or "Not found" before requesting review — usually two to four weeks.
 

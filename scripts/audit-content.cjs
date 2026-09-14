@@ -36,12 +36,30 @@ const MIN_UNIQUE_WORDS = 200;
 /** Clusters smaller than this are hubs and one-offs, not templates. */
 const MIN_CLUSTER_SIZE = 3;
 const SHINGLE = 5;
-const CONCURRENCY = 8;
+/**
+ * Kept low on purpose. Against production, a burst of a few hundred
+ * requests from one IP trips Vercel's bot mitigation, which then serves a
+ * 403 challenge page to that IP for a while — and an audit that reads the
+ * challenge page reports nonsense. Local builds can take more.
+ */
+const CONCURRENCY = process.argv[2] && !/localhost|127.0.0.1/.test(process.argv[2]) ? 2 : 8;
+const USER_AGENT = "where-in-london-content-audit/1.0";
 
 const base = (process.argv[2] ?? "http://localhost:3000").replace(/\/$/, "");
 
+class ChallengedError extends Error {}
+
 async function fetchText(url, init) {
-  const res = await fetch(url, { redirect: "manual", ...init });
+  const res = await fetch(url, {
+    redirect: "manual",
+    ...init,
+    headers: { "user-agent": USER_AGENT, ...(init && init.headers) },
+  });
+  if (res.headers.get("x-vercel-mitigated")) {
+    throw new ChallengedError(
+      `${url} returned a Vercel bot-mitigation challenge (${res.status}). This IP is being rate-limited; wait before re-running, and use Search Console's URL Inspection to confirm Googlebot is not affected.`,
+    );
+  }
   return { status: res.status, location: res.headers.get("location"), body: res.status === 200 ? await res.text() : "" };
 }
 
@@ -214,6 +232,11 @@ async function main() {
 }
 
 main().catch((error) => {
+  if (error instanceof ChallengedError) {
+    console.error(`
+✖ audit aborted: ${error.message}`);
+    process.exit(2);
+  }
   console.error(error);
   process.exit(1);
 });
