@@ -120,6 +120,15 @@ The cleanest path is Vercel:
 3. Set the same env vars in the Vercel dashboard.
 4. Vercel auto-detects Next.js and deploys.
 
+## Before requesting an AdSense review
+
+AdSense has rejected this site three times for "Low value content", each time because of pages generated from one template. Before ticking "I confirm I have fixed the issues":
+
+1. Build and serve the site (`npm run build`, then `npx next start -p 3210`), and run `npm run audit:content -- http://localhost:3210`. It must exit cleanly: no sitemap cluster over 60% shared text, no page under 200 words of its own, no internal link that redirects or 404s.
+2. Run the same audit against production once the deploy is live.
+3. Check that the sitemap count is what you expect. New city sections stay switched off in `lib/published-city-sections.json` until their pages carry writing of their own.
+4. Wait until Search Console's Pages report shows retired URLs as "Page with redirect" or "Not found" before requesting review — usually two to four weeks.
+
 ## Note for beginners
 
 This project is structured to be readable end-to-end. If a file is confusing, search for it in `STRATEGY.md` — most architectural choices are explained there with their rationale. When in doubt, **start at `app/page.tsx` and follow the imports.**

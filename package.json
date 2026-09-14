@@ -10,7 +10,8 @@
     "lint": "eslint",
     "test": "node --test tests/*.test.cjs",
     "typecheck": "tsc --noEmit",
-    "refresh:manchester-ons": "node scripts/refresh-manchester-ons.cjs"
+    "refresh:manchester-ons": "node scripts/refresh-manchester-ons.cjs",
+    "audit:content": "node scripts/audit-content.cjs"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
