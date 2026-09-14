@@ -316,7 +316,7 @@ export default async function CommutePage({ params }: Props) {
                             </span>
                           </div>
                           <p className="mt-1 text-xs text-slate-400">
-                            GBP {n.oneBedRent.toLocaleString()}/mo 1-bed
+                            £{n.oneBedRent.toLocaleString()}/mo 1-bed
                           </p>
                         </Link>
                       ))}

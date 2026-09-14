@@ -131,14 +131,14 @@ export default function MethodologyPage() {
                   </time>
                 </strong>
                 . Across the {count} tracked areas, the current London-wide
-                medians are about GBP {oneBed.toLocaleString()}/month for a
-                one-bed and GBP {twoBed.toLocaleString()}/month for a two-bed.
+                medians are about £{oneBed.toLocaleString()}/month for a
+                one-bed and £{twoBed.toLocaleString()}/month for a two-bed.
               </p>
               <p>
                 Room rents are derived from listing-sample regional averages
                 and local overrides. Current regional average inputs range from
-                GBP {Math.min(...roomRegionValues).toLocaleString("en-GB")} to
-                GBP {Math.max(...roomRegionValues).toLocaleString("en-GB")} per
+                £{Math.min(...roomRegionValues).toLocaleString("en-GB")} to
+                £{Math.max(...roomRegionValues).toLocaleString("en-GB")} per
                 month before neighbourhood adjustment.
               </p>
               <ul className="list-disc space-y-2 pl-5">
@@ -154,7 +154,7 @@ export default function MethodologyPage() {
                 personal allowance, income-tax bands and employee National
                 Insurance rates, then show rent budgets at 33% and 35% of
                 take-home pay. The model includes the personal allowance taper
-                between GBP 100,000 and GBP 125,140 and the 45% additional
+                between £100,000 and £125,140 and the 45% additional
                 rate, so the effective marginal rate of roughly 60% across the
                 taper band is reflected in the higher salary pages. It does not
                 include pension contributions, student loans, benefits, salary
@@ -173,8 +173,7 @@ export default function MethodologyPage() {
               <p>
                 Borough pages and the council tax guide show the total Band D
                 charge for {COUNCIL_TAX_YEAR}, which is the borough&apos;s own
-                element plus the Greater London Authority precept of GBP{" "}
-                {GLA_PRECEPT_BAND_D.toFixed(2)}. Figures exclude any parish or
+                element plus the Greater London Authority precept of £{GLA_PRECEPT_BAND_D.toFixed(2)}. Figures exclude any parish or
                 special-expenses element, which applies to only a small number
                 of London areas.
               </p>

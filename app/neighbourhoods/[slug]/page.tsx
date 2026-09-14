@@ -2,30 +2,27 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  getAllBoroughSlugs,
   getAllNeighbourhoodSlugs,
   getCommutePairPageData,
   getNeighbourhoodPageData,
   boroughSlug,
   londonRentMedians,
-  oneBedRentPercentile,
   lifestyleStanding,
   roomRentFor,
   SITE_URL,
 } from "@/lib/seo-data";
-import { LIFESTYLE_LABELS, type Neighbourhood } from "@/lib/types";
+import { LIFESTYLE_LABELS } from "@/lib/types";
 import {
   RENT_MARKET_REVIEW_AS_OF,
   RENT_MARKET_SOURCE_DETAILS,
   RENT_MARKET_SOURCES,
 } from "@/lib/data/rent-market";
-import type { SimilarArea } from "@/lib/similarity";
 import { provenanceLabel } from "@/lib/provenance";
 import { CONTENT_YEAR } from "@/lib/site-config";
 import { councilTaxForBorough, formatPounds } from "@/lib/council-tax";
 import { COUNCIL_TAX_YEAR } from "@/lib/data/council-tax";
 import { zonesOf } from "@/lib/centrality";
-import { DESTINATIONS } from "@/lib/data/destinations";
-import { STATIC_COMMUTE_TIMES } from "@/lib/commute";
 import { COMMUTE_MODEL_REVIEW_AS_OF } from "@/lib/commute-details";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -33,8 +30,8 @@ type Props = { params: Promise<{ slug: string }> };
 const SEARCH_INTENT_TITLES: Record<string, string> = {
   archway: `Living in Archway: rent, Tube & area guide (${CONTENT_YEAR})`,
   bermondsey: `Living in Bermondsey: rent, commute & area guide (${CONTENT_YEAR})`,
-  chiswick: `Living in Chiswick: rent, transport & is it posh? (${CONTENT_YEAR})`,
-  putney: `Living in Putney: rent, transport & is it posh? (${CONTENT_YEAR})`,
+  chiswick: `Living in Chiswick: rent, transport & area guide (${CONTENT_YEAR})`,
+  putney: `Living in Putney: rent, transport & area guide (${CONTENT_YEAR})`,
 };
 
 export const dynamicParams = false;
@@ -55,8 +52,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       : `Zone ${zonesOf(n)[0]}`;
   const title =
     SEARCH_INTENT_TITLES[slug] ??
-    `Living in ${n.name}: rent & is it worth it? (${CONTENT_YEAR})`;
-  const description = `Living in ${n.name}? One-bed rent averages £${n.rent.oneBedMedianGbp.toLocaleString()}/month, ${zoneStr}. Is ${n.name} a nice place to live? See transport, lifestyle scores and the verdict.`;
+    `Living in ${n.name}: rent, transport & area guide (${CONTENT_YEAR})`;
+  const description = `What living in ${n.name} is actually like: one-bed rent around £${n.rent.oneBedMedianGbp.toLocaleString()}/month, ${zoneStr}, commute times, council tax and the trade-offs.`;
 
   return {
     title,
@@ -92,40 +89,9 @@ export default async function NeighbourhoodPage({ params }: Props) {
 
   const primaryBorough = n.borough.split("/")[0].trim();
   const bSlug = boroughSlug(primaryBorough);
-  const commuteGuides = DESTINATIONS
-    .map((destination) => ({
-      id: destination.id,
-      label: destination.label,
-      minutes: STATIC_COMMUTE_TIMES[n.id]?.[destination.id],
-    }))
-    .filter((destination): destination is { id: string; label: string; minutes: number } =>
-      typeof destination.minutes === "number",
-    )
-    .sort((a, b) => a.minutes - b.minutes)
-    .slice(0, 4);
-
+  // The City of London is not one of the 32 borough pages.
+  const hasBoroughPage = getAllBoroughSlugs().includes(bSlug);
   const allLines = [...new Set(n.mainStations.flatMap((s) => s.lines))];
-  const decisionWatchout = getDecisionWatchout(n);
-
-  const lifestyleValues = Object.values(n.lifestyle);
-  const avgLifestyle =
-    Math.round(
-      (lifestyleValues.reduce((sum, v) => sum + v, 0) / lifestyleValues.length) * 10,
-    ) / 10;
-  const topStrengthsPhrase = n.strengths.slice(0, 2).join(" and ").toLowerCase();
-  const primaryTradeoff = n.tradeoffs[0]
-    ? n.tradeoffs[0].toLowerCase()
-    : "the usual London trade-offs on price and space";
-  const niceToLiveAnswer = `Yes — ${n.name} is well-regarded for ${topStrengthsPhrase}. The main trade-off is ${primaryTradeoff}. Average lifestyle scores sit at ${avgLifestyle}/10, and a 1-bed flat costs around £${n.rent.oneBedMedianGbp.toLocaleString()}/month, making it a solid choice for most renters in ${primaryBorough}.`;
-
-  const vibeDescriptor =
-    n.lifestyle.livelyVsQuiet >= 7
-      ? "a lively, buzzing character"
-      : n.lifestyle.livelyVsQuiet <= 4
-      ? "a calm, quiet character"
-      : "a balanced mix of lively and quiet streets";
-  const whoItSuits = topPersonalities[0] ?? "a wide range of renters";
-  const whatIsItLikeAnswer = `${n.name} has ${vibeDescriptor}, scoring ${n.lifestyle.nightlife}/10 for nightlife and ${n.lifestyle.greenSpace}/10 for green space. It's particularly well-suited to ${whoItSuits}, and sits in ${zoneStr} of ${n.borough}.`;
 
   // Typical room-in-a-share cost, so the page answers the sharer's budget
   // question alongside the one- and two-bed figures.
@@ -140,16 +106,6 @@ export default async function NeighbourhoodPage({ params }: Props) {
       : rentVsMedian > 0
       ? `A one-bed in ${n.name} averages £${n.rent.oneBedMedianGbp.toLocaleString()}/month — about £${rentVsMedian.toLocaleString()} above the London-wide median of £${londonMedianOneBed.toLocaleString()} (across ${trackedCount} tracked areas). On rent alone, ${n.name} is more expensive than the typical London neighbourhood.`
       : `A one-bed in ${n.name} averages £${n.rent.oneBedMedianGbp.toLocaleString()}/month — about £${Math.abs(rentVsMedian).toLocaleString()} below the London-wide median of £${londonMedianOneBed.toLocaleString()} (across ${trackedCount} tracked areas). On rent alone, ${n.name} is cheaper than the typical London neighbourhood.`;
-
-  // "Is it posh?" — stated as a transparent proxy, not an editorial claim.
-  const rentPercentile = oneBedRentPercentile(n.rent.oneBedMedianGbp);
-  const poshVerdict =
-    rentPercentile >= 70 && n.lifestyle.safety >= 7 && n.lifestyle.greenSpace >= 6
-      ? `On that basis it reads as an affluent, quieter residential area.`
-      : rentPercentile <= 40
-      ? `On that basis it reads as more affordable and less exclusive than London's priciest districts.`
-      : `On that basis it sits mid-table — comfortable, but not among London's most exclusive addresses.`;
-  const poshAnswer = `"Posh" isn't something we measure directly, so as a transparent proxy we combine rent level with a couple of lifestyle scores. ${n.name}'s one-bed rent sits around the ${rentPercentile}th percentile of tracked London areas (higher = pricier), with safety ${n.lifestyle.safety}/10, green space ${n.lifestyle.greenSpace}/10 and nightlife ${n.lifestyle.nightlife}/10. ${poshVerdict}`;
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -197,11 +153,6 @@ export default async function NeighbourhoodPage({ params }: Props) {
   const commuteAnswer = bestDestination
     ? `The fastest commute from ${n.name} is to ${bestDestination.destinationLabel} at approximately ${bestDestination.minutes} minutes by public transport.${bankCommute ? ` The commute to Bank/City is around ${bankCommute.minutes} minutes.` : ""}`
     : `${n.name} is in ${zoneStr} and is served by ${n.mainStations[0]?.name ?? "local public transport"}.`;
-  const goodPlaceAnswer =
-    topPersonalities.length > 0
-      ? `${n.name} is in ${n.borough}, ${zoneStr}. It's particularly well-suited to ${topPersonalities[0]}. ${n.tradeoffs[0] ? `The main trade-off is: ${n.tradeoffs[0].toLowerCase()}.` : ""}`
-      : `${n.name} is a ${n.borough} neighbourhood in ${zoneStr}. ${n.summary}`;
-
   // Safety is one of the highest-volume questions asked about any London
   // area. We answer it from our own composite lifestyle score and say so
   // plainly — this is a curated review score, not police recorded-crime
@@ -243,10 +194,6 @@ export default async function NeighbourhoodPage({ params }: Props) {
           },
         ]
       : []),
-    {
-      question: `Is ${n.name} a good place to live?`,
-      answer: goodPlaceAnswer,
-    },
   ];
 
   const faqSchema = {
@@ -255,23 +202,8 @@ export default async function NeighbourhoodPage({ params }: Props) {
     mainEntity: [
       {
         "@type": "Question",
-        name: `Is ${n.name} a nice place to live?`,
-        acceptedAnswer: { "@type": "Answer", text: niceToLiveAnswer },
-      },
-      {
-        "@type": "Question",
-        name: `What is ${n.name} like to live in?`,
-        acceptedAnswer: { "@type": "Answer", text: whatIsItLikeAnswer },
-      },
-      {
-        "@type": "Question",
         name: `Is ${n.name} expensive?`,
         acceptedAnswer: { "@type": "Answer", text: expensiveAnswer },
-      },
-      {
-        "@type": "Question",
-        name: `Is ${n.name} posh?`,
-        acceptedAnswer: { "@type": "Answer", text: poshAnswer },
       },
       {
         "@type": "Question",
@@ -396,29 +328,32 @@ export default async function NeighbourhoodPage({ params }: Props) {
             .
           </p>
 
-          {/* Query-matched intent sections */}
+          {/*
+            The written profile is the part of this page that is not derived
+            from the dataset — the reason it exists as a page at all. The two
+            questions below it are computed, and say so.
+          */}
+          {n.profile && n.profile.length > 0 && (
+            <section className="mb-12 max-w-3xl">
+              <h2 className="text-xl font-semibold mb-3">
+                What living in {n.name} is like
+              </h2>
+              <div className="space-y-4">
+                {n.profile.map((paragraph) => (
+                  <p key={paragraph} className="leading-relaxed text-slate-300">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            </section>
+          )}
+
           <section className="mb-12 space-y-8">
-            <div>
-              <h2 className="text-xl font-semibold mb-3">
-                Is {n.name} a nice place to live?
-              </h2>
-              <p className="text-slate-300">{niceToLiveAnswer}</p>
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold mb-3">
-                What is {n.name} like to live in?
-              </h2>
-              <p className="text-slate-300">{whatIsItLikeAnswer}</p>
-            </div>
             <div>
               <h2 className="text-xl font-semibold mb-3">
                 Is {n.name} expensive?
               </h2>
               <p className="text-slate-300">{expensiveAnswer}</p>
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold mb-3">Is {n.name} posh?</h2>
-              <p className="text-slate-300">{poshAnswer}</p>
             </div>
             <div>
               <h2 className="text-xl font-semibold mb-3">Is {n.name} safe?</h2>
@@ -584,32 +519,6 @@ export default async function NeighbourhoodPage({ params }: Props) {
             </div>
           </section>
 
-          <section className="mb-12 rounded-lg bg-slate-900 border border-slate-800 p-6">
-            <h2 className="text-xl font-semibold mb-4">
-              Decision guide for {n.name}
-            </h2>
-            <div className="grid md:grid-cols-3 gap-4">
-              <DecisionCard
-                label="Best reason"
-                title="Why it makes the shortlist"
-                body={n.strengths[0] ?? `${n.name} has a balanced profile.`}
-              />
-              <DecisionCard
-                label="Give up"
-                title="The compromise to check"
-                body={
-                  n.tradeoffs[0] ??
-                  "Compare your exact commute and viewing notes before deciding."
-                }
-              />
-              <DecisionCard
-                label="Reconsider if"
-                title="Where it may fall short"
-                body={decisionWatchout}
-              />
-            </div>
-          </section>
-
           {/* Who it suits */}
           {topPersonalities.length > 0 && (
             <section className="mb-12 rounded-lg bg-slate-900 border border-slate-800 p-6">
@@ -624,35 +533,6 @@ export default async function NeighbourhoodPage({ params }: Props) {
                   </li>
                 ))}
               </ul>
-            </section>
-          )}
-
-          {commuteGuides.length > 0 && (
-            <section className="mb-12">
-              <h2 className="mb-2 text-xl font-semibold">
-                Commuting from {n.name}
-              </h2>
-              <p className="mb-4 max-w-3xl text-slate-300">
-                Compare {n.name} with every tracked neighbourhood for these
-                common destinations, with rent and estimated journey time shown
-                together.
-              </p>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {commuteGuides.map((destination) => (
-                  <Link
-                    key={destination.id}
-                    href={`/commute/${destination.id}`}
-                    className="rounded-lg border border-slate-800 bg-slate-900 px-4 py-3 transition-colors hover:border-slate-600"
-                  >
-                    <p className="font-medium text-white">
-                      {n.name} to {destination.label}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-400">
-                      About {destination.minutes} minutes — full commute ranking
-                    </p>
-                  </Link>
-                ))}
-              </div>
             </section>
           )}
 
@@ -673,58 +553,27 @@ export default async function NeighbourhoodPage({ params }: Props) {
             </div>
           </section>
 
-          {/* Compare with similar */}
+          {/* Similar areas — one block, not five overlapping ones. */}
           {similarAreaGroups.mostSimilar.length > 0 && (
             <section className="mb-12">
               <h2 className="text-xl font-semibold mb-4">
-                Compare {n.name} with alternatives
+                Similar areas to {n.name}
               </h2>
               <div className="grid sm:grid-cols-2 gap-3">
-                {similarAreaGroups.mostSimilar.map(({ neighbourhood: other }) => {
-                  if (!other) return null;
-                  return (
-                    <Link
-                      key={other.id}
-                      href={`/neighbourhoods/${other.id}`}
-                      className="rounded-lg bg-slate-900 border border-slate-800 px-4 py-3 hover:border-slate-600 transition-colors"
-                    >
-                      <p className="font-medium text-sm">
-                        {n.name} vs {other.name}
-                      </p>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        {other.borough} · £
-                        {other.rent.oneBedMedianGbp.toLocaleString()}/mo 1-bed
-                      </p>
-                    </Link>
-                  );
-                })}
-              </div>
-              <div className="mt-5 grid lg:grid-cols-2 gap-5">
-                <SimilarGroup
-                  title="Cheaper options"
-                  items={similarAreaGroups.cheaper}
-                  targetName={n.name}
-                />
-                <SimilarGroup
-                  title="Livelier options"
-                  items={similarAreaGroups.livelier}
-                  targetName={n.name}
-                />
-                <SimilarGroup
-                  title="Quieter options"
-                  items={similarAreaGroups.quieter}
-                  targetName={n.name}
-                />
-                <SimilarGroup
-                  title="Greener options"
-                  items={similarAreaGroups.greener}
-                  targetName={n.name}
-                />
-                <SimilarGroup
-                  title="More central options"
-                  items={similarAreaGroups.moreCentral}
-                  targetName={n.name}
-                />
+                {similarAreaGroups.mostSimilar.map(({ neighbourhood: other, reason }) => (
+                  <Link
+                    key={other.id}
+                    href={`/neighbourhoods/${other.id}`}
+                    className="rounded-lg bg-slate-900 border border-slate-800 px-4 py-3 hover:border-slate-600 transition-colors"
+                  >
+                    <p className="font-medium text-sm">{other.name}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {other.borough} · £
+                      {other.rent.oneBedMedianGbp.toLocaleString()}/mo 1-bed
+                    </p>
+                    <p className="text-xs text-slate-300 mt-2">{reason}</p>
+                  </Link>
+                ))}
               </div>
             </section>
           )}
@@ -763,21 +612,23 @@ export default async function NeighbourhoodPage({ params }: Props) {
           )}
 
           {/* Borough link */}
-          <section className="mb-12 grid gap-3 sm:grid-cols-2">
-            <Link
-              href={`/boroughs/${bSlug}`}
-              className="flex items-center justify-between rounded-lg bg-slate-900 border border-slate-800 px-5 py-4 hover:border-slate-600 transition-colors"
-            >
-              <div>
-                <p className="font-medium">
-                  {n.name} is in {primaryBorough}
-                </p>
-                <p className="text-sm text-slate-400">
-                  See all neighbourhoods in this borough →
-                </p>
-              </div>
-            </Link>
-          </section>
+          {hasBoroughPage && (
+            <section className="mb-12 grid gap-3 sm:grid-cols-2">
+              <Link
+                href={`/boroughs/${bSlug}`}
+                className="flex items-center justify-between rounded-lg bg-slate-900 border border-slate-800 px-5 py-4 hover:border-slate-600 transition-colors"
+              >
+                <div>
+                  <p className="font-medium">
+                    {n.name} is in {primaryBorough}
+                  </p>
+                  <p className="text-sm text-slate-400">
+                    See all neighbourhoods in this borough →
+                  </p>
+                </div>
+              </Link>
+            </section>
+          )}
 
           <section className="mb-12 rounded-lg bg-slate-900 border border-slate-800 p-6">
             <h2 className="text-xl font-semibold mb-3">
@@ -833,96 +684,5 @@ export default async function NeighbourhoodPage({ params }: Props) {
         </main>
       </div>
     </>
-  );
-}
-
-function DecisionCard({
-  label,
-  title,
-  body,
-}: {
-  label: string;
-  title: string;
-  body: string;
-}) {
-  return (
-    <div className="rounded-lg border border-slate-800 bg-slate-950 p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-emerald-300">
-        {label}
-      </p>
-      <h3 className="mt-2 font-semibold text-white">{title}</h3>
-      <p className="mt-2 text-sm text-slate-300">{body}</p>
-    </div>
-  );
-}
-
-function SimilarGroup({
-  title,
-  items,
-  targetName,
-}: {
-  title: string;
-  items: SimilarArea[];
-  targetName: string;
-}) {
-  if (items.length === 0) return null;
-
-  return (
-    <div className="rounded-lg bg-slate-900 border border-slate-800 p-4">
-      <h3 className="font-semibold text-white mb-3">{title}</h3>
-      <div className="space-y-3">
-        {items.slice(0, 3).map((item) => (
-          <Link
-            key={item.neighbourhood.id}
-            href={`/neighbourhoods/${item.neighbourhood.id}`}
-            className="block rounded-md border border-slate-800 bg-slate-950 px-3 py-3 hover:border-slate-600 transition-colors"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-medium text-sm text-white">
-                  {item.neighbourhood.name}
-                </p>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {item.neighbourhood.borough} - GBP{" "}
-                  {item.neighbourhood.rent.oneBedMedianGbp.toLocaleString()}/mo
-                  1-bed
-                </p>
-              </div>
-              <span className="text-xs text-slate-400">
-                {Math.round(item.score * 100)}%
-              </span>
-            </div>
-            <p className="text-xs text-slate-300 mt-2">{item.reason}</p>
-            <p className="text-xs text-emerald-300 mt-2">
-              Compare against {targetName}
-            </p>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function getDecisionWatchout(neighbourhood: Neighbourhood): string {
-  const { lifestyle } = neighbourhood;
-
-  if (lifestyle.greenSpace <= 5) {
-    return "You want parks and open space to be the deciding factor.";
-  }
-  if (lifestyle.nightlife <= 5 && lifestyle.livelyVsQuiet <= 5) {
-    return "You want a strong late-night or high-energy social scene.";
-  }
-  if (lifestyle.nightlife >= 8 || lifestyle.livelyVsQuiet >= 8) {
-    return "You are prioritising very quiet evenings and low street noise.";
-  }
-  if (lifestyle.connectivity <= 6) {
-    return "You need multiple fast routes across London rather than one main line.";
-  }
-  if (lifestyle.safety <= 6) {
-    return "Perceived safety and calm streets are your highest priority.";
-  }
-  return (
-    neighbourhood.tradeoffs[1] ??
-    "Your commute test comes out materially worse than nearby alternatives."
   );
 }
