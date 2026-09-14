@@ -143,14 +143,6 @@ export type Neighbourhood = {
   summary: string;
   strengths: string[];
   tradeoffs: string[];
-  /**
-   * Hand-written paragraphs on what living here is actually like. Unlike
-   * everything else on an area page this is not derived from the dataset,
-   * which is what gives the page a reason to exist on its own. London
-   * areas carry one (a test holds the floor); the city sections do not yet,
-   * which is why their area pages are switched off.
-   */
-  profile?: string[];
 
   // Data quality flag for the whole neighbourhood
   dataQuality: "sourceBacked" | "full";

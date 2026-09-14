@@ -115,6 +115,40 @@ const {
   ukTakeHomeMonthly,
 } = jiti("../lib/seo-data.ts");
 
+// ── Written profiles ─────────────────────────────────────────────────
+
+const { NEIGHBOURHOOD_PROFILES } = jiti("../lib/data/neighbourhood-profiles.ts");
+
+function wordsOf(paragraphs) {
+  return paragraphs.join(" ").split(/\s+/).filter(Boolean);
+}
+
+test("every written profile belongs to a real area and clears the word floor", () => {
+  const ids = new Set(NEIGHBOURHOODS.map((n) => n.id));
+  for (const [id, paragraphs] of Object.entries(NEIGHBOURHOOD_PROFILES)) {
+    assert.ok(ids.has(id), `profile for unknown area ${id}`);
+    const count = wordsOf(paragraphs).length;
+    assert.ok(count >= 250, `${id} profile is ${count} words; the floor is 250`);
+    assert.ok(count <= 400, `${id} profile is ${count} words; keep it under 400`);
+    assert.ok(paragraphs.length >= 2, `${id} profile needs at least two paragraphs`);
+  }
+});
+
+test("no two written profiles share an eight-word run", () => {
+  // A profile copied from a neighbour and lightly edited is the template
+  // problem again, one level down.
+  const seen = new Map();
+  for (const [id, paragraphs] of Object.entries(NEIGHBOURHOOD_PROFILES)) {
+    const words = wordsOf(paragraphs).map((w) => w.toLowerCase().replace(/[^a-z']/g, ""));
+    for (let i = 0; i + 8 <= words.length; i++) {
+      const run = words.slice(i, i + 8).join(" ");
+      const owner = seen.get(run);
+      assert.ok(!owner || owner === id, `${id} and ${owner} share "${run}"`);
+      seen.set(run, id);
+    }
+  }
+});
+
 test("comparison pages describe exact ties without inventing a winner", () => {
   const comparison = getComparePageData("wimbledon-vs-richmond");
   assert.ok(comparison);

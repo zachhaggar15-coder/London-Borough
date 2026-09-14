@@ -13,6 +13,7 @@ import {
   SITE_URL,
 } from "@/lib/seo-data";
 import { LIFESTYLE_LABELS } from "@/lib/types";
+import { NEIGHBOURHOOD_PROFILES } from "@/lib/data/neighbourhood-profiles";
 import {
   RENT_MARKET_REVIEW_AS_OF,
   RENT_MARKET_SOURCE_DETAILS,
@@ -91,6 +92,7 @@ export default async function NeighbourhoodPage({ params }: Props) {
   const bSlug = boroughSlug(primaryBorough);
   // The City of London is not one of the 32 borough pages.
   const hasBoroughPage = getAllBoroughSlugs().includes(bSlug);
+  const profile = NEIGHBOURHOOD_PROFILES[n.id] ?? [];
   const allLines = [...new Set(n.mainStations.flatMap((s) => s.lines))];
 
   // Typical room-in-a-share cost, so the page answers the sharer's budget
@@ -333,13 +335,13 @@ export default async function NeighbourhoodPage({ params }: Props) {
             from the dataset — the reason it exists as a page at all. The two
             questions below it are computed, and say so.
           */}
-          {n.profile && n.profile.length > 0 && (
+          {profile.length > 0 && (
             <section className="mb-12 max-w-3xl">
               <h2 className="text-xl font-semibold mb-3">
                 What living in {n.name} is like
               </h2>
               <div className="space-y-4">
-                {n.profile.map((paragraph) => (
+                {profile.map((paragraph) => (
                   <p key={paragraph} className="leading-relaxed text-slate-300">
                     {paragraph}
                   </p>
