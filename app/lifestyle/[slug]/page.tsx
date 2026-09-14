@@ -7,6 +7,7 @@ import {
   getLifestylePageData,
   SITE_URL,
 } from "@/lib/seo-data";
+import { LIFESTYLE_EDITORIAL } from "@/lib/data/editorial/lifestyle";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -41,6 +42,7 @@ export default async function LifestylePage({ params }: Props) {
   if (!result) notFound();
 
   const { page, ranked } = result;
+  const editorial = LIFESTYLE_EDITORIAL[slug] ?? [];
   const top10 = ranked.slice(0, 10);
   const rest = ranked.slice(10, 30);
   const isGbp = page.unit === "gbp";
@@ -117,6 +119,16 @@ export default async function LifestylePage({ params }: Props) {
             </h1>
             <p className="text-lg text-slate-300 max-w-2xl">{page.intro}</p>
           </header>
+
+          {editorial.length > 0 && (
+            <section className="mb-12 max-w-3xl space-y-4">
+              {editorial.map((paragraph) => (
+                <p key={paragraph} className="leading-relaxed text-slate-300">
+                  {paragraph}
+                </p>
+              ))}
+            </section>
+          )}
 
           {/* Top 10 */}
           <section className="mb-12">

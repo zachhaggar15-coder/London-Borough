@@ -154,6 +154,45 @@ test("no two written profiles share an eight-word run", () => {
   }
 });
 
+// The other London clusters carry written editorial for the same reason
+// the area pages carry profiles: without it each page is its template.
+const { BOROUGH_EDITORIAL } = jiti("../lib/data/editorial/boroughs.ts");
+const { COMMUTE_EDITORIAL } = jiti("../lib/data/editorial/commute.ts");
+const { COMPARE_EDITORIAL } = jiti("../lib/data/editorial/compare.ts");
+const { LIFESTYLE_EDITORIAL } = jiti("../lib/data/editorial/lifestyle.ts");
+
+for (const [label, editorial, keysFn, floor] of [
+  ["borough", BOROUGH_EDITORIAL, () => getAllBoroughSlugs(), 220],
+  ["commute destination", COMMUTE_EDITORIAL, () => getAllCommuteSlugs(), 220],
+  ["comparison", COMPARE_EDITORIAL, () => getIndexableCompareSlugs(), 220],
+  ["lifestyle", LIFESTYLE_EDITORIAL, () => LIFESTYLE_PAGES.map((p) => p.slug), 220],
+]) {
+  test(`every ${label} page has written editorial above the floor`, () => {
+    const keys = keysFn();
+    const missing = keys.filter((k) => !editorial[k]);
+    assert.deepEqual(missing, [], `${label} pages without editorial: ${missing.join(", ")}`);
+    const orphans = Object.keys(editorial).filter((k) => !keys.includes(k));
+    assert.deepEqual(orphans, [], `${label} editorial for pages that do not exist: ${orphans.join(", ")}`);
+    for (const [key, paragraphs] of Object.entries(editorial)) {
+      const count = wordsOf(paragraphs).length;
+      assert.ok(count >= floor, `${key} ${label} editorial is ${count} words; the floor is ${floor}`);
+    }
+  });
+
+  test(`no two ${label} pages share an eight-word run of editorial`, () => {
+    const seen = new Map();
+    for (const [key, paragraphs] of Object.entries(editorial)) {
+      const words = wordsOf(paragraphs).map((w) => w.toLowerCase().replace(/[^a-z']/g, ""));
+      for (let i = 0; i + 8 <= words.length; i++) {
+        const run = words.slice(i, i + 8).join(" ");
+        const owner = seen.get(run);
+        assert.ok(!owner || owner === key, `${key} and ${owner} share "${run}"`);
+        seen.set(run, key);
+      }
+    }
+  });
+}
+
 test("comparison pages describe exact ties without inventing a winner", () => {
   const comparison = getComparePageData("wimbledon-vs-richmond");
   assert.ok(comparison);

@@ -23,6 +23,7 @@ import { zonesOf } from "@/lib/centrality";
 import CommercialOffer from "@/components/CommercialOffer";
 import { REVIEWED_SHORTLIST_ENABLED } from "@/lib/commercial";
 import { COMMUTE_MODEL_REVIEW_AS_OF } from "@/lib/commute-details";
+import { COMPARE_EDITORIAL } from "@/lib/data/editorial/compare";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -341,6 +342,21 @@ export default async function ComparePage({ params }: Props) {
             </h1>
             <p className="text-lg text-slate-300 max-w-2xl">{introParagraph}</p>
           </header>
+
+          {(COMPARE_EDITORIAL[slug] ?? []).length > 0 && (
+            <section className="mb-10 max-w-3xl">
+              <h2 className="text-xl font-semibold mb-3">
+                Choosing between {a.name} and {b.name}
+              </h2>
+              <div className="space-y-4">
+                {COMPARE_EDITORIAL[slug].map((paragraph) => (
+                  <p key={paragraph} className="leading-relaxed text-slate-300">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Living in A and B — prominent links into the full area guides */}
           <section className="grid sm:grid-cols-2 gap-4 mb-10">

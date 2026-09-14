@@ -7,6 +7,7 @@ import {
   SITE_URL,
 } from "@/lib/seo-data";
 import { CONTENT_YEAR } from "@/lib/site-config";
+import { COMMUTE_EDITORIAL } from "@/lib/data/editorial/commute";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -55,6 +56,7 @@ export default async function CommutePage({ params }: Props) {
   const { slug } = await params;
   const data = getCommutePageData(slug);
   if (!data) notFound();
+  const editorial = COMMUTE_EDITORIAL[slug] ?? [];
 
   const {
     destinationLabel,
@@ -193,6 +195,21 @@ export default async function CommutePage({ params }: Props) {
               </Link>
             </p>
           </header>
+
+          {editorial.length > 0 && (
+            <section className="mb-12 max-w-3xl">
+              <h2 className="text-xl font-semibold mb-3">
+                Getting to {destinationLabel}
+              </h2>
+              <div className="space-y-4">
+                {editorial.map((paragraph) => (
+                  <p key={paragraph} className="leading-relaxed text-slate-300">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            </section>
+          )}
 
           {decisionPicks.length > 0 && (
             <section className="mb-12">

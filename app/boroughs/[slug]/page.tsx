@@ -14,6 +14,7 @@ import {
 } from "@/lib/council-tax";
 import { COUNCIL_TAX_YEAR } from "@/lib/data/council-tax";
 import { CONTENT_YEAR } from "@/lib/site-config";
+import { BOROUGH_EDITORIAL } from "@/lib/data/editorial/boroughs";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -177,6 +178,19 @@ export default async function BoroughPage({ params }: Props) {
               {maxOneBedRent.toLocaleString()} depending on where you look.
             </p>
           </header>
+
+          {(BOROUGH_EDITORIAL[slug] ?? []).length > 0 && (
+            <section className="mb-12 max-w-3xl">
+              <h2 className="text-xl font-semibold mb-3">About {name}</h2>
+              <div className="space-y-4">
+                {BOROUGH_EDITORIAL[slug].map((paragraph) => (
+                  <p key={paragraph} className="leading-relaxed text-slate-300">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Rent + Transport snapshot */}
           <section className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-12">

@@ -37,6 +37,13 @@ const nextConfig = {
   async redirects() {
     return [
       ...unpublishedCitySectionRedirects(),
+      // "best-for-food" ranked the same scores as "foodies" with slightly
+      // different weights, and the two pages were 91% the same text.
+      {
+        source: "/lifestyle/best-for-food",
+        destination: "/lifestyle/foodies",
+        permanent: true,
+      },
       // Salary pages were one template with a different number in it (79%
       // shared text). The hub carries every level in one table instead.
       {

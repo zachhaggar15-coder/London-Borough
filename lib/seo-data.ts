@@ -746,7 +746,7 @@ export const LIFESTYLE_PAGES: LifestylePageDef[] = [
     metaDescription:
       "No extreme trade-offs — the most well-rounded places to live in London, scoring well across commute, green space, food, safety and social life.",
     intro:
-      "Some people don't have a strong preference — they just want somewhere that does everything reasonably well. These are the most well-rounded neighbourhoods in London: decent on nightlife, good on green space, solid on commute, and not a nightmare on rent.",
+      "Some people don't have a strong preference — they just want somewhere that does everything reasonably well. These are the most well-rounded neighbourhoods in London on lifestyle scores alone: decent on nightlife, good on green space, solid on transport. Rent is not part of the score, so check the figure beside each one.",
     scoreFn: PERSONALITY_SCORERS.balanced,
   },
   {
@@ -765,18 +765,6 @@ export const LIFESTYLE_PAGES: LifestylePageDef[] = [
         (10 - s.livelyVsQuiet) * 0.1) /
       10,
     rentColumn: "twoBed",
-  },
-  {
-    slug: "best-for-food",
-    h1: "Best areas for food in London",
-    metaTitle: `Best areas for food in London (${CONTENT_YEAR} guide)`,
-    metaDescription:
-      "The best London neighbourhoods for eating out, ranked by restaurant and market strength — from destination food scenes to great everyday café streets.",
-    intro:
-      "These are London's best areas for food — ranked by restaurant diversity, market culture and café density. If where you live is where you want to eat, start here.",
-    scoreFn: (s) =>
-      (s.foodScene * 0.55 + s.cafeDensity * 0.25 + s.livelyVsQuiet * 0.1 + s.walkability * 0.1) /
-      10,
   },
   {
     slug: "expensive",
