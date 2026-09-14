@@ -110,11 +110,15 @@ export type CityData = {
     destinationPlaceholder: string;
   };
 
-  /** Where the tool's own hub links point. */
+  /**
+   * Where the tool's own hub links point. Null when that section is
+   * switched off for the city (lib/city-sections.ts), so the tool hides
+   * the link rather than sending readers into a redirect.
+   */
   links: {
-    areaGuides: string;
-    compare: string;
-    rentIndex: string;
+    areaGuides: string | null;
+    compare: string | null;
+    rentIndex: string | null;
     methodology: string;
     areaHref: (id: string) => string;
   };

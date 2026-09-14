@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SALARY_LEVELS, getSalaryPageData, SITE_URL } from "@/lib/seo-data";
+import { NEIGHBOURHOODS } from "@/lib/data/neighbourhoods";
+
+const NEIGHBOURHOODS_TRACKED = NEIGHBOURHOODS.length;
 
 export const metadata: Metadata = {
-  title: "Where to live in London by salary — rent budget guides",
+  title: "Where to live in London by salary — rent budgets from £25k to £150k",
   description:
-    "Find out where you can afford to live in London based on your salary. Take-home pay, rent budgets and neighbourhood recommendations for every income level.",
+    "What a London salary leaves you after tax, the rent that fits inside 35% of it, and which neighbourhoods are in range — every level from £25,000 to £150,000 in one table.",
   alternates: { canonical: `${SITE_URL}/salary` },
   openGraph: {
     title: "Where to live in London by salary",
@@ -25,6 +28,10 @@ export default function SalaryIndexPage() {
       budget35: d.budget35,
       comfortableCount: d.comfortable.length,
       roomCount: d.roomShareWithinBudget.length,
+      // The dearest areas still in range, not the cheapest: at £150k the
+      // useful answer is Marylebone, not Romford.
+      topInRange: d.comfortable.slice(-3).reverse(),
+      cheapestRoom: d.roomShare[0] ?? null,
     };
   });
 
@@ -101,9 +108,9 @@ export default function SalaryIndexPage() {
                 instead.
               </>
             )}{" "}
-            Each guide below the threshold lists the cheapest room-share areas
-            with the real percentage of take-home they would consume, rather
-            than showing you an empty list.
+            Below that threshold the table names the cheapest room in a share
+            and the real percentage of take-home it would consume, rather than
+            showing an empty row.
           </p>
           <p>
             Two things the percentages do not capture. Council tax and bills are
@@ -115,54 +122,86 @@ export default function SalaryIndexPage() {
           </p>
         </section>
 
-        <h2 className="mb-4 text-xl font-semibold">Guides by salary</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {salaryData.map(({
-            salary,
-            takeHome,
-            budget35,
-            comfortableCount,
-            roomCount,
-          }) => (
-            <Link
-              key={salary}
-              href={`/salary/${salary}`}
-              className="rounded-lg bg-slate-900 border border-slate-800 p-5 hover:border-slate-600 transition-colors"
-            >
-              <h2 className="font-semibold text-white mb-3">
-                £{salary.toLocaleString()} salary
-              </h2>
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                <div>
-                  <p className="text-slate-400 text-xs mb-0.5">Take-home</p>
-                  <p className="font-medium">
-                    £{takeHome.toLocaleString()}/mo
-                  </p>
-                </div>
-                <div>
-                  <p className="text-slate-400 text-xs mb-0.5">Rent budget</p>
-                  <p className="font-medium">
-                    £{budget35.toLocaleString()}/mo
-                  </p>
-                </div>
-                <div>
-                  <p className="text-slate-400 text-xs mb-0.5">
-                    {comfortableCount > 0 ? "1-beds in budget" : "Rooms in budget"}
-                  </p>
-                  <p className="font-medium text-emerald-400">
-                    {comfortableCount > 0 ? comfortableCount : roomCount}
-                  </p>
-                </div>
-              </div>
-              <p className="mt-3 text-xs text-slate-400">
-                {comfortableCount > 0
-                  ? `${comfortableCount} tracked areas where a one-bed fits inside 35% of take-home.`
-                  : roomCount > 0
-                  ? `A one-bed is out of range at this level; ${roomCount} areas have room-shares that fit.`
-                  : `Both a one-bed and a room sit above the 35% guideline here — the guide shows the cheapest options and the real gap.`}
-              </p>
-            </Link>
-          ))}
+        {/*
+          One table rather than a page per level. The per-level pages were
+          the same template with a different number in (79% shared text),
+          which is exactly what the AdSense review flagged.
+        */}
+        <h2 className="mb-2 text-xl font-semibold">Every salary level</h2>
+        <p className="mb-4 max-w-3xl text-sm text-slate-400">
+          Rent budget is 35% of monthly take-home. &ldquo;In range&rdquo;
+          counts the {NEIGHBOURHOODS_TRACKED} tracked areas where a one-bed
+          fits inside it; the named areas are the priciest of those, which is
+          what the extra money actually buys.
+        </p>
+        <div className="-mx-6 overflow-x-auto px-6">
+          <table className="w-full min-w-[44rem] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-slate-800 text-left text-xs uppercase tracking-wide text-slate-500">
+                <th scope="col" className="py-2 pr-4 font-medium">Salary</th>
+                <th scope="col" className="py-2 pr-4 font-medium">Take-home / mo</th>
+                <th scope="col" className="py-2 pr-4 font-medium">Rent budget</th>
+                <th scope="col" className="py-2 pr-4 font-medium">1-beds in range</th>
+                <th scope="col" className="py-2 pr-4 font-medium">What it reaches</th>
+              </tr>
+            </thead>
+            <tbody>
+              {salaryData.map((row) => (
+                <tr
+                  key={row.salary}
+                  id={`salary-${row.salary}`}
+                  className="scroll-mt-24 border-b border-slate-900 align-top"
+                >
+                  <td className="py-3 pr-4 font-medium tabular-nums">
+                    £{row.salary.toLocaleString()}
+                  </td>
+                  <td className="py-3 pr-4 tabular-nums text-slate-300">
+                    £{row.takeHome.toLocaleString()}
+                  </td>
+                  <td className="py-3 pr-4 tabular-nums text-emerald-400">
+                    £{row.budget35.toLocaleString()}
+                  </td>
+                  <td className="py-3 pr-4 tabular-nums">
+                    {row.comfortableCount}
+                  </td>
+                  <td className="py-3 pr-4 text-slate-300">
+                    {row.topInRange.length > 0 ? (
+                      row.topInRange.map((area, index) => (
+                        <span key={area.id}>
+                          {index > 0 && ", "}
+                          <Link
+                            href={`/neighbourhoods/${area.id}`}
+                            className="hover:text-emerald-400"
+                          >
+                            {area.name}
+                          </Link>{" "}
+                          <span className="text-slate-500">
+                            £{area.oneBedRent.toLocaleString()}
+                          </span>
+                        </span>
+                      ))
+                    ) : row.cheapestRoom ? (
+                      <>
+                        No one-bed. Cheapest room:{" "}
+                        <Link
+                          href={`/neighbourhoods/${row.cheapestRoom.id}`}
+                          className="hover:text-emerald-400"
+                        >
+                          {row.cheapestRoom.name}
+                        </Link>{" "}
+                        <span className="text-slate-500">
+                          £{row.cheapestRoom.roomRent.toLocaleString()} (
+                          {row.cheapestRoom.roomAsPct}% of take-home)
+                        </span>
+                      </>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
         <section className="mt-12 rounded-xl border border-slate-800 bg-slate-900 p-6">

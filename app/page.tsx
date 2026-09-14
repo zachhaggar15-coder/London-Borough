@@ -341,7 +341,7 @@ export default function HomePage() {
             {SALARY_LEVELS.map((s) => (
               <Link
                 key={s}
-                href={`/salary/${s}`}
+                href={`/salary#salary-${s}`}
                 className="rounded-lg bg-slate-900 border border-slate-800 px-4 py-2 text-sm hover:border-slate-600 transition-colors"
               >
                 £{s.toLocaleString()} salary

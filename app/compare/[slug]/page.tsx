@@ -8,7 +8,6 @@ import {
   getComparePageData,
   getCommutePairPageData,
   getIndexableCompareSlugs,
-  isCompareSlug,
   isIndexableCompareSlug,
   relatedComparisons,
   SITE_URL,
@@ -34,7 +33,7 @@ export async function generateStaticParams() {
 // Curated pairs are prerendered; any other slug is resolved on demand so that
 // a non-canonical ordering (e.g. `streatham-vs-walthamstow` when the canonical
 // page is `walthamstow-vs-streatham`) 308-redirects to the canonical URL
-// instead of 404ing. Non-curated pairs still 404.
+// instead of 404ing. Non-curated pairs 404.
 export const dynamicParams = true;
 
 /** Resolve a slug to its canonical curated form, or null if it isn't one. */
@@ -42,7 +41,10 @@ function canonicalCompareSlug(slug: string): string | null {
   const data = getComparePageData(slug);
   if (!data) return null;
   const canonical = comparisonSlugFor(data.a.id, data.b.id);
-  return isCompareSlug(canonical) ? canonical : null;
+  // Only the curated set exists. The other ~4,400 generated pairs used to
+  // render with noindex, which still left them crawlable by anyone
+  // reviewing the site; they now 404.
+  return isIndexableCompareSlug(canonical) ? canonical : null;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

@@ -8,6 +8,7 @@ import {
 } from "@/lib/city-commute-details";
 import { councilSummaries } from "@/lib/council-summaries";
 import { haversineKm } from "@/lib/city-content";
+import { livePath } from "@/lib/city-sections";
 import type {
   CommuteEstimateSource,
   Destination,
@@ -202,9 +203,9 @@ export function createCityData(
     },
 
     links: {
-      areaGuides: content.path("/neighbourhoods"),
-      compare: content.path("/compare"),
-      rentIndex: content.path("/rent-index"),
+      areaGuides: livePath(content.path("/neighbourhoods")),
+      compare: livePath(content.path("/compare")),
+      rentIndex: livePath(content.path("/rent-index")),
       methodology: content.path("/methodology"),
       areaHref: (id) => content.path(`/neighbourhoods/${id}`),
     },

@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  CONTENT_CITY_IDS,
+  citiesPublishing,
   getCityContent,
   isContentCityId,
+  isPathPublished,
 } from "@/lib/city-registry";
 import GuideDataBlock from "@/components/city/GuideDataBlock";
 import {
@@ -18,7 +19,7 @@ type Props = { params: Promise<{ city: string; slug: string }> };
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
-  return CONTENT_CITY_IDS.flatMap((city) =>
+  return citiesPublishing("guides").flatMap((city) =>
     getCityContent(city).input.guides.map((guide) => ({
       city,
       slug: guide.slug,
@@ -56,6 +57,9 @@ export default async function CityGuidePage({ params }: Props) {
   if (!guide) notFound();
 
   const others = content.input.guides.filter((g) => g.slug !== slug);
+  // Related links can name a section that is switched off; linking to it
+  // would only bounce the reader back to the hub.
+  const related = guide.related.filter((link) => isPathPublished(link.href));
 
   const articleSchema = {
     "@context": "https://schema.org",
@@ -190,11 +194,11 @@ export default async function CityGuidePage({ params }: Props) {
           </section>
         </article>
 
-        {guide.related.length > 0 && (
+        {related.length > 0 && (
           <section className="mt-12 border-t border-slate-800 pt-8">
             <h2 className="text-2xl font-bold tracking-tight">Related</h2>
             <div className="mt-5 flex flex-wrap gap-3">
-              {guide.related.map((link) => (
+              {related.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}

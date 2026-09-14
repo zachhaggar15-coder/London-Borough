@@ -15,6 +15,7 @@
  */
 
 import { SITE_URL } from "@/lib/seo-data";
+import { isCitySectionPublished } from "@/lib/city-sections";
 import type { City } from "@/lib/cities";
 import type { Currency } from "@/lib/currency";
 import { PERSONALITY_SCORERS } from "@/lib/personalities";
@@ -746,7 +747,8 @@ export function createCityContent(input: CityInput) {
     input.guides.reduce((latest, g) => (g.updated > latest ? g.updated : latest),
       input.guides[0]?.updated ?? input.rent.reviewedAsOf);
 
-  const indexableRoutes = (): IndexableRoute[] => {
+  /** Every route the section could publish, live or not. */
+  const allRoutes = (): IndexableRoute[] => {
     const rent = input.rent.reviewedAsOf;
     const tax = councilTax?.asOf ?? rent;
     const council = rent >= tax ? rent : tax;
@@ -806,6 +808,16 @@ export function createCityContent(input: CityInput) {
       })),
     ];
   };
+
+  /**
+   * The routes that are live and belong in the sitemap: the hub, plus
+   * every route whose section is published (lib/city-sections.ts).
+   */
+  const indexableRoutes = (): IndexableRoute[] =>
+    allRoutes().filter((route) => {
+      const section = route.path.slice(city.basePath.length).split("/")[1];
+      return !section || isCitySectionPublished(section);
+    });
 
   return {
     input,
@@ -877,6 +889,7 @@ export function createCityContent(input: CityInput) {
       [...input.guides].sort((a, b) => b.updated.localeCompare(a.updated)),
     guidesLastUpdated,
 
+    allRoutes,
     indexableRoutes,
   };
 }

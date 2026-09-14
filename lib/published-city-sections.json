@@ -1,0 +1,20 @@
+{
+  "cities": ["manchester", "bristol", "leeds", "edinburgh", "geneva", "paris", "barcelona"],
+  "sections": [
+    "neighbourhoods",
+    "boroughs",
+    "councils",
+    "communes",
+    "arrondissements",
+    "districts",
+    "commute",
+    "compare",
+    "lifestyle",
+    "salary",
+    "rent-index",
+    "couples",
+    "methodology",
+    "guides"
+  ],
+  "published": ["guides", "methodology"]
+}

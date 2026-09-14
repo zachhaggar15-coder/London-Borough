@@ -192,24 +192,22 @@ function FinderShell({ cityData }: { cityData: CityData }) {
               aria-label={`Explore ${city.brand}`}
               className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs"
             >
-              <Link
-                href={links.areaGuides}
-                className="text-slate-300 transition-colors hover:text-white"
-              >
-                Area guides
-              </Link>
-              <Link
-                href={links.compare}
-                className="text-slate-300 transition-colors hover:text-white"
-              >
-                Compare
-              </Link>
-              <Link
-                href={links.rentIndex}
-                className="text-slate-300 transition-colors hover:text-white"
-              >
-                Rent index
-              </Link>
+              {[
+                { href: links.areaGuides, label: "Area guides" },
+                { href: links.compare, label: "Compare" },
+                { href: links.rentIndex, label: "Rent index" },
+              ].map(
+                (link) =>
+                  link.href && (
+                    <Link
+                      key={link.label}
+                      href={link.href}
+                      className="text-slate-300 transition-colors hover:text-white"
+                    >
+                      {link.label}
+                    </Link>
+                  ),
+              )}
               <Link
                 href={links.methodology}
                 className="text-slate-300 transition-colors hover:text-white"

@@ -614,7 +614,6 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
     getAllNeighbourhoodSlugs().length +
     getAllBoroughSlugs().length +
     getAllCommuteSlugs().length +
-    SALARY_LEVELS.length +
     LIFESTYLE_PAGES.length +
     getIndexableCompareSlugs().length +
     GUIDES.length;
@@ -631,6 +630,8 @@ test("SEO inventory exposes every generated public page for sitemap discovery", 
   );
   assert.ok(paths.every((path) => !path.startsWith("/commute/route/")));
   assert.ok(paths.every((path) => !path.startsWith("/rent-guide")));
+  // Per-level salary pages were retired into the /salary table.
+  assert.ok(paths.every((path) => !path.startsWith("/salary/")));
   assert.ok(GUIDES.every((guide) => paths.includes(`/guides/${guide.slug}`)));
 
   // Every entry must carry a real content-review date. Stamping the build

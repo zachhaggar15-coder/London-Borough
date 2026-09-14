@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { money } from "@/lib/currency";
 import {
-  CONTENT_CITY_IDS,
+  citiesPublishing,
   getCityContent,
   isContentCityId,
 } from "@/lib/city-registry";
@@ -22,7 +22,7 @@ type Props = { params: Promise<{ city: string; slug: string }> };
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
-  return CONTENT_CITY_IDS.flatMap((city) =>
+  return citiesPublishing("commute").flatMap((city) =>
     getCityContent(city)
       .commuteSlugs()
       .map((slug) => ({ city, slug })),

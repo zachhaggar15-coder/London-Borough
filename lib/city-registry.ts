@@ -7,6 +7,9 @@ import { EDINBURGH_INPUT } from "@/lib/city-inputs/edinburgh";
 import { GENEVA_INPUT } from "@/lib/city-inputs/geneva";
 import { PARIS_INPUT } from "@/lib/city-inputs/paris";
 import { BARCELONA_INPUT } from "@/lib/city-inputs/barcelona";
+import { isCitySectionPublished } from "@/lib/city-sections";
+
+export { isCitySectionPublished, isPathPublished } from "@/lib/city-sections";
 
 /**
  * Which cities have a generated section, and their content.
@@ -50,6 +53,11 @@ export function getCityContent(id: ContentCityId): CityContent {
     CONTENT_CACHE.set(id, content);
   }
   return content;
+}
+
+/** Cities whose pages for `section` should be built: all of them, or none. */
+export function citiesPublishing(section: string): ContentCityId[] {
+  return isCitySectionPublished(section) ? CONTENT_CITY_IDS : [];
 }
 
 /** Every generated city's content, in registry order. */

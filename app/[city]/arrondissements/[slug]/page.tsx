@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CONTENT_CITY_IDS, getCityContent, isContentCityId } from "@/lib/city-registry";
+import { citiesPublishing, getCityContent, isContentCityId } from "@/lib/city-registry";
 import { CITIES } from "@/lib/cities";
 import {
   CouncilDetailPage,
@@ -12,7 +12,7 @@ type Props = { params: Promise<{ city: string; slug: string }> };
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
-  return CONTENT_CITY_IDS.filter(
+  return citiesPublishing("arrondissements").filter(
     (city) => CITIES[city].councilSegment === "arrondissements",
   ).flatMap((city) =>
     getCityContent(city)

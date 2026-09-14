@@ -1,3 +1,33 @@
+// CommonJS config file: require is the only way to read JSON here.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const CITY_SECTIONS = require("./lib/published-city-sections.json");
+
+/**
+ * Unpublished city sections 308 to their city hub. The same JSON drives
+ * the sitemap and which pages are built, so a section cannot be linked,
+ * listed and redirected at once. See lib/city-sections.ts for why most
+ * of them are off.
+ */
+function unpublishedCitySectionRedirects() {
+  const cities = CITY_SECTIONS.cities.join("|");
+  const sections = CITY_SECTIONS.sections
+    .filter((section) => !CITY_SECTIONS.published.includes(section))
+    .join("|");
+  if (!sections) return [];
+  return [
+    {
+      source: `/:city(${cities})/:section(${sections})`,
+      destination: "/:city",
+      permanent: true,
+    },
+    {
+      source: `/:city(${cities})/:section(${sections})/:rest*`,
+      destination: "/:city",
+      permanent: true,
+    },
+  ];
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -6,6 +36,14 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      ...unpublishedCitySectionRedirects(),
+      // Salary pages were one template with a different number in it (79%
+      // shared text). The hub carries every level in one table instead.
+      {
+        source: "/salary/:amount",
+        destination: "/salary",
+        permanent: true,
+      },
       // Retired thin clusters. /rent-guide/[slug] duplicated the neighbourhood
       // page for the same area (its room-rate figure now lives there), and
       // /commute/route/[slug] covered the same curated pairs as /compare

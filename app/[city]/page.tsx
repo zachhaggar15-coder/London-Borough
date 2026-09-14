@@ -11,7 +11,7 @@ import { spellNumber } from "@/lib/city-content";
 import { money, moneyWithGbp } from "@/lib/currency";
 import CityToolClient from "@/app/[city]/CityToolClient";
 import {
-  AreaCard,
+  BandPill,
   DataNote,
   PageShell,
   Section,
@@ -53,8 +53,6 @@ export default async function CityHomePage({ params }: Props) {
 
   const areaCount = content.areas.length;
   const { oneBed, twoBed } = content.rentMedians();
-  const featuredAreas = content.areasByBand().slice(0, 8);
-  const compareCount = content.compareSlugs().length;
   const councils = content.councils;
   const noun = input.councilNoun;
 
@@ -143,31 +141,23 @@ export default async function CityHomePage({ params }: Props) {
           journey times and the trade-offs each one asks you to make.
         </p>
 
-        <div className="mt-8 flex flex-wrap gap-3 text-sm">
-          <Link
-            href={content.path("/neighbourhoods")}
-            className="rounded-lg bg-emerald-600 px-4 py-2 font-medium transition-colors hover:bg-emerald-500"
-          >
-            Browse all {areaCount} areas
-          </Link>
-          {[
-            { href: "/rent-index", label: "Rent by area" },
-            {
-              href: `/${content.city.councilSegment}`,
-              label: `The ${spellNumber(councils.length)} ${noun.plural}`,
-            },
-            { href: "/salary", label: "What your salary rents" },
-            { href: "/couples", label: "Two commutes" },
-          ].map((link) => (
-            <Link
-              key={link.href}
-              href={content.path(link.href)}
-              className="rounded-lg border border-slate-700 px-4 py-2 transition-colors hover:border-slate-500"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </div>
+        <Section
+          title="Before you pick an area"
+          lead="What it costs, how renting works here, and how the transport actually behaves."
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            {content.guidesByRecency().map((guide) => (
+              <Link
+                key={guide.slug}
+                href={content.path(`/guides/${guide.slug}`)}
+                className="rounded-lg border border-slate-800 bg-slate-900 px-4 py-3 transition-colors hover:border-slate-600"
+              >
+                <p className="text-sm font-medium">{guide.h1}</p>
+                <p className="mt-1 text-xs text-slate-400">{guide.summary}</p>
+              </Link>
+            ))}
+          </div>
+        </Section>
 
         <Section
           title="How far out is far out?"
@@ -197,102 +187,37 @@ export default async function CityHomePage({ params }: Props) {
           </DataNote>
         </Section>
 
+        {/*
+          One page carrying every area's written summary, rather than one
+          thin page per area. The per-area pages are switched off until
+          each has writing of its own — see lib/city-sections.ts.
+        */}
         <Section
-          title="Start from where you work"
-          lead={`${input.destinations.length} employment centres, each with every area ranked by how long it actually takes to get there on a weekday morning.`}
-        >
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {input.destinations.map((d) => (
-              <Link
-                key={d.id}
-                href={content.path(`/commute/${d.id}`)}
-                className="rounded-lg border border-slate-800 bg-slate-900 px-4 py-3 text-sm transition-colors hover:border-slate-600"
-              >
-                Best areas for commuting to {d.label}
-              </Link>
-            ))}
-          </div>
-        </Section>
-
-        <Section
-          title="Start from how you want to live"
-          lead={`${input.lifestylePages.length} cuts through the same data, weighted for different priorities.`}
+          title={`All ${areaCount} areas at a glance`}
+          lead={`Working outwards from the middle. Rents are typical one-bed asking rents; the ${noun.singular} is where council services and any local tax are set.`}
         >
           <div className="grid gap-3 sm:grid-cols-2">
-            {input.lifestylePages.map((page) => (
-              <Link
-                key={page.slug}
-                href={content.path(`/lifestyle/${page.slug}`)}
-                className="rounded-lg border border-slate-800 bg-slate-900 px-4 py-3 transition-colors hover:border-slate-600"
+            {content.areasByBand().map((n) => (
+              <div
+                key={n.id}
+                className="rounded-lg border border-slate-800 bg-slate-900 px-4 py-3"
               >
-                <p className="text-sm font-medium">{page.h1}</p>
-              </Link>
+                <div className="flex items-baseline justify-between gap-3">
+                  <h3 className="font-medium">{n.name}</h3>
+                  <p className="shrink-0 text-sm tabular-nums text-slate-400">
+                    {money(n.rent.oneBedMedianGbp, input.currency)}
+                  </p>
+                </div>
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                  <span>{n.borough}</span>
+                  <BandPill area={n} />
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                  {n.summary}
+                </p>
+              </div>
             ))}
           </div>
-        </Section>
-
-        <Section
-          title="A few places to start"
-          lead="Working outwards from the middle."
-        >
-          <div className="grid gap-3 sm:grid-cols-2">
-            {featuredAreas.map((n) => (
-              <AreaCard key={n.id} content={content} area={n} />
-            ))}
-          </div>
-          <Link
-            href={content.path("/neighbourhoods")}
-            className="mt-6 inline-block text-sm text-emerald-400 transition-colors hover:text-emerald-300"
-          >
-            All {areaCount} areas →
-          </Link>
-        </Section>
-
-        <Section
-          title="Before you pick an area"
-          lead="What it costs, how renting works here, and how the transport actually behaves."
-        >
-          <div className="grid gap-3 sm:grid-cols-2">
-            {content.guidesByRecency().map((guide) => (
-              <Link
-                key={guide.slug}
-                href={content.path(`/guides/${guide.slug}`)}
-                className="rounded-lg border border-slate-800 bg-slate-900 px-4 py-3 transition-colors hover:border-slate-600"
-              >
-                <p className="text-sm font-medium">{guide.h1}</p>
-                <p className="mt-1 text-xs text-slate-400">{guide.summary}</p>
-              </Link>
-            ))}
-          </div>
-        </Section>
-
-        <Section
-          title={`The ${spellNumber(councils.length)} ${noun.plural}`}
-          lead="Rents, council tax and the areas inside each one."
-        >
-          <div className="flex flex-wrap gap-3">
-            {councils.map((council) => (
-              <Link
-                key={council}
-                href={content.councilPath(council)}
-                className="rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm transition-colors hover:border-slate-600"
-              >
-                {council}
-              </Link>
-            ))}
-          </div>
-        </Section>
-
-        <Section
-          title="Weighing up two areas"
-          lead={`${compareCount} side-by-side comparisons, limited to pairs that are a genuine either/or rather than every possible combination.`}
-        >
-          <Link
-            href={content.path("/compare")}
-            className="inline-block rounded-lg border border-slate-700 px-4 py-2 text-sm transition-colors hover:border-slate-500"
-          >
-            Browse comparisons →
-          </Link>
         </Section>
 
         <Section title="Common questions">

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  CONTENT_CITY_IDS,
+  citiesPublishing,
   getCityContent,
   isContentCityId,
 } from "@/lib/city-registry";
@@ -21,7 +21,7 @@ type Props = { params: Promise<{ city: string }> };
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
-  return CONTENT_CITY_IDS.map((city) => ({ city }));
+  return citiesPublishing("methodology").map((city) => ({ city }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -213,14 +213,7 @@ export default async function CityMethodologyPage({ params }: Props) {
             These are editorial judgements, informed by transport data,
             published crime and deprivation statistics and local knowledge.
             They are not survey results and they are not derived from a
-            formula. The{" "}
-            <Link
-              href={content.path("/lifestyle")}
-              className="underline underline-offset-2 hover:text-white"
-            >
-              lifestyle rankings
-            </Link>{" "}
-            combine them with different weights, which are stated on each page.
+            formula.
           </p>
         </div>
       </Section>

@@ -364,8 +364,11 @@ for (const [id, content] of CITIES) {
   });
 
   test(`${id}: every guide's related links point somewhere real`, () => {
+    // Real means a route the city could publish, live or switched off: the
+    // guide page drops links into unpublished sections at render time, so
+    // they come back on their own when a section is republished.
     const known = new Set([
-      ...content.indexableRoutes().map((r) => r.path),
+      ...content.allRoutes().map((r) => r.path),
       ...getIndexableRoutes().map((r) => r.path),
     ]);
     for (const guide of content.input.guides) {
@@ -423,6 +426,53 @@ test("no city route collides with London's, or with another city's", () => {
       assert.ok(!existing, `${id} collides with ${existing} on ${route.path}`);
       seen.set(route.path, id);
     }
+  }
+});
+
+// ── Published sections ───────────────────────────────────────────────
+
+const SECTION_CONFIG = require("../lib/published-city-sections.json");
+const { isPathPublished } = jiti("../lib/city-sections.ts");
+
+/** Turn a Next.js redirect source like `/:city(a|b)/:rest*` into a RegExp. */
+function redirectSourceToRegExp(source) {
+  const pattern = source
+    .replace(/\/:\w+\*/g, "(?:/.*)?")
+    .replace(/:\w+\(([^)]+)\)/g, "($1)");
+  return new RegExp(`^${pattern}$`);
+}
+
+test("the sitemap lists only published city sections", () => {
+  for (const content of allCityContent()) {
+    for (const route of content.indexableRoutes()) {
+      assert.ok(isPathPublished(route.path), `${route.path} is not published`);
+    }
+  }
+});
+
+test("every unpublished city path redirects, and no published one does", async () => {
+  const nextConfig = require("../next.config.js");
+  const sources = (await nextConfig.redirects()).map((r) =>
+    redirectSourceToRegExp(r.source),
+  );
+  const redirected = (p) => sources.some((re) => re.test(p));
+
+  for (const content of allCityContent()) {
+    for (const route of content.allRoutes()) {
+      const live = isPathPublished(route.path);
+      assert.equal(
+        redirected(route.path),
+        !live,
+        `${route.path} is ${live ? "published but redirects" : "unpublished but still resolves"}`,
+      );
+    }
+  }
+});
+
+test("the section config names every city in the registry", () => {
+  assert.deepEqual([...SECTION_CONFIG.cities].sort(), [...CONTENT_CITY_IDS].sort());
+  for (const section of SECTION_CONFIG.published) {
+    assert.ok(SECTION_CONFIG.sections.includes(section), `${section} is not a section`);
   }
 });
 

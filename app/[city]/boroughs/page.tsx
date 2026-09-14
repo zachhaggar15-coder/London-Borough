@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CONTENT_CITY_IDS, getCityContent, isContentCityId } from "@/lib/city-registry";
+import { citiesPublishing, getCityContent, isContentCityId } from "@/lib/city-registry";
 import { CITIES } from "@/lib/cities";
 import {
   CouncilsIndexPage,
@@ -16,7 +16,7 @@ export const dynamicParams = false;
  * The others answer on the sibling segment, and this one 404s for them.
  */
 export async function generateStaticParams() {
-  return CONTENT_CITY_IDS.filter(
+  return citiesPublishing("boroughs").filter(
     (city) => CITIES[city].councilSegment === "boroughs",
   ).map((city) => ({ city }));
 }

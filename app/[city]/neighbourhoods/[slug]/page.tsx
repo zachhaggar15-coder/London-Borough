@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  CONTENT_CITY_IDS,
+  citiesPublishing,
   getCityContent,
   isContentCityId,
 } from "@/lib/city-registry";
@@ -27,7 +27,7 @@ type Props = { params: Promise<{ city: string; slug: string }> };
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
-  return CONTENT_CITY_IDS.flatMap((city) =>
+  return citiesPublishing("neighbourhoods").flatMap((city) =>
     getCityContent(city)
       .areaSlugs()
       .map((slug) => ({ city, slug })),

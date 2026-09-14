@@ -178,12 +178,14 @@ export default function ShortlistPanel() {
             <div className="text-[11px] uppercase tracking-wider text-slate-500">
               Decision compare
             </div>
-            <Link
-              href={links.compare}
-              className="text-[11px] text-slate-500 hover:text-slate-200"
-            >
-              More guides
-            </Link>
+            {links.compare && (
+              <Link
+                href={links.compare}
+                className="text-[11px] text-slate-500 hover:text-slate-200"
+              >
+                More guides
+              </Link>
+            )}
           </div>
           <p className="mb-3 text-xs leading-relaxed text-slate-300">
             {decision.recommendation}

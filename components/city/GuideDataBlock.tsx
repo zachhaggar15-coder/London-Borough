@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { money } from "@/lib/currency";
 import type { CityContent, CityGuideSection } from "@/lib/city-content";
 import {
   LocalCostsTable,
   ScrollTable,
+  SectionLink,
   TableHead,
 } from "@/components/city/Pieces";
 
@@ -58,12 +58,12 @@ export default function GuideDataBlock({
               return (
                 <tr key={council} className="border-b border-slate-900">
                   <td className="py-2.5 pr-4">
-                    <Link
+                    <SectionLink
                       href={content.councilPath(council)}
                       className="transition-colors hover:text-emerald-400"
                     >
                       {council}
-                    </Link>
+                    </SectionLink>
                   </td>
                   <td className="py-2.5 pr-4 tabular-nums text-slate-200">
                     {money(bandD, currency)}
@@ -98,12 +98,12 @@ export default function GuideDataBlock({
             {picks.map((n) => (
               <tr key={n.id} className="border-b border-slate-900">
                 <td className="py-2.5 pr-4">
-                  <Link
+                  <SectionLink
                     href={content.path(`/neighbourhoods/${n.id}`)}
                     className="transition-colors hover:text-emerald-400"
                   >
                     {n.name}
-                  </Link>
+                  </SectionLink>
                 </td>
                 <td className="py-2.5 pr-4 tabular-nums text-slate-200">
                   {money(n.rent.oneBedMedianGbp, currency)}

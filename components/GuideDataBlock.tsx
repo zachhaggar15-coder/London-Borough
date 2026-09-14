@@ -164,7 +164,7 @@ function SalaryLadder() {
               </td>
               <td className="px-4 py-2.5 text-right">
                 <Link
-                  href={`/salary/${salary}`}
+                  href={`/salary#salary-${salary}`}
                   className="text-slate-400 hover:text-emerald-400 transition-colors"
                 >
                   £{(salary / 1000).toFixed(0)}k →

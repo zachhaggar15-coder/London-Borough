@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { money } from "@/lib/currency";
 import {
-  CONTENT_CITY_IDS,
+  citiesPublishing,
   getCityContent,
   isContentCityId,
 } from "@/lib/city-registry";
@@ -22,7 +22,7 @@ type Props = { params: Promise<{ city: string }> };
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
-  return CONTENT_CITY_IDS.map((city) => ({ city }));
+  return citiesPublishing("rent-index").map((city) => ({ city }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

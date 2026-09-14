@@ -121,12 +121,6 @@ export function getIndexableRoutes(): IndexableRoute[] {
       changefreq: "monthly" as const,
       lastmod: rent,
     })),
-    ...SALARY_LEVELS.map((amount) => ({
-      path: `/salary/${amount}`,
-      priority: 0.7,
-      changefreq: "monthly" as const,
-      lastmod: rent,
-    })),
     ...LIFESTYLE_PAGES.map((page) => ({
       path: `/lifestyle/${page.slug}`,
       priority: 0.7,
@@ -477,7 +471,7 @@ function commuteValueTradeOff(
 }
 
 // ──────────────────────────────────────────────────────────────────
-// Salary pages  →  /salary/[amount]
+// Salary data  →  the /salary table (per-level pages retired Sept 2026)
 // ──────────────────────────────────────────────────────────────────
 
 export const SALARY_LEVELS = [
@@ -829,7 +823,7 @@ export function getLifestylePageData(slug: string): {
 }
 
 // ──────────────────────────────────────────────────────────────────
-// London-wide rent stats — used by the "expensive/posh" copy and the
+// London-wide rent stats — used by the "is it expensive?" copy and the
 // rent-index asset. All derived from NEIGHBOURHOODS, no external data.
 // ──────────────────────────────────────────────────────────────────
 

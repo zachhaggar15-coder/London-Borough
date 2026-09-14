@@ -1,7 +1,7 @@
 import Link from "next/link";
 import CookieSettingsLink from "@/components/CookieSettingsLink";
 import { CONTACT_EMAIL, SITE_NAME } from "@/lib/site-config";
-import { allCityContent } from "@/lib/city-registry";
+import { allCityContent, isPathPublished } from "@/lib/city-registry";
 
 const LONDON_LINKS = [
   { href: "/guides", label: "Guides" },
@@ -78,13 +78,17 @@ export default function SiteFooter() {
             >
               Overview
             </Link>
-            <Link
-              href={content.path(`/${content.city.councilSegment}`)}
-              className="capitalize transition-colors hover:text-white"
-            >
-              {content.input.councilNoun.plural}
-            </Link>
-            {CITY_SECTIONS.map((section) => (
+            {isPathPublished(content.path(`/${content.city.councilSegment}`)) && (
+              <Link
+                href={content.path(`/${content.city.councilSegment}`)}
+                className="capitalize transition-colors hover:text-white"
+              >
+                {content.input.councilNoun.plural}
+              </Link>
+            )}
+            {CITY_SECTIONS.filter((section) =>
+              isPathPublished(content.path(section.path)),
+            ).map((section) => (
               <Link
                 key={section.path}
                 href={content.path(section.path)}

@@ -4,6 +4,7 @@ import type { LifestyleScores, Neighbourhood } from "@/lib/types";
 import { centralityLabel } from "@/lib/centrality";
 import type { CityContent } from "@/lib/city-content";
 import { money, moneyWithGbp } from "@/lib/currency";
+import { isPathPublished } from "@/lib/city-sections";
 
 /**
  * Small presentational pieces shared by every generated city section.
@@ -13,6 +14,28 @@ import { money, moneyWithGbp } from "@/lib/currency";
  * rather than importing a city-specific path helper. Nothing here holds
  * state, so they are all server components.
  */
+
+/**
+ * A link when the target section is live, plain text when it is switched
+ * off in lib/city-sections.ts. A link that 308s straight back to the hub
+ * is worse than no link.
+ */
+export function SectionLink({
+  href,
+  className,
+  children,
+}: {
+  href: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  if (!isPathPublished(href)) return <span>{children}</span>;
+  return (
+    <Link href={href} className={className}>
+      {children}
+    </Link>
+  );
+}
 
 export function Breadcrumbs({
   trail,
@@ -93,11 +116,9 @@ export function AreaCard({
   area: Neighbourhood;
   note?: string;
 }) {
-  return (
-    <Link
-      href={content.path(`/neighbourhoods/${area.id}`)}
-      className="block rounded-lg border border-slate-800 bg-slate-900 px-4 py-3 transition-colors hover:border-slate-600"
-    >
+  const href = content.path(`/neighbourhoods/${area.id}`);
+  const body = (
+    <>
       <div className="flex items-baseline justify-between gap-3">
         <p className="font-medium">{area.name}</p>
         <p className="shrink-0 text-sm text-slate-400">
@@ -116,6 +137,18 @@ export function AreaCard({
         <BandPill area={area} />
       </p>
       {note && <p className="mt-2 text-sm text-slate-400">{note}</p>}
+    </>
+  );
+  const className =
+    "block rounded-lg border border-slate-800 bg-slate-900 px-4 py-3";
+
+  if (!isPathPublished(href)) return <div className={className}>{body}</div>;
+  return (
+    <Link
+      href={href}
+      className={`${className} transition-colors hover:border-slate-600`}
+    >
+      {body}
     </Link>
   );
 }
