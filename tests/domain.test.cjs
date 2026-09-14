@@ -134,6 +134,11 @@ test("every written profile belongs to a real area and clears the word floor", (
   }
 });
 
+test("every London area has a written profile", () => {
+  const missing = NEIGHBOURHOODS.map((n) => n.id).filter((id) => !NEIGHBOURHOOD_PROFILES[id]);
+  assert.deepEqual(missing, [], `areas without a profile: ${missing.join(", ")}`);
+});
+
 test("no two written profiles share an eight-word run", () => {
   // A profile copied from a neighbour and lightly edited is the template
   // problem again, one level down.
