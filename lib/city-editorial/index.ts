@@ -2,6 +2,7 @@ import type { CityEditorial } from "@/lib/city-content";
 import type { ContentCityId } from "@/lib/cities";
 import { MANCHESTER_EDITORIAL } from "@/lib/city-editorial/manchester";
 import { GENEVA_EDITORIAL } from "@/lib/city-editorial/geneva";
+import { PARIS_EDITORIAL } from "@/lib/city-editorial/paris";
 import { BRISTOL_EDITORIAL } from "@/lib/city-editorial/bristol";
 import { LEEDS_EDITORIAL } from "@/lib/city-editorial/leeds";
 import { EDINBURGH_EDITORIAL } from "@/lib/city-editorial/edinburgh";
@@ -16,4 +17,5 @@ export const CITY_EDITORIAL: Partial<Record<ContentCityId, CityEditorial>> = {
   leeds: LEEDS_EDITORIAL,
   edinburgh: EDINBURGH_EDITORIAL,
   geneva: GENEVA_EDITORIAL,
+  paris: PARIS_EDITORIAL,
 };
