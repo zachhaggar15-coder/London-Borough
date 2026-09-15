@@ -320,8 +320,9 @@ export function CouncilDetailPage({
           {bandD != null && rankPhrase
             ? `Council tax runs to ${money(bandD, currency)} at Band D, ${rankPhrase}. `
             : ""}
-          Below are the {areas.length} areas covered here, and what separates
-          them.
+          {areas.length === 1
+            ? `This guide covers one area here, profiled below.`
+            : `Below are the ${spellNumber(areas.length)} areas covered here, and what separates them.`}
         </p>
 
         <EditorialSection
@@ -398,12 +399,24 @@ export function CouncilDetailPage({
           </Section>
         )}
 
+        {/* The costs beyond rent abroad are set by the country or canton,
+            not the local authority, so the table is identical on every
+            detail page. Repeating it thirteen times is exactly the
+            templated text the content audit exists to catch; it lives once
+            on the index and each detail page points there. */}
         {content.localCosts && (
-          <Section
-            title={content.localCosts.heading}
-            lead={content.localCosts.intro}
-          >
-            <LocalCostsTable content={content} />
+          <Section title={content.localCosts.heading}>
+            <p className="max-w-3xl text-slate-300">
+              Those costs do not change from one {noun.singular} to the next,
+              so they are set out once, with sources, on the{" "}
+              <Link
+                href={content.path(`/${content.city.councilSegment}`)}
+                className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
+              >
+                {noun.plural} overview
+              </Link>
+              .
+            </p>
           </Section>
         )}
 
