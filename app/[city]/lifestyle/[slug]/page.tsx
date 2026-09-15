@@ -9,6 +9,7 @@ import {
 } from "@/lib/city-registry";
 import { centralityLabel } from "@/lib/centrality";
 import {
+  EditorialSection,
   CityBreadcrumbs,
   DataNote,
   PageShell,
@@ -93,6 +94,11 @@ export default async function CityLifestylePage({ params }: Props) {
         <p className="mt-4 max-w-3xl text-lg leading-relaxed text-slate-300">
           {page.intro}
         </p>
+
+        <EditorialSection
+          title={"How to read this ranking"}
+          paragraphs={content.editorial.lifestyle[slug]}
+        />
 
         <Section title="The ranking">
           <ol className="space-y-3">

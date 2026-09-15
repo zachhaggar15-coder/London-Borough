@@ -23,7 +23,7 @@ type Props = { params: Promise<{ city: string; amount: string }> };
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
-  return citiesPublishing("salary").flatMap((city) =>
+  return citiesPublishing("salary/*").flatMap((city) =>
     getCityContent(city).input.salaryLevels.map((amount) => ({
       city,
       amount: String(amount),

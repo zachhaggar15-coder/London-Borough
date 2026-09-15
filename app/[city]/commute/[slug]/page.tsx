@@ -9,6 +9,7 @@ import {
 } from "@/lib/city-registry";
 import { centralityLabel } from "@/lib/centrality";
 import {
+  EditorialSection,
   CityBreadcrumbs,
   DataNote,
   PageShell,
@@ -147,6 +148,11 @@ export default async function CityCommutePage({ params }: Props) {
             </>
           )}
         </p>
+
+        <EditorialSection
+          title={`Getting to ${destination.label}`}
+          paragraphs={content.editorial.destinations[slug]}
+        />
 
         <Section
           title="Ranked by journey time"

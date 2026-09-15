@@ -469,6 +469,67 @@ test("every unpublished city path redirects, and no published one does", async (
   }
 });
 
+// ── Written editorial ────────────────────────────────────────────────
+
+const EDITORIAL_CLUSTERS = [
+  // [editorial key, published section it belongs to, required keys, word floor]
+  ["areas", "neighbourhoods", (c) => c.areaSlugs(), 250],
+  ["councils", "councils", (c) => [...c.input.councils], 220],
+  ["destinations", "commute", (c) => c.input.destinations.map((d) => d.id), 220],
+  ["comparisons", "compare", (c) => c.compareSlugs(), 220],
+  ["lifestyle", "lifestyle", (c) => c.lifestylePages.map((p) => p.slug), 220],
+];
+
+function editorialWords(paragraphs) {
+  return paragraphs.join(" ").split(/\s+/).filter(Boolean);
+}
+
+for (const [key, , keysFn, floor] of EDITORIAL_CLUSTERS) {
+  test(`city ${key} editorial names real pages and clears the word floor`, () => {
+    for (const [id, content] of CITIES) {
+      const valid = new Set(keysFn(content));
+      for (const [k, paragraphs] of Object.entries(content.editorial[key])) {
+        assert.ok(valid.has(k), `${id}: ${key} editorial for unknown page "${k}"`);
+        const count = editorialWords(paragraphs).length;
+        assert.ok(count >= floor, `${id}/${k}: ${count} words, floor ${floor}`);
+      }
+    }
+  });
+
+  test(`no two city ${key} entries share an eight-word run, in any city`, () => {
+    // Across cities as well as within one: a Leeds profile lifted from a
+    // Bristol one is the template problem wearing a different name.
+    const seen = new Map();
+    for (const [id, content] of CITIES) {
+      for (const [k, paragraphs] of Object.entries(content.editorial[key])) {
+        const owner = `${id}/${k}`;
+        const words = editorialWords(paragraphs).map((w) =>
+          w.toLowerCase().replace(/[^a-zà-ÿ']/g, ""),
+        );
+        for (let i = 0; i + 8 <= words.length; i++) {
+          const run = words.slice(i, i + 8).join(" ");
+          const prior = seen.get(run);
+          assert.ok(!prior || prior === owner, `${owner} and ${prior} share "${run}"`);
+          seen.set(run, owner);
+        }
+      }
+    }
+  });
+}
+
+test("a city section is only published once every page in it is written", () => {
+  const councilSegments = ["boroughs", "councils", "communes", "arrondissements", "districts"];
+  for (const [key, section, keysFn] of EDITORIAL_CLUSTERS) {
+    for (const [id, content] of CITIES) {
+      const segment = section === "councils" ? content.city.councilSegment : section;
+      if (!SECTION_CONFIG.published.includes(segment)) continue;
+      const missing = keysFn(content).filter((k) => !content.editorial[key][k]);
+      assert.deepEqual(missing, [], `${id}/${segment} is published but unwritten: ${missing.join(", ")}`);
+    }
+  }
+  assert.ok(councilSegments.length > 0);
+});
+
 test("the section config names every city in the registry", () => {
   assert.deepEqual([...SECTION_CONFIG.cities].sort(), [...CONTENT_CITY_IDS].sort());
   for (const section of SECTION_CONFIG.published) {

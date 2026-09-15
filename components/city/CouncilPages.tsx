@@ -10,6 +10,7 @@ import {
 import { centralityLabel } from "@/lib/centrality";
 import { money, moneyWithGbp } from "@/lib/currency";
 import {
+  EditorialSection,
   AreaCard,
   CityBreadcrumbs,
   DataNote,
@@ -322,6 +323,11 @@ export function CouncilDetailPage({
           Below are the {areas.length} areas covered here, and what separates
           them.
         </p>
+
+        <EditorialSection
+          title={`About ${name}`}
+          paragraphs={content.editorial.councils[name]}
+        />
 
         <Section
           title={`Areas in ${name}`}

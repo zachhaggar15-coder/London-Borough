@@ -15,6 +15,7 @@ import {
   AreaCard,
   CityBreadcrumbs,
   DataNote,
+  EditorialSection,
   LifestyleBars,
   PageShell,
   ScrollTable,
@@ -83,6 +84,7 @@ export default async function CityNeighbourhoodPage({ params }: Props) {
   const currency = input.currency;
   const anyDriveTimes = commutes.some((c) => c.driveMinutes != null);
   const band = centralityLabel(n);
+  const profile = content.editorial.areas[n.id] ?? [];
 
   const vsRegion = n.rent.oneBedMedianGbp - regionMedianOneBed;
   const expensiveAnswer =
@@ -132,7 +134,7 @@ export default async function CityNeighbourhoodPage({ params }: Props) {
       {
         "@type": "Question",
         name: `What is ${n.name} like to live in?`,
-        acceptedAnswer: { "@type": "Answer", text: whatIsItLike },
+        acceptedAnswer: { "@type": "Answer", text: profile[0] ?? whatIsItLike },
       },
       {
         "@type": "Question",
@@ -194,6 +196,11 @@ export default async function CityNeighbourhoodPage({ params }: Props) {
         <p className="mt-6 max-w-3xl text-lg leading-relaxed text-slate-200">
           {n.summary}
         </p>
+
+        <EditorialSection
+          title={`What living in ${n.name} is like`}
+          paragraphs={profile}
+        />
 
         <Section title="What it costs">
           <dl className="grid gap-4 sm:grid-cols-3">
@@ -328,7 +335,9 @@ export default async function CityNeighbourhoodPage({ params }: Props) {
           lead="Ten measures, each 0–10 and comparable across every area covered here."
         >
           <LifestyleBars scores={n.lifestyle} />
-          <p className="mt-6 max-w-3xl text-slate-300">{whatIsItLike}</p>
+          {profile.length === 0 && (
+            <p className="mt-6 max-w-3xl text-slate-300">{whatIsItLike}</p>
+          )}
         </Section>
 
         {n.travelBand && (

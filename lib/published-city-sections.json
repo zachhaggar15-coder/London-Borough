@@ -1,5 +1,13 @@
 {
-  "cities": ["manchester", "bristol", "leeds", "edinburgh", "geneva", "paris", "barcelona"],
+  "cities": [
+    "manchester",
+    "bristol",
+    "leeds",
+    "edinburgh",
+    "geneva",
+    "paris",
+    "barcelona"
+  ],
   "sections": [
     "neighbourhoods",
     "boroughs",
@@ -16,5 +24,11 @@
     "methodology",
     "guides"
   ],
-  "published": ["guides", "methodology"]
+  "published": [
+    "guides",
+    "methodology"
+  ],
+  "indexOnly": [
+    "salary"
+  ]
 }

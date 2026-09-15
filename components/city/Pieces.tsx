@@ -99,6 +99,28 @@ export function Section({
   );
 }
 
+/** Hand-written paragraphs under a heading. Renders nothing when empty. */
+export function EditorialSection({
+  title,
+  paragraphs,
+}: {
+  title: string;
+  paragraphs: string[] | undefined;
+}) {
+  if (!paragraphs || paragraphs.length === 0) return null;
+  return (
+    <Section title={title}>
+      <div className="max-w-3xl space-y-4">
+        {paragraphs.map((paragraph) => (
+          <p key={paragraph} className="leading-relaxed text-slate-300">
+            {paragraph}
+          </p>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
 export function BandPill({ area }: { area: Neighbourhood }) {
   return (
     <span className="rounded-full border border-slate-700 px-2 py-0.5 text-xs text-slate-400">

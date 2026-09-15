@@ -12,6 +12,7 @@ import { LIFESTYLE_KEYS, LIFESTYLE_LABELS } from "@/lib/types";
 import type { Neighbourhood } from "@/lib/types";
 import type { CityContent } from "@/lib/city-content";
 import {
+  EditorialSection,
   CityBreadcrumbs,
   DataNote,
   PageShell,
@@ -243,6 +244,11 @@ export default async function CityComparePage({ params }: Props) {
         <p className="mt-4 max-w-3xl text-lg leading-relaxed text-slate-300">
           {rentLine} {summaryLines.join(" ")}
         </p>
+
+        <EditorialSection
+          title={`Choosing between ${a.name} and ${b.name}`}
+          paragraphs={content.editorial.comparisons[slug]}
+        />
 
         <Section title="The two, in their own words">
           <div className="grid gap-6 sm:grid-cols-2">

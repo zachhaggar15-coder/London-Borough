@@ -8,6 +8,7 @@ import { GENEVA_INPUT } from "@/lib/city-inputs/geneva";
 import { PARIS_INPUT } from "@/lib/city-inputs/paris";
 import { BARCELONA_INPUT } from "@/lib/city-inputs/barcelona";
 import { isCitySectionPublished } from "@/lib/city-sections";
+import { CITY_EDITORIAL } from "@/lib/city-editorial";
 
 export { isCitySectionPublished, isPathPublished } from "@/lib/city-sections";
 
@@ -49,7 +50,7 @@ const CONTENT_CACHE = new Map<ContentCityId, CityContent>();
 export function getCityContent(id: ContentCityId): CityContent {
   let content = CONTENT_CACHE.get(id);
   if (!content) {
-    content = createCityContent(CITY_INPUTS[id]);
+    content = createCityContent({ ...CITY_INPUTS[id], editorial: CITY_EDITORIAL[id] });
     CONTENT_CACHE.set(id, content);
   }
   return content;

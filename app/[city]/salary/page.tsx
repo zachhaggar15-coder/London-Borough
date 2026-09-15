@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { money } from "@/lib/currency";
 import {
@@ -31,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `What you can afford in ${content.copy.regionLabel} on your salary`,
-    description: `Enter your salary and see what it actually rents in ${content.copy.regionLabel} — take-home pay, a realistic rent budget, and the areas that fit.`,
+    description: `What a salary actually rents in ${content.copy.regionLabel}: take-home pay, a realistic rent budget, and the areas that fit, for every level in one table.`,
     alternates: { canonical: content.url("/salary") },
   };
 }
@@ -51,6 +50,10 @@ export default async function CitySalaryIndexPage({ params }: Props) {
       takeHome: data.takeHomeMonthly,
       budget35: data.budget35,
       areasFitting: data.comfortable.length,
+      // The dearest areas still in reach, not the cheapest: at the top of
+      // the ladder the useful answer is what the extra money buys.
+      reaches: data.comfortable.slice(-3).reverse(),
+      cheapestRoom: data.roomShare[0],
     };
   });
 
@@ -66,36 +69,37 @@ export default async function CitySalaryIndexPage({ params }: Props) {
       </h1>
       <p className="mt-4 max-w-3xl text-lg leading-relaxed text-slate-300">
         Worked backwards from gross pay to what you can actually sign for:
-        income tax and National Insurance come off first, then a rent budget of
-        35% of what is left, then the areas that fit inside it. The ladder
+        income tax and compulsory contributions come off first, then a rent
+        budget of 35% of what is left, then the areas that fit inside it. The ladder
         starts at {money(first, currency)} and stops at{" "}
         {money(last, currency)}, because past that point every area in the
         region fits and the answer stops being interesting.
       </p>
 
-      <Section title="Pick a salary">
-        <ScrollTable minWidth="34rem">
+      {/*
+        One table rather than a page per level: the per-level pages were one
+        template with a number swapped (99% shared text).
+      */}
+      <Section title="Every salary level">
+        <ScrollTable minWidth="44rem">
           <TableHead
             cells={[
               "Salary",
               "Take-home / month",
               "Rent at 35%",
               "One-beds that fit",
+              "What it reaches",
             ]}
           />
           <tbody>
             {rows.map((row) => (
               <tr
                 key={row.salary}
-                className="border-b border-slate-900 transition-colors hover:bg-slate-900/60"
+                id={`salary-${row.salary}`}
+                className="scroll-mt-24 border-b border-slate-900 align-top"
               >
-                <td className="py-2.5 pr-4">
-                  <Link
-                    href={content.path(`/salary/${row.salary}`)}
-                    className="font-medium tabular-nums transition-colors hover:text-emerald-400"
-                  >
-                    {money(row.salary, currency)}
-                  </Link>
+                <td className="py-2.5 pr-4 font-medium tabular-nums">
+                  {money(row.salary, currency)}
                 </td>
                 <td className="py-2.5 pr-4 tabular-nums text-slate-300">
                   {money(row.takeHome, currency)}
@@ -103,8 +107,17 @@ export default async function CitySalaryIndexPage({ params }: Props) {
                 <td className="py-2.5 pr-4 tabular-nums text-slate-300">
                   {money(row.budget35, currency)}
                 </td>
-                <td className="py-2.5 tabular-nums text-slate-400">
+                <td className="py-2.5 pr-4 tabular-nums text-slate-400">
                   {row.areasFitting} of {content.areas.length}
+                </td>
+                <td className="py-2.5 text-slate-300">
+                  {row.reaches.length > 0
+                    ? row.reaches
+                        .map((r) => `${r.area.name} ${money(r.rentGbp, currency)}`)
+                        .join(", ")
+                    : row.cheapestRoom
+                      ? `No one-bed. Cheapest room: ${row.cheapestRoom.area.name} ${money(row.cheapestRoom.rentGbp, currency)} (${Math.round(row.cheapestRoom.shareOfTakeHome * 100)}% of take-home)`
+                      : "—"}
                 </td>
               </tr>
             ))}

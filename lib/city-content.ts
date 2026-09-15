@@ -15,7 +15,7 @@
  */
 
 import { SITE_URL } from "@/lib/seo-data";
-import { isCitySectionPublished } from "@/lib/city-sections";
+import { isPathPublished } from "@/lib/city-sections";
 import type { City } from "@/lib/cities";
 import type { Currency } from "@/lib/currency";
 import { PERSONALITY_SCORERS } from "@/lib/personalities";
@@ -63,6 +63,27 @@ export type CityGuide = {
   faqs: { question: string; answer: string }[];
   related: { href: string; label: string }[];
   sources?: string[];
+};
+
+/**
+ * Hand-written text for the city's detail pages, keyed by the same ids
+ * the pages use. Everything else on those pages is computed and shares a
+ * template; this is what gives each page a reason to exist. Lives in
+ * lib/city-editorial/<city>.ts. Optional on the type so a new city can be
+ * built before it is written, but a section should not be published
+ * until every page in it has an entry (tests/cities.test.cjs).
+ */
+export type CityEditorial = {
+  /** area id → profile paragraphs */
+  areas: Record<string, string[]>;
+  /** council name, exactly as in CityInput.councils → paragraphs */
+  councils: Record<string, string[]>;
+  /** destination id → paragraphs */
+  destinations: Record<string, string[]>;
+  /** canonical compare slug → paragraphs */
+  comparisons: Record<string, string[]>;
+  /** lifestyle page slug → paragraphs */
+  lifestyle: Record<string, string[]>;
 };
 
 export type CityLifestylePage = {
@@ -331,6 +352,9 @@ export type CityInput = {
   guides: CityGuide[];
   lifestylePages: CityLifestylePage[];
   salaryLevels: readonly number[];
+
+  /** Written text for detail pages. See CityEditorial. */
+  editorial?: CityEditorial;
 
   /**
    * Monthly take-home after income tax and National Insurance.
@@ -814,10 +838,7 @@ export function createCityContent(input: CityInput) {
    * every route whose section is published (lib/city-sections.ts).
    */
   const indexableRoutes = (): IndexableRoute[] =>
-    allRoutes().filter((route) => {
-      const section = route.path.slice(city.basePath.length).split("/")[1];
-      return !section || isCitySectionPublished(section);
-    });
+    allRoutes().filter((route) => isPathPublished(route.path));
 
   return {
     input,
@@ -837,6 +858,13 @@ export function createCityContent(input: CityInput) {
     rent: input.rent,
     taxRegimeLabel: input.taxRegimeLabel,
     salaryLevels: input.salaryLevels,
+    editorial: {
+      areas: input.editorial?.areas ?? {},
+      councils: input.editorial?.councils ?? {},
+      destinations: input.editorial?.destinations ?? {},
+      comparisons: input.editorial?.comparisons ?? {},
+      lifestyle: input.editorial?.lifestyle ?? {},
+    } satisfies CityEditorial,
 
     path,
     url,
@@ -902,6 +930,10 @@ export type CityContent = ReturnType<typeof createCityContent>;
 
 export function slugify(value: string): string {
   return value
+    // Strip accents rather than drop the letter: "Chêne-Bougeries" was
+    // becoming "ch-ne-bougeries" and "Gràcia" "gr-cia".
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
     .replace(/&/g, "and")
     .replace(/[^a-z0-9]+/g, "-")

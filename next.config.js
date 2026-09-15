@@ -10,11 +10,20 @@ const CITY_SECTIONS = require("./lib/published-city-sections.json");
  */
 function unpublishedCitySectionRedirects() {
   const cities = CITY_SECTIONS.cities.join("|");
+  // Index-only sections keep their index and send detail pages to it,
+  // whether or not everything else is being previewed.
+  const indexOnly = CITY_SECTIONS.indexOnly.map((section) => ({
+    source: `/:city(${cities})/${section}/:rest+`,
+    destination: `/:city/${section}`,
+    permanent: true,
+  }));
+  if (process.env.NEXT_PUBLIC_PREVIEW_ALL_CITY_SECTIONS === "1") return indexOnly;
   const sections = CITY_SECTIONS.sections
     .filter((section) => !CITY_SECTIONS.published.includes(section))
     .join("|");
-  if (!sections) return [];
+  if (!sections) return indexOnly;
   return [
+    ...indexOnly,
     {
       source: `/:city(${cities})/:section(${sections})`,
       destination: "/:city",
