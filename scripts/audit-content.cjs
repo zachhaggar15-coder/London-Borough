@@ -4,6 +4,7 @@
  *
  *   npm run audit:content -- http://localhost:3000
  *   npm run audit:content -- https://london-borough.vercel.app
+ *   npm run audit:content -- http://localhost:3210 bristol   (one section)
  *
  * AdSense rejected this site three times for "Low value content". Each
  * time the cause was the same: pages generated from one template with a
@@ -46,6 +47,12 @@ const CONCURRENCY = process.argv[2] && !/localhost|127.0.0.1/.test(process.argv[
 const USER_AGENT = "where-in-london-content-audit/1.0";
 
 const base = (process.argv[2] ?? "http://localhost:3000").replace(/\/$/, "");
+/**
+ * Optional section, e.g. "bristol", to audit one part of the site. Given
+ * without a leading slash because Git Bash on Windows rewrites "/bristol"
+ * into a filesystem path.
+ */
+const only = process.argv[3] ? `/${process.argv[3].replace(/^\/+/, "")}` : "";
 
 class ChallengedError extends Error {}
 
@@ -118,9 +125,17 @@ function median(values) {
   return sorted[Math.floor(sorted.length / 2)];
 }
 
+const { cities: CITY_PREFIXES } = require("../lib/published-city-sections.json");
+
 function clusterOf(path) {
   const parts = path.split("/").filter(Boolean);
   if (parts.length <= 1) return `/${parts.join("/")}`;
+  // A city's section indexes (/bristol/commute, /bristol/salary, …) are
+  // one page per type, exactly like London's /commute and /salary, which
+  // never share a cluster. Grouping them only because they share a city
+  // prefix compares a rent table with a commute ranking. Give each its own
+  // cluster so they are treated as the hubs they are.
+  if (parts.length === 2 && CITY_PREFIXES.includes(parts[0])) return `/${parts.join("/")}`;
   return `/${parts.slice(0, -1).join("/")}/*`;
 }
 
@@ -130,7 +145,11 @@ async function main() {
   const paths = [...sitemap.body.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) =>
     new URL(m[1]).pathname.replace(/\/$/, "") || "/",
   );
-  console.log(`${paths.length} URLs in the sitemap at ${base}\n`);
+  if (only) {
+    const kept = paths.filter((p) => p === only || p.startsWith(`${only}/`));
+    paths.splice(0, paths.length, ...kept);
+  }
+  console.log(`${paths.length} URLs in the sitemap at ${base}${only ? ` under ${only}` : ""}\n`);
 
   const pages = await pool(paths, async (path) => {
     const res = await fetchText(`${base}${path}`);
