@@ -98,7 +98,8 @@ export default function SalaryIndexPage() {
                   £{firstViable.salary.toLocaleString()}
                 </strong>
                 , which yields a £{firstViable.budget35.toLocaleString()}/month
-                ceiling and {firstViable.comfortableCount} areas in range. Below
+                ceiling and {firstViable.comfortableCount}{" "}
+                {firstViable.comfortableCount === 1 ? "area" : "areas"} in range. Below
                 that, sharing is not a compromise — it is the market.
               </>
             ) : (

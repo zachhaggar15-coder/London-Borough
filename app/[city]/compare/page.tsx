@@ -13,6 +13,7 @@ import {
   PageShell,
   Section,
 } from "@/components/city/Pieces";
+import { regionAdjective } from "@/lib/region-words";
 
 type Props = { params: Promise<{ city: string }> };
 
@@ -29,8 +30,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const region = content.copy.regionLabel;
 
   return {
-    title: `Compare ${region} areas side by side`,
-    description: `Side-by-side comparisons of ${region} areas on rent, commute, green space and how lively they are.`,
+    title: `Compare ${regionAdjective(region)} areas side by side`,
+    description: `Side-by-side comparisons of ${regionAdjective(region)} areas on rent, commute, green space and how lively they are.`,
     alternates: { canonical: content.url("/compare") },
   };
 }
@@ -60,7 +61,7 @@ export default async function CityCompareIndexPage({ params }: Props) {
       <CityBreadcrumbs content={content} trail={[{ label: "Compare" }]} />
 
       <h1 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
-        Compare {content.copy.regionLabel} areas
+        Compare {regionAdjective(content.copy.regionLabel)} areas
       </h1>
       <p className="mt-4 max-w-3xl text-lg leading-relaxed text-slate-300">
         {total} comparisons, each one a decision somebody is actually making.{" "}

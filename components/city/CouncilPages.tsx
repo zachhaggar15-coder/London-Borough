@@ -20,6 +20,7 @@ import {
   Section,
   TableHead,
 } from "@/components/city/Pieces";
+import { regionAdjective } from "@/lib/region-words";
 
 /**
  * The local-authority pages, written once.
@@ -51,8 +52,8 @@ export function councilsIndexMetadata(content: CityContent): Metadata {
   const { input, copy } = content;
   const plural = input.councilNoun.plural;
   return {
-    title: `The ${spellNumber(input.councils.length)} ${copy.regionLabel} ${plural} compared`,
-    description: `Rent and local charges across the ${copy.regionLabel} ${plural} — ${input.councils.join(", ")}.`,
+    title: `The ${spellNumber(input.councils.length)} ${regionAdjective(copy.regionLabel)} ${plural} compared`,
+    description: `Rent and local charges across the ${plural} of ${copy.regionLabel} — ${input.councils.join(", ")}.`,
     alternates: {
       canonical: content.url(`/${content.city.councilSegment}`),
     },
@@ -99,7 +100,7 @@ export function CouncilsIndexPage({ content }: { content: CityContent }) {
       />
 
       <h1 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
-        The {spellNumber(input.councils.length)} {copy.regionLabel}{" "}
+        The {spellNumber(input.councils.length)} {regionAdjective(copy.regionLabel)}{" "}
         {noun.plural}
       </h1>
       <p className="mt-4 max-w-3xl text-lg leading-relaxed text-slate-300">

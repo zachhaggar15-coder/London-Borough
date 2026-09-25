@@ -15,6 +15,7 @@ import {
   PageShell,
   Section,
 } from "@/components/city/Pieces";
+import { sentenceStart } from "@/lib/region-words";
 
 type Props = { params: Promise<{ city: string }> };
 
@@ -30,8 +31,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const content = getCityContent(city);
 
   return {
-    title: `How the ${content.copy.regionLabel} figures are worked out`,
-    description: `Sources and method behind the ${content.copy.regionLabel} rent, commute, council tax and lifestyle figures — including what the data cannot tell you.`,
+    title: `How the figures for ${content.copy.regionLabel} are worked out`,
+    description: `Sources and method behind the rent, commute, council tax and lifestyle figures for ${content.copy.regionLabel} — including what the data cannot tell you.`,
     alternates: { canonical: content.url("/methodology") },
   };
 }
@@ -70,7 +71,7 @@ export default async function CityMethodologyPage({ params }: Props) {
       <CityBreadcrumbs content={content} trail={[{ label: "Methodology" }]} />
 
       <h1 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
-        How the {copy.regionLabel} figures are worked out
+        How the figures for {copy.regionLabel} are worked out
       </h1>
       <p className="mt-4 max-w-3xl text-lg leading-relaxed text-slate-300">
         Every number on these pages comes from one of three places: a published
@@ -115,7 +116,7 @@ export default async function CityMethodologyPage({ params }: Props) {
       <Section title="Commute times">
         <div className="max-w-3xl space-y-4 text-slate-300">
           <p>
-            {content.city.transitAuthority} publishes no open routing API, so
+            {sentenceStart(content.city.transitAuthority)} publishes no open routing API, so
             there is no journey planner to query. Every time on these pages
             comes from a reviewed static matrix instead: one figure for each of
             the {areaCount} areas against each of the {destinationCount}{" "}

@@ -16,6 +16,7 @@ import {
   Section,
   TableHead,
 } from "@/components/city/Pieces";
+import { regionAdjective } from "@/lib/region-words";
 
 type Props = { params: Promise<{ city: string }> };
 
@@ -32,8 +33,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const region = content.copy.regionLabel;
 
   return {
-    title: `Every ${region} neighbourhood, ranked by rent`,
-    description: `All ${content.areas.length} ${region} areas with one-bed and two-bed rents, travel band and transport links.`,
+    title: `Every ${regionAdjective(region)} neighbourhood, ranked by rent`,
+    description: `All ${content.areas.length} ${regionAdjective(region)} areas with one-bed and two-bed rents, travel band and transport links.`,
     alternates: { canonical: content.url("/neighbourhoods") },
   };
 }
@@ -61,7 +62,7 @@ export default async function CityNeighbourhoodsPage({ params }: Props) {
       <CityBreadcrumbs content={content} trail={[{ label: "Neighbourhoods" }]} />
 
       <h1 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
-        Every {copy.regionLabel} neighbourhood
+        Every {regionAdjective(copy.regionLabel)} neighbourhood
       </h1>
       <p className="mt-4 max-w-3xl text-lg leading-relaxed text-slate-300">
         {areas.length} areas, grouped by how far out they are rather than

@@ -16,6 +16,7 @@ import {
   PageShell,
   Section,
 } from "@/components/city/Pieces";
+import { regionAdjective } from "@/lib/region-words";
 
 type Props = { params: Promise<{ city: string }> };
 
@@ -103,7 +104,7 @@ export default async function CityHomePage({ params }: Props) {
         ? [
             {
               "@type": "Question",
-              name: `Which ${input.regionName} ${noun.singular} has the lowest council tax?`,
+              name: `Which ${regionAdjective(input.regionName)} ${noun.singular} has the lowest council tax?`,
               acceptedAnswer: {
                 "@type": "Answer",
                 text: `${lowestTaxCouncil}, at ${money(content.councilTax.bandD[lowestTaxCouncil], input.currency)} at Band D for ${content.councilTax.year}.`,

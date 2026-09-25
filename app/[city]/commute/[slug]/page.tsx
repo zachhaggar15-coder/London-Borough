@@ -17,6 +17,7 @@ import {
   Section,
   TableHead,
 } from "@/components/city/Pieces";
+import { regionAdjective } from "@/lib/region-words";
 
 type Props = { params: Promise<{ city: string; slug: string }> };
 
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { destination, ranked } = data;
   const title = `Best areas for commuting to ${destination.label}`;
-  const description = `Where to live if you work at ${destination.label}: ${ranked.length} ${content.copy.regionLabel} areas ranked by journey time, with rents. Quickest is ${ranked[0].area.name} at about ${ranked[0].minutes} minutes.`;
+  const description = `Where to live if you work at ${destination.label}: ${ranked.length} ${regionAdjective(content.copy.regionLabel)} areas ranked by journey time, with rents. Quickest is ${ranked[0].area.name} at about ${ranked[0].minutes} minutes.`;
 
   return {
     title,
@@ -127,7 +128,7 @@ export default async function CityCommutePage({ params }: Props) {
           Best areas for commuting to {destination.label}
         </h1>
         <p className="mt-4 max-w-3xl text-lg leading-relaxed text-slate-300">
-          {ranked.length} {copy.regionLabel} areas ranked by how long it takes
+          {ranked.length} {regionAdjective(copy.regionLabel)} areas ranked by how long it takes
           to reach {destination.label} on a weekday morning, door to door.{" "}
           {under30.length} of them come in at half an hour or under.
           {carWins.length > 0 && (

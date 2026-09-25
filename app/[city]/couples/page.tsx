@@ -12,6 +12,7 @@ import {
   DataNote,
   PageShell,
 } from "@/components/city/Pieces";
+import { regionAdjective } from "@/lib/region-words";
 
 type Props = { params: Promise<{ city: string }> };
 
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const region = content.copy.regionLabel;
 
   const title = `Where to live as a couple or flatmates in ${region}`;
-  const description = `Two people, two commutes, one shared budget. Compare ${region} areas that work for both of you rather than only for whoever has the easier journey.`;
+  const description = `Two people, two commutes, one shared budget. Compare ${regionAdjective(region)} areas that work for both of you rather than only for whoever has the easier journey.`;
 
   return {
     title,

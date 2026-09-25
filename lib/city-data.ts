@@ -16,6 +16,7 @@ import type {
   Neighbourhood,
   RentProfile,
 } from "@/lib/types";
+import { regionAdjective } from "@/lib/region-words";
 
 /**
  * The interactive tool's binding for a generated city.
@@ -195,7 +196,7 @@ export function createCityData(
     labels: {
       panelTitle: config.labels.panelTitle,
       panelSubtitle: config.labels.panelSubtitle,
-      boroughNoun: `${input.regionName} ${input.councilNoun.plural}`,
+      boroughNoun: `${regionAdjective(input.regionName)} ${input.councilNoun.plural}`,
       boroughSearchLabel: `Search ${input.councilNoun.singular}`,
       shareTitle: `My best places to live in ${input.regionName}`,
       shareText: `Here are my ${city.brand} results.`,

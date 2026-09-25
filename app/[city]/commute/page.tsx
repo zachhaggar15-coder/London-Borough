@@ -12,6 +12,7 @@ import {
   PageShell,
   Section,
 } from "@/components/city/Pieces";
+import { regionAdjective } from "@/lib/region-words";
 
 type Props = { params: Promise<{ city: string }> };
 
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `Commuting in ${region}: where to live for each destination`,
-    description: `Journey times from ${content.areas.length} ${region} areas to ${content.input.destinations.length} employment centres, ranked.`,
+    description: `Journey times from ${content.areas.length} ${regionAdjective(region)} areas to ${content.input.destinations.length} employment centres, ranked.`,
     alternates: { canonical: content.url("/commute") },
   };
 }

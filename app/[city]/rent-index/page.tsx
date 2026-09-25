@@ -16,6 +16,7 @@ import {
   Section,
   TableHead,
 } from "@/components/city/Pieces";
+import { regionAdjective } from "@/lib/region-words";
 
 type Props = { params: Promise<{ city: string }> };
 
@@ -31,8 +32,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const content = getCityContent(city);
 
   return {
-    title: `${content.copy.regionLabel} rent index`,
-    description: `Every ${content.copy.regionLabel} area ranked by rent — room, one-bed and two-bed figures for ${content.areas.length} areas.`,
+    title: `${regionAdjective(content.copy.regionLabel)} rent index`,
+    description: `Every ${regionAdjective(content.copy.regionLabel)} area ranked by rent — room, one-bed and two-bed figures for ${content.areas.length} areas.`,
     alternates: { canonical: content.url("/rent-index") },
   };
 }
@@ -60,7 +61,7 @@ export default async function CityRentIndexPage({ params }: Props) {
       <CityBreadcrumbs content={content} trail={[{ label: "Rent index" }]} />
 
       <h1 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
-        {copy.regionLabel} rent index
+        {regionAdjective(copy.regionLabel)} rent index
       </h1>
       <p className="mt-4 max-w-3xl text-lg leading-relaxed text-slate-300">
         All {count} areas ranked by what a one-bed costs, cheapest first. The
