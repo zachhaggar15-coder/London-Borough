@@ -34,7 +34,10 @@ export async function generateStaticParams() {
 // Curated pairs are prerendered; any other slug is resolved on demand so that
 // a non-canonical ordering (e.g. `streatham-vs-walthamstow` when the canonical
 // page is `walthamstow-vs-streatham`) 308-redirects to the canonical URL
-// instead of 404ing. Non-curated pairs 404.
+// instead of 404ing. Non-curated pairs of two real areas 308 to the compare
+// index: many were indexed and earning clicks before the cluster was cut, so
+// a visitor arriving from an old search result lands on the curated list
+// rather than a dead end.
 export const dynamicParams = true;
 
 /** Resolve a slug to its canonical curated form, or null if it isn't one. */
@@ -44,7 +47,7 @@ function canonicalCompareSlug(slug: string): string | null {
   const canonical = comparisonSlugFor(data.a.id, data.b.id);
   // Only the curated set exists. The other ~4,400 generated pairs used to
   // render with noindex, which still left them crawlable by anyone
-  // reviewing the site; they now 404.
+  // reviewing the site; they now redirect to the compare index.
   return isIndexableCompareSlug(canonical) ? canonical : null;
 }
 
@@ -114,10 +117,10 @@ export default async function ComparePage({ params }: Props) {
   const data = getComparePageData(slug);
   if (!data) notFound();
 
-  // Canonicalise ordering: a non-curated pair 404s; a reversed ordering of a
-  // curated pair 308-redirects to the canonical URL.
+  // Canonicalise ordering: a non-curated pair 308s to the compare index; a
+  // reversed ordering of a curated pair 308-redirects to the canonical URL.
   const canonicalSlug = canonicalCompareSlug(slug);
-  if (!canonicalSlug) notFound();
+  if (!canonicalSlug) permanentRedirect("/compare");
   if (canonicalSlug !== slug) permanentRedirect(`/compare/${canonicalSlug}`);
 
   const {
