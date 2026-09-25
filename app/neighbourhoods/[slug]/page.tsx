@@ -25,15 +25,27 @@ import { councilTaxForBorough, formatPounds } from "@/lib/council-tax";
 import { COUNCIL_TAX_YEAR } from "@/lib/data/council-tax";
 import { zonesOf } from "@/lib/centrality";
 import { COMMUTE_MODEL_REVIEW_AS_OF } from "@/lib/commute-details";
+import { POSH_ANSWERS } from "@/lib/data/editorial/posh";
 
 type Props = { params: Promise<{ slug: string }> };
 
 const SEARCH_INTENT_TITLES: Record<string, string> = {
   archway: `Living in Archway: rent, Tube & area guide (${CONTENT_YEAR})`,
   bermondsey: `Living in Bermondsey: rent, commute & area guide (${CONTENT_YEAR})`,
-  chiswick: `Living in Chiswick: rent, transport & area guide (${CONTENT_YEAR})`,
-  putney: `Living in Putney: rent, transport & area guide (${CONTENT_YEAR})`,
+  // Search Console (Sept 2026): these pages rank on page one for "is X
+  // posh?" / "is X expensive?" but a generic title drew no clicks. The title
+  // names the question; the page answers it in an H2 and the FAQ schema.
+  chiswick: `Is Chiswick posh? Living in Chiswick: rent & area guide (${CONTENT_YEAR})`,
+  putney: `Is Putney posh? Living in Putney: rent & area guide (${CONTENT_YEAR})`,
+  richmond: `Is Richmond posh? Living in Richmond: rent & area guide (${CONTENT_YEAR})`,
+  tooting: `Is Tooting posh? Living in Tooting: rent & area guide (${CONTENT_YEAR})`,
+  hammersmith: `Is Hammersmith expensive? Rent, transport & area guide (${CONTENT_YEAR})`,
+  shoreditch: `Is Shoreditch expensive? Rent, transport & area guide (${CONTENT_YEAR})`,
 };
+
+// Pages whose title asks "is X expensive?": the description leads with the
+// answer instead of the generic summary.
+const EXPENSIVE_INTENT = new Set(["hammersmith", "shoreditch"]);
 
 export const dynamicParams = false;
 
@@ -54,7 +66,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title =
     SEARCH_INTENT_TITLES[slug] ??
     `Living in ${n.name}: rent, transport & area guide (${CONTENT_YEAR})`;
-  const description = `What living in ${n.name} is actually like: one-bed rent around £${n.rent.oneBedMedianGbp.toLocaleString()}/month, ${zoneStr}, commute times, council tax and the trade-offs.`;
+  const rentFacts = `one-bed rent around £${n.rent.oneBedMedianGbp.toLocaleString()}/month, ${zoneStr}, commute times, council tax and the trade-offs.`;
+  const { oneBed: londonMedianOneBed } = londonRentMedians();
+  const rentVsMedian = n.rent.oneBedMedianGbp - londonMedianOneBed;
+  const description = POSH_ANSWERS[slug]
+    ? `${POSH_ANSWERS[slug].short} Plus ${rentFacts}`
+    : EXPENSIVE_INTENT.has(slug)
+      ? `${rentVsMedian > 0 ? "Yes" : "Not especially"}: a one-bed in ${n.name} averages £${n.rent.oneBedMedianGbp.toLocaleString()}/month, £${Math.abs(rentVsMedian).toLocaleString()} ${rentVsMedian > 0 ? "above" : "below"} the London median. Plus ${zoneStr}, commute times, council tax and the trade-offs.`
+      : `What living in ${n.name} is actually like: ${rentFacts}`;
 
   return {
     title,
@@ -198,10 +217,21 @@ export default async function NeighbourhoodPage({ params }: Props) {
       : []),
   ];
 
+  const poshAnswer = POSH_ANSWERS[n.id]?.answer;
+
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     mainEntity: [
+      ...(poshAnswer
+        ? [
+            {
+              "@type": "Question",
+              name: `Is ${n.name} posh?`,
+              acceptedAnswer: { "@type": "Answer", text: poshAnswer },
+            },
+          ]
+        : []),
       {
         "@type": "Question",
         name: `Is ${n.name} expensive?`,
@@ -351,6 +381,14 @@ export default async function NeighbourhoodPage({ params }: Props) {
           )}
 
           <section className="mb-12 space-y-8">
+            {poshAnswer && (
+              <div>
+                <h2 className="text-xl font-semibold mb-3">
+                  Is {n.name} posh?
+                </h2>
+                <p className="text-slate-300">{poshAnswer}</p>
+              </div>
+            )}
             <div>
               <h2 className="text-xl font-semibold mb-3">
                 Is {n.name} expensive?

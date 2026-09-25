@@ -1106,6 +1106,27 @@ const COMPARE_INDEX_SECTIONS: {
       ["maida-vale", "bayswater"],
     ],
   },
+  {
+    title: "Most-searched head-to-heads",
+    description:
+      "The comparisons people search for most, from prime central London to the south London shortlist.",
+    pairs: [
+      ["wimbledon", "richmond"],
+      ["barnes", "richmond"],
+      ["chelsea", "mayfair"],
+      ["kensington", "mayfair"],
+      ["putney", "earlsfield"],
+      ["camden", "notting-hill"],
+      ["camden", "kentish-town"],
+      ["west-hampstead", "belsize-park"],
+      ["hackney-central", "shoreditch"],
+      ["hackney-central", "brixton"],
+      ["peckham", "camberwell"],
+      ["peckham", "lewisham"],
+      ["highgate", "muswell-hill"],
+      ["elephant-castle", "vauxhall"],
+    ],
+  },
 ];
 
 export function getCompareIndexSections(): CompareIndexSection[] {
