@@ -12,6 +12,7 @@ import {
   PageShell,
   Section,
 } from "@/components/city/Pieces";
+import { regionAdjective } from "@/lib/region-words";
 
 type Props = { params: Promise<{ city: string }> };
 
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const content = getCityContent(city);
 
   return {
-    title: `${content.copy.regionLabel} guides`,
+    title: `${regionAdjective(content.copy.regionLabel)} guides`,
     description: `What ${content.copy.regionLabel} costs, how renting works here, how the transport actually behaves, and what to sort out in which order.`,
     alternates: { canonical: content.url("/guides") },
   };
@@ -42,7 +43,7 @@ export default async function CityGuidesPage({ params }: Props) {
   const itemListSchema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `${content.copy.regionLabel} guides`,
+    name: `${regionAdjective(content.copy.regionLabel)} guides`,
     itemListElement: guides.map((guide, index) => ({
       "@type": "ListItem",
       position: index + 1,
@@ -62,7 +63,7 @@ export default async function CityGuidesPage({ params }: Props) {
         <CityBreadcrumbs content={content} trail={[{ label: "Guides" }]} />
 
         <h1 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
-          {content.copy.regionLabel} guides
+          {regionAdjective(content.copy.regionLabel)} guides
         </h1>
         <p className="mt-4 max-w-3xl text-lg leading-relaxed text-slate-300">
           The rest of this section answers &ldquo;which area&rdquo;. These

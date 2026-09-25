@@ -22,6 +22,7 @@ import {
   Section,
   TableHead,
 } from "@/components/city/Pieces";
+import { regionAdjective } from "@/lib/region-words";
 
 type Props = { params: Promise<{ city: string; slug: string }> };
 
@@ -89,7 +90,7 @@ export default async function CityNeighbourhoodPage({ params }: Props) {
   const vsRegion = n.rent.oneBedMedianGbp - regionMedianOneBed;
   const expensiveAnswer =
     vsRegion === 0
-      ? `A one-bed in ${n.name} averages ${moneyWithGbp(n.rent.oneBedMedianGbp, currency)} a month, exactly the median across the ${count} ${region} areas covered here.`
+      ? `A one-bed in ${n.name} averages ${moneyWithGbp(n.rent.oneBedMedianGbp, currency)} a month, exactly the median across the ${count} ${regionAdjective(region)} areas covered here.`
       : vsRegion > 0
         ? `A one-bed in ${n.name} averages ${moneyWithGbp(n.rent.oneBedMedianGbp, currency)} a month — about ${money(vsRegion, currency)} above the ${money(regionMedianOneBed, currency)} median across the ${count} areas covered here, putting it around the ${ordinal(percentile)} percentile. On rent alone it is a dearer than average place to live in ${region}.`
         : `A one-bed in ${n.name} averages ${moneyWithGbp(n.rent.oneBedMedianGbp, currency)} a month — about ${money(Math.abs(vsRegion), currency)} below the ${money(regionMedianOneBed, currency)} median across the ${count} areas covered here, putting it around the ${ordinal(percentile)} percentile. On rent alone it is a cheaper than average place to live in ${region}.`;

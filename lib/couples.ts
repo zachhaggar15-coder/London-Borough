@@ -138,12 +138,17 @@ function couplesExplanation(
   commuteB: number | null,
   input: CouplesInput,
 ): string {
-  const a = commuteA == null ? "an unknown commute" : `about ${commuteA} minutes`;
-  const b = commuteB == null ? "an unknown commute" : `about ${commuteB} minutes`;
   const budget =
     input.monthlyRentBudgetGbp == null
       ? "with no shared rent cap set"
       : `against a shared £${input.monthlyRentBudgetGbp.toLocaleString("en-GB")}/mo budget`;
+  // Before either workplace is entered, "gives Person A an unknown commute
+  // and Person B an unknown commute" says nothing twice.
+  if (commuteA == null && commuteB == null) {
+    return `${neighbourhood.name} is ranked ${budget}; add both workplaces to see each commute.`;
+  }
+  const a = commuteA == null ? "an unknown commute" : `about ${commuteA} minutes`;
+  const b = commuteB == null ? "an unknown commute" : `about ${commuteB} minutes`;
   return `${neighbourhood.name} gives Person A ${a} and Person B ${b}, ${budget}.`;
 }
 

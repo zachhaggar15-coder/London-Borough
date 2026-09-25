@@ -186,52 +186,89 @@ export default async function ComparePage({ params }: Props) {
       : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
 
   // Dimension where each area most out-scores the other → "who suits" copy.
+  // Transport, green space and nightlife are left out: the winner sentence
+  // already names them, and repeating one read as "Richmond scores higher for
+  // nightlife … Richmond is stronger on nightlife".
   const CONTRAST_DIMS: [keyof typeof LIFESTYLE_LABELS, string][] = [
-    ["connectivity", "fast transport"],
-    ["nightlife", "nightlife"],
-    ["greenSpace", "green space"],
-    ["safety", "a safer, quieter feel"],
-    ["foodScene", "its food scene"],
-    ["youngProfessionalDensity", "a young professional crowd"],
+    ["safety", "safety"],
+    ["foodScene", "food"],
+    ["youngProfessionalDensity", "its share of young professionals"],
+    ["cafeDensity", "cafés"],
+    ["walkability", "walkability"],
   ];
   const edgeFor = (
     x: typeof a,
     y: typeof a,
-  ): string => {
-    let best = CONTRAST_DIMS[0];
-    let bestGap = -Infinity;
-    for (const dim of CONTRAST_DIMS) {
-      const gap = x.lifestyle[dim[0]] - y.lifestyle[dim[0]];
+    dims: [keyof typeof LIFESTYLE_LABELS, string][],
+  ): string | null => {
+    let best: string | null = null;
+    let bestGap = 0;
+    for (const [dim, label] of dims) {
+      const gap = x.lifestyle[dim] - y.lifestyle[dim];
       if (gap > bestGap) {
         bestGap = gap;
-        best = dim;
+        best = label;
       }
     }
-    return best[1];
+    return best;
   };
-  const aEdge = edgeFor(a, b);
-  const bEdge = edgeFor(b, a);
+  const aEdge = edgeFor(a, b, CONTRAST_DIMS);
+  const bEdge = edgeFor(b, a, CONTRAST_DIMS);
+  // The "should I live in…" answer sums the pair up, so it can draw on
+  // every dimension — but only one the area actually leads on.
+  const PICK_DIMS: [keyof typeof LIFESTYLE_LABELS, string][] = [
+    ["connectivity", "faster transport"],
+    ["nightlife", "nightlife"],
+    ["greenSpace", "green space"],
+    ["safety", "a safer, quieter feel"],
+    ["foodScene", "the food scene"],
+    ["youngProfessionalDensity", "a young professional crowd"],
+  ];
+  const aPick = edgeFor(a, b, PICK_DIMS);
+  const bPick = edgeFor(b, a, PICK_DIMS);
+  const pickSentence =
+    aPick && bPick
+      ? ` Pick ${a.name} for ${aPick}, or ${b.name} for ${bPick}.`
+      : aPick || bPick
+        ? ` Pick ${aPick ? a.name : b.name} for ${aPick ?? bPick}.`
+        : "";
+  const edgeSentence =
+    aEdge && bEdge
+      ? ` Beyond that, ${a.name} edges ahead on ${aEdge} and ${b.name} on ${bEdge}.`
+      : aEdge || bEdge
+        ? ` Beyond that, ${aEdge ? a.name : b.name} edges ahead on ${aEdge ?? bEdge}.`
+        : "";
 
-  // Winner sentence — collapses when one area leads several dimensions so the
-  // copy doesn't repeat the same name three times.
-  const metricSentence = (
-    winner: string | null,
-    metric: string,
-  ): string =>
-    winner ? `${winner} scores higher for ${metric}` : `they are tied for ${metric}`;
-  const winnerSentence = `${metricSentence(
-    transportWinner,
-    "transport",
-  )}, ${metricSentence(greenSpaceWinner, "green space")}, and ${metricSentence(
-    nightlifeArea,
-    "nightlife",
-  )}`;
+  // Winner sentence — groups metrics by who wins them (or ties), so one
+  // area leading several reads "Richmond scores higher for transport and
+  // nightlife" rather than naming it three times.
+  const metricWinners: [string, string | null][] = [
+    ["transport", transportWinner],
+    ["green space", greenSpaceWinner],
+    ["nightlife", nightlifeArea],
+  ];
+  const metricGroups = new Map<string | null, string[]>();
+  for (const [metric, winner] of metricWinners) {
+    metricGroups.set(winner, [...(metricGroups.get(winner) ?? []), metric]);
+  }
+  const metricClauses = [...metricGroups].map(([winner, metrics]) =>
+    winner
+      ? `${winner} scores higher for ${listWords(metrics)}`
+      : `the two are level on ${listWords(metrics)}`,
+  );
+  const joinedClauses =
+    metricClauses.length <= 1
+      ? metricClauses.join("")
+      : `${metricClauses.slice(0, -1).join(", ")}, and ${metricClauses[metricClauses.length - 1]}`;
+  const winnerSentence = `${joinedClauses.charAt(0).toUpperCase()}${joinedClauses.slice(1)}.`;
 
   // Unique intro — structure varies by whether rents diverge.
   const introParagraph =
     rentGap >= 100
-      ? `Choosing between ${a.name} and ${b.name} usually comes down to rent versus lifestyle. ${cheaperN.name} is the cheaper of the two, with a one-bed averaging about £${rentGap.toLocaleString()}/month less. ${winnerSentence}. ${a.name} leans towards ${aEdge}, while ${b.name} is stronger on ${bEdge}. In short, ${overallRecommendation}`
-      : `${a.name} and ${b.name} sit at almost the same price — within £${rentGap.toLocaleString()}/month on a one-bed — so the choice is really about character. ${winnerSentence}. ${a.name} leans towards ${aEdge}, whereas ${b.name} is stronger on ${bEdge}. ${overallRecommendation}`;
+      ? `Choosing between ${a.name} and ${b.name} usually comes down to rent versus lifestyle. ${cheaperN.name} is the cheaper of the two, with a one-bed averaging about £${rentGap.toLocaleString()}/month less. ${winnerSentence}${edgeSentence} In short, ${overallRecommendation}`
+      : rentGap === 0
+        ? `${a.name} and ${b.name} cost the same on our figures — about £${a.rent.oneBedMedianGbp.toLocaleString()}/month for a one-bed — so the choice is really about character. ${winnerSentence}${edgeSentence} ${overallRecommendation}`
+        : `${a.name} and ${b.name} sit at almost the same price — within £${rentGap.toLocaleString()}/month on a one-bed — so the choice is really about character. ${winnerSentence}${edgeSentence} ${overallRecommendation}`;
 
   // Largest lifestyle gap → dynamic "which is better for X" question.
   const QUESTION_DIMS: [keyof typeof LIFESTYLE_LABELS, string][] = [
@@ -272,7 +309,7 @@ export default async function ComparePage({ params }: Props) {
     },
     {
       question: `Should I live in ${a.name} or ${b.name}?`,
-      answer: `${overallRecommendation} Pick ${a.name} for ${aEdge}, or ${b.name} for ${bEdge}.`,
+      answer: `${overallRecommendation}${pickSentence}`,
     },
   ];
 
