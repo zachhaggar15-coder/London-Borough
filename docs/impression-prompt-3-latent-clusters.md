@@ -37,9 +37,9 @@ Valuation queries are commercial and high-intent but imply a *service* (valuatio
 site may not offer. Two options — implement whichever the owner confirms:
 - **If offering valuations:** create `/valuation/[area]` pages ("Free property valuation in
   {area}") with a lead-capture form and local rent context from `rent-market.ts`.
-- **If NOT offering valuations:** create informational `/rent-guide/[area]` pages
-  ("What's my {area} flat worth to rent? — {area} rent guide") that answer the intent with data
-  and internally link to the neighbourhood + compare pages. Avoid implying a service you don't run.
+- **If NOT offering valuations:** do not revive the retired `/rent-guide/[area]` cluster.
+  Improve the canonical neighbourhood pages only where they can answer a real informational
+  question without implying a valuation service. Avoid creating a second rent-page type.
 
 > ⚠️ Do not build the valuation cluster until the owner confirms which option. Ship part A first.
 
@@ -57,4 +57,4 @@ site may not offer. Two options — implement whichever the owner confirms:
 ## After shipping
 
 Submit sitemap; request indexing for 5–10 commute slugs matching real queries above.
-Bring the valuation/rent-guide decision back to the owner before building part B.
+Bring the valuation decision back to the owner before building part B.

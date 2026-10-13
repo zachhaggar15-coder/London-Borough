@@ -20,6 +20,10 @@ export default async function Image({ params }: Props) {
   const zone = n ? centralityLabel(n) : "";
   const rent = n ? `£${n.rent.oneBedMedianGbp.toLocaleString()}/mo` : "";
   const summary = n?.summary?.slice(0, 100) ?? "";
+  // Satori requires a multi-child <div> to declare a display mode. Build the
+  // clipped summary as one text node instead, so long area summaries still
+  // render reliably when crawlers request this Open Graph image.
+  const summaryText = summary ? `${summary}${summary.length >= 100 ? "…" : ""}` : "";
 
   // Top two lifestyle dimensions
   const topDimensions = n
@@ -97,7 +101,7 @@ export default async function Image({ params }: Props) {
         </div>
 
         {/* Summary */}
-        {summary && (
+        {summaryText && (
           <div
             style={{
               color: "#94a3b8",
@@ -107,8 +111,7 @@ export default async function Image({ params }: Props) {
               marginBottom: "40px",
             }}
           >
-            {summary}
-            {summary.length >= 100 ? "…" : ""}
+            {summaryText}
           </div>
         )}
 

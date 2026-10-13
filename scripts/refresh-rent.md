@@ -22,7 +22,7 @@ API — it's all static data compiled into the build.
      markedly from their region average.
 3. **Bump the as-of date** — set `RENT_MARKET_REVIEW_AS_OF` to the date you
    completed the review (ISO `YYYY-MM-DD`). This one change updates the visible
-   "Rent data as of …" line on every neighbourhood, compare, rent-guide and
+   "Rent data as of …" line on every neighbourhood, compare and
    rent-index page, the methodology page, and the `dateModified` on the rent
    index's Dataset schema. **Always bump it when you touch rents** — it's the
    freshness signal.
@@ -51,8 +51,9 @@ npx tsc --noEmit   # optional: types only, faster
 Spot-check a couple of pages against the new figures:
 
 - `/london-rent-index` — headline medians and the table update automatically.
-- A `/rent-guide/<area>` and a `/neighbourhoods/<area>` you changed — confirm
-  the figure and the "Rent data as of …" line show the new date.
+- A `/neighbourhoods/<area>` you changed — confirm the figure and the "Rent
+  data as of …" line show the new date. `/rent-guide/<area>` is retired and
+  permanently redirects to the canonical neighbourhood page.
 
 Then commit with a message noting the review date, e.g.
 `Refresh rent data (review 2026-08-xx)`.

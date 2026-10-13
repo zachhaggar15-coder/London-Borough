@@ -110,6 +110,7 @@ const {
   getIndexableCompareSlugs,
   getIndexableRoutes,
   isIndexableCompareSlug,
+  retainedCommutePairCompareSlug,
   LIFESTYLE_PAGES,
   SALARY_LEVELS,
   ukTakeHomeMonthly,
@@ -202,6 +203,19 @@ test("comparison pages describe exact ties without inventing a winner", () => {
   assert.equal(comparison.greenWinner, null);
   assert.match(comparison.overallRecommendation, /same/i);
   assert.doesNotMatch(comparison.overallRecommendation, /lower rent/i);
+});
+
+test("the Mayfair–Kensington comparison is a curated canonical page", () => {
+  assert.ok(getIndexableCompareSlugs().includes("kensington-vs-mayfair"));
+  assert.ok(COMPARE_EDITORIAL["kensington-vs-mayfair"]);
+});
+
+test("retired pair routes only redirect to retained comparisons", () => {
+  assert.equal(
+    retainedCommutePairCompareSlug("kensington-to-mayfair"),
+    "kensington-vs-mayfair",
+  );
+  assert.equal(retainedCommutePairCompareSlug("wimbledon-to-vauxhall"), null);
 });
 
 test("comparison rent winner is always the cheaper area", () => {

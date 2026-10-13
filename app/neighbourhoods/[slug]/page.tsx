@@ -20,7 +20,6 @@ import {
   RENT_MARKET_SOURCES,
 } from "@/lib/data/rent-market";
 import { provenanceLabel } from "@/lib/provenance";
-import { CONTENT_YEAR } from "@/lib/site-config";
 import { councilTaxForBorough, formatPounds } from "@/lib/council-tax";
 import { COUNCIL_TAX_YEAR } from "@/lib/data/council-tax";
 import { zonesOf } from "@/lib/centrality";
@@ -29,11 +28,23 @@ import { COMMUTE_MODEL_REVIEW_AS_OF } from "@/lib/commute-details";
 type Props = { params: Promise<{ slug: string }> };
 
 const SEARCH_INTENT_TITLES: Record<string, string> = {
-  archway: `Living in Archway: rent, Tube & area guide (${CONTENT_YEAR})`,
-  bermondsey: `Living in Bermondsey: rent, commute & area guide (${CONTENT_YEAR})`,
-  chiswick: `Living in Chiswick: rent, transport & area guide (${CONTENT_YEAR})`,
-  putney: `Living in Putney: rent, transport & area guide (${CONTENT_YEAR})`,
+  archway: "Living in Archway: rent & Tube",
+  bermondsey: "Living in Bermondsey: rent & commute",
+  camberwell: "Living in Camberwell: Zone 2, rent & transport",
+  chiswick: "Living in Chiswick: is it posh? Rent & transport",
+  putney: "Living in Putney: is it posh? Rent & transport",
+  richmond: "Living in Richmond: is it posh? Rent & transport",
 };
+
+// These are real queries already earning page-one visibility. Keep the answer
+// tightly scoped to the areas Search Console shows for this intent rather than
+// adding a generic, subjective claim to every neighbourhood page.
+const POSH_QUERY_SLUGS = new Set(["chiswick", "putney", "richmond"]);
+
+// Zone 2 is Camberwell's strongest unanswered page-one query cluster. The
+// page already contains this verified transport data; this makes the answer
+// explicit in the visible FAQ as well as the snippet.
+const ZONE_QUERY_SLUGS = new Set(["camberwell"]);
 
 export const dynamicParams = false;
 
@@ -53,8 +64,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       : `Zone ${zonesOf(n)[0]}`;
   const title =
     SEARCH_INTENT_TITLES[slug] ??
-    `Living in ${n.name}: rent, transport & area guide (${CONTENT_YEAR})`;
-  const description = `What living in ${n.name} is actually like: one-bed rent around £${n.rent.oneBedMedianGbp.toLocaleString()}/month, ${zoneStr}, commute times, council tax and the trade-offs.`;
+    `Living in ${n.name}: rent & transport`;
+  const description = POSH_QUERY_SLUGS.has(slug)
+    ? `Is ${n.name} posh? A practical guide to its £${n.rent.oneBedMedianGbp.toLocaleString()}/month one-bed rent, ${zoneStr}, transport, lifestyle and trade-offs.`
+    : `What living in ${n.name} is actually like: one-bed rent around £${n.rent.oneBedMedianGbp.toLocaleString()}/month, ${zoneStr}, commute times, council tax and the trade-offs.`;
 
   return {
     title,
@@ -108,6 +121,13 @@ export default async function NeighbourhoodPage({ params }: Props) {
       : rentVsMedian > 0
       ? `A one-bed in ${n.name} averages £${n.rent.oneBedMedianGbp.toLocaleString()}/month — about £${rentVsMedian.toLocaleString()} above the London-wide median of £${londonMedianOneBed.toLocaleString()} (across ${trackedCount} tracked areas). On rent alone, ${n.name} is more expensive than the typical London neighbourhood.`
       : `A one-bed in ${n.name} averages £${n.rent.oneBedMedianGbp.toLocaleString()}/month — about £${Math.abs(rentVsMedian).toLocaleString()} below the London-wide median of £${londonMedianOneBed.toLocaleString()} (across ${trackedCount} tracked areas). On rent alone, ${n.name} is cheaper than the typical London neighbourhood.`;
+
+  const poshAnswer = POSH_QUERY_SLUGS.has(slug)
+    ? `“Posh” is subjective, but ${n.name} is generally seen as an affluent, polished part of London. A one-bed here averages around £${n.rent.oneBedMedianGbp.toLocaleString()} a month, ${rentVsMedian >= 0 ? `£${rentVsMedian.toLocaleString()} above` : `£${Math.abs(rentVsMedian).toLocaleString()} below`} the London-wide median across the ${trackedCount} areas we track. ${n.summary} The rent, transport and trade-offs on this page are a better guide to whether the premium suits you than the label alone.`
+    : null;
+  const zoneAnswer = ZONE_QUERY_SLUGS.has(slug)
+    ? `${n.name} is in ${zoneStr}. Its main stations are ${n.mainStations.map((station) => station.name).join(" and ")}, with ${allLines.join(", ")} services.`
+    : null;
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
@@ -179,6 +199,12 @@ export default async function NeighbourhoodPage({ params }: Props) {
     : null;
 
   const extraFaqItems: { question: string; answer: string }[] = [
+    ...(poshAnswer
+      ? [{ question: `Is ${n.name} posh?`, answer: poshAnswer }]
+      : []),
+    ...(zoneAnswer
+      ? [{ question: `What Zone is ${n.name}?`, answer: zoneAnswer }]
+      : []),
     { question: `What is the average rent in ${n.name}?`, answer: rentAnswer },
     ...(councilTaxAnswer
       ? [

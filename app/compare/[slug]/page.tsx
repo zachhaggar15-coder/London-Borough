@@ -27,6 +27,20 @@ import { COMPARE_EDITORIAL } from "@/lib/data/editorial/compare";
 
 type Props = { params: Promise<{ slug: string }> };
 
+// The canonical URL is deliberately stable, but this query's dominant word
+// order is Mayfair first. Keep the phrase on the one canonical page rather
+// than creating a duplicate reverse-order route.
+const SEARCH_INTENT_LABELS: Record<string, string> = {
+  "kensington-vs-mayfair": "Mayfair vs Kensington",
+  "brixton-vs-clapham": "Brixton vs Clapham for young professionals",
+};
+
+// Keep the result title compact while letting the page heading answer the
+// more specific decision that people are actually searching for.
+const SEARCH_INTENT_META_TITLES: Record<string, string> = {
+  "brixton-vs-clapham": `Brixton vs Clapham for young professionals (${CONTENT_YEAR})`,
+};
+
 export async function generateStaticParams() {
   return getIndexableCompareSlugs().map((slug) => ({ slug }));
 }
@@ -57,8 +71,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Point canonical/OG at the canonical URL even when reached via a reversed slug.
   const canonicalSlug = canonicalCompareSlug(slug) ?? slug;
   const isIndexable = isIndexableCompareSlug(canonicalSlug);
-  const title = `${a.name} vs ${b.name} (${CONTENT_YEAR}): rent, transport & lifestyle`;
-  const description = `${a.name} vs ${b.name} (${CONTENT_YEAR}): one-bed rents £${a.rent.oneBedMedianGbp.toLocaleString()} vs £${b.rent.oneBedMedianGbp.toLocaleString()}/mo, plus transport, green space, nightlife and safety compared — and who each area suits.`;
+  const comparisonLabel = SEARCH_INTENT_LABELS[canonicalSlug] ?? `${a.name} vs ${b.name}`;
+  const title =
+    SEARCH_INTENT_META_TITLES[canonicalSlug] ??
+    `${comparisonLabel} (${CONTENT_YEAR}): rent, transport & lifestyle`;
+  const description =
+    canonicalSlug === "brixton-vs-clapham"
+      ? `Choosing between Brixton and Clapham as a young professional? Compare one-bed rents of £${a.rent.oneBedMedianGbp.toLocaleString()} and £${b.rent.oneBedMedianGbp.toLocaleString()}/month, commuting, nightlife, green space and safety.`
+      : `${comparisonLabel} (${CONTENT_YEAR}): one-bed rents £${a.rent.oneBedMedianGbp.toLocaleString()} vs £${b.rent.oneBedMedianGbp.toLocaleString()}/mo, plus transport, green space, nightlife and safety compared — and who each area suits.`;
 
   return {
     title,
@@ -161,6 +181,7 @@ export default async function ComparePage({ params }: Props) {
   const greenSpaceWinner = winnerName(greenWinner);
   const nightlifeArea = winnerName(nightlifeWinner);
   const safetyArea = winnerName(safetyWinner);
+  const comparisonLabel = SEARCH_INTENT_LABELS[slug] ?? `${a.name} vs ${b.name}`;
 
   // ── Data-driven copy (unique per pair, no fabricated numbers) ──────
   const rentGap = Math.abs(rentDiff);
@@ -223,12 +244,14 @@ export default async function ComparePage({ params }: Props) {
     nightlifeArea,
     "nightlife",
   )}`;
+  const winnerSentenceLead =
+    winnerSentence.charAt(0).toUpperCase() + winnerSentence.slice(1);
 
   // Unique intro — structure varies by whether rents diverge.
   const introParagraph =
     rentGap >= 100
-      ? `Choosing between ${a.name} and ${b.name} usually comes down to rent versus lifestyle. ${cheaperN.name} is the cheaper of the two, with a one-bed averaging about £${rentGap.toLocaleString()}/month less. ${winnerSentence}. ${a.name} leans towards ${aEdge}, while ${b.name} is stronger on ${bEdge}. In short, ${overallRecommendation}`
-      : `${a.name} and ${b.name} sit at almost the same price — within £${rentGap.toLocaleString()}/month on a one-bed — so the choice is really about character. ${winnerSentence}. ${a.name} leans towards ${aEdge}, whereas ${b.name} is stronger on ${bEdge}. ${overallRecommendation}`;
+      ? `Choosing between ${a.name} and ${b.name} usually comes down to rent versus lifestyle. ${cheaperN.name} is the cheaper of the two, with a one-bed averaging about £${rentGap.toLocaleString()}/month less. ${winnerSentenceLead}. ${a.name} leans towards ${aEdge}, while ${b.name} is stronger on ${bEdge}. In short, ${overallRecommendation}`
+      : `${a.name} and ${b.name} sit at almost the same price — within £${rentGap.toLocaleString()}/month on a one-bed — so the choice is really about character. ${winnerSentenceLead}. ${a.name} leans towards ${aEdge}, whereas ${b.name} is stronger on ${bEdge}. ${overallRecommendation}`;
 
   // Largest lifestyle gap → dynamic "which is better for X" question.
   const QUESTION_DIMS: [keyof typeof LIFESTYLE_LABELS, string][] = [
@@ -287,7 +310,7 @@ export default async function ComparePage({ params }: Props) {
       {
         "@type": "ListItem",
         position: 3,
-        name: `${a.name} vs ${b.name}`,
+        name: comparisonLabel,
         item: `${SITE_URL}/compare/${slug}`,
       },
     ],
@@ -329,7 +352,7 @@ export default async function ComparePage({ params }: Props) {
             </Link>
             <span>/</span>
             <span className="min-w-0 break-words text-slate-200">
-              {a.name} vs {b.name}
+              {comparisonLabel}
             </span>
           </div>
         </nav>
@@ -338,7 +361,7 @@ export default async function ComparePage({ params }: Props) {
           {/* Header */}
           <header className="mb-10">
             <h1 className="break-words text-3xl font-bold tracking-tight mb-4 sm:text-4xl">
-              {a.name} vs {b.name}
+              {comparisonLabel}
             </h1>
             <p className="text-lg text-slate-300 max-w-2xl">{introParagraph}</p>
           </header>
@@ -475,7 +498,7 @@ export default async function ComparePage({ params }: Props) {
             </div>
             {rentDiff !== 0 && (
               <p className="mt-3 text-sm text-slate-400">
-                {rentDiff > 0 ? b.name : a.name} is{" "}
+                {cheaperN.name} is{" "}
                 <strong className="text-white">
                   £{Math.abs(rentDiff).toLocaleString()}/month cheaper
                 </strong>{" "}

@@ -374,7 +374,7 @@ export type CityInput = {
    * was cut to after two AdSense rejections for low-value content, and
    * a cluster larger than the neighbourhood pages themselves.
    *
-   * London's answer was to curate: 24 pairs for 95 areas, chosen because
+    * London's answer was to curate: 25 pairs for 95 areas, chosen because
    * each is a decision somebody is actually making. Every other city now
    * does the same. A pair earns a page when the two are a genuine
    * either/or — commutable from the same job, close enough in rent that

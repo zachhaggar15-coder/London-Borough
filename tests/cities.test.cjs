@@ -249,7 +249,7 @@ for (const [id, content] of CITIES) {
 
   test(`${id}: comparison pages stay a curated set, not every pair`, () => {
     const slugs = content.compareSlugs();
-    // London was cut to 24 pairs for 95 areas after two AdSense
+    // London was cut to 25 pairs for 95 areas after two AdSense
     // rejections for low-value content. Every other city is now held to
     // roughly the same ratio: a comparison earns a page when it is a
     // decision somebody is making, not because two areas are adjacent.

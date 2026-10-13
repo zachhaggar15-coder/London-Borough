@@ -1074,6 +1074,10 @@ const COMPARE_INDEX_SECTIONS: {
       ["shoreditch", "bethnal-green"],
       ["borough", "bermondsey"],
       ["hammersmith", "shepherds-bush"],
+      // A genuine prime-central either/or: both are Zone 1 and expensive,
+      // but their day-to-day character, parks and transport differ enough to
+      // support an editorial comparison rather than a generated pair.
+      ["kensington", "mayfair"],
     ],
   },
   {
@@ -1234,6 +1238,20 @@ export function getCommutePairPageData(slug: string): CommutePairPageData | null
     compareSlug,
     relatedPairSlugs,
   };
+}
+
+/**
+ * Canonical comparison destination for a retired pair-route URL.
+ *
+ * Pair-route redirects must not revive the former generated matrix by pointing
+ * at a comparison that is no longer indexable. Null means the old route has no
+ * equivalent retained page and should be retired rather than sent to a hub.
+ */
+export function retainedCommutePairCompareSlug(slug: string): string | null {
+  const data = getCommutePairPageData(slug);
+  return data && isIndexableCompareSlug(data.compareSlug)
+    ? data.compareSlug
+    : null;
 }
 
 // ──────────────────────────────────────────────────────────────────
