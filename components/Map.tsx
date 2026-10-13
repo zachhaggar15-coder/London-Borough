@@ -135,6 +135,9 @@ export default function MapView() {
   // Flipped on load so the resize observer below attaches to a real map
   // instance rather than a ref that is still null on first commit.
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  // Map is client-only (ssr: false in CityFinder), so document is safe here.
+  const [canFullscreen] = useState(() => document.fullscreenEnabled);
   // London-only overlays: tube lines, and the borough rent explorer.
   const [showTubeLines, setShowTubeLines] = useState(false);
   const [showRentExplorer, setShowRentExplorer] = useState(false);
@@ -308,7 +311,29 @@ export default function MapView() {
     // on the same frame the container is still the old width.
     const frame = requestAnimationFrame(() => map.resize());
     return () => cancelAnimationFrame(frame);
-  }, [isPanelCollapsed, isMapLoaded]);
+  }, [isPanelCollapsed, isMapLoaded, isFullscreen]);
+
+  // Track native fullscreen, including Esc to leave.
+  useEffect(() => {
+    function onChange() {
+      setIsFullscreen(document.fullscreenElement !== null);
+    }
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  /**
+   * Fullscreen the map's parent, not the canvas alone, so the overlays
+   * (search, legend, toggles) come with it.
+   */
+  function toggleFullscreen() {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen();
+      return;
+    }
+    const shell = ref.current?.getContainer().parentElement;
+    shell?.requestFullscreen().catch(() => {});
+  }
 
   useEffect(() => {
     const map = ref.current;
@@ -380,6 +405,17 @@ export default function MapView() {
         boroughs={boroughs}
         onSelect={selectBorough}
       />
+
+      {canFullscreen && (
+        <button
+          type="button"
+          onClick={toggleFullscreen}
+          aria-pressed={isFullscreen}
+          className="absolute bottom-12 right-3 z-20 rounded-md bg-slate-950/85 px-3 py-1.5 text-[11px] font-semibold text-slate-200 shadow-lg ring-1 ring-slate-700 backdrop-blur hover:ring-sky-400"
+        >
+          {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+        </button>
+      )}
 
       {isLondon && (
         <div className="absolute bottom-4 left-4 z-20 flex w-[300px] max-w-[calc(100%-2rem)] flex-col gap-2 text-[11px] text-slate-200">
