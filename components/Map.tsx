@@ -28,12 +28,23 @@ import Map, {
   type MapLayerMouseEvent,
   type MapRef,
 } from "react-map-gl/maplibre";
-import type { FilterSpecification, StyleSpecification } from "maplibre-gl";
+import type {
+  ExpressionSpecification,
+  FilterSpecification,
+  StyleSpecification,
+} from "maplibre-gl";
 import { useStore } from "@/lib/store";
 import { useCityData } from "@/components/CityDataProvider";
 import type { BoroughSummary } from "@/lib/boroughs";
 import { matchScoreHex, scoreAll } from "@/lib/scoring";
 import BoroughSearch from "@/components/BoroughSearch";
+import {
+  RENT_BAND_COLOURS,
+  boundaryNameFor,
+  londonBoroughRents,
+  rentBandBreaks,
+  rentBandIndex,
+} from "@/lib/london-borough-rent";
 
 /**
  * Default inline style — satellite imagery with no API key required.
@@ -83,6 +94,38 @@ function getMapStyle(): string | StyleSpecification {
   return FREE_SATELLITE_STYLE;
 }
 
+function rentBandLabel(index: number, breaks: number[]): string {
+  const gbp = (n: number) => `£${n.toLocaleString("en-GB")}`;
+  if (index === 0) return `< ${gbp(breaks[0])}`;
+  if (index === RENT_BAND_COLOURS.length - 1) return `${gbp(breaks[index - 1])}+`;
+  return `${gbp(breaks[index - 1])}–${gbp(breaks[index])}`;
+}
+
+function OverlayToggle({
+  label,
+  pressed,
+  onToggle,
+}: {
+  label: string;
+  pressed: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={pressed}
+      onClick={onToggle}
+      className={`rounded-md px-3 py-1.5 font-semibold shadow-lg ring-1 backdrop-blur ${
+        pressed
+          ? "bg-sky-400 text-slate-950 ring-sky-300"
+          : "bg-slate-950/85 text-slate-200 ring-slate-700 hover:ring-sky-400"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
 export default function MapView() {
   const ref = useRef<MapRef | null>(null);
   const suppressNextSelectedFly = useRef(false);
@@ -92,8 +135,12 @@ export default function MapView() {
   // Flipped on load so the resize observer below attaches to a real map
   // instance rather than a ref that is still null on first commit.
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  // London-only overlays: tube lines, and the borough rent explorer.
+  const [showTubeLines, setShowTubeLines] = useState(false);
+  const [showRentExplorer, setShowRentExplorer] = useState(false);
 
   const {
+    city,
     neighbourhoods,
     scoringAdapters,
     polygonFor,
@@ -120,6 +167,27 @@ export default function MapView() {
   const boroughs = useMemo(
     () => boroughSummaries(scored),
     [boroughSummaries, scored],
+  );
+
+  const isLondon = city.id === "london";
+  const boroughRents = useMemo(
+    () => (isLondon ? londonBoroughRents(neighbourhoods) : []),
+    [isLondon, neighbourhoods],
+  );
+  const rentBreaks = useMemo(() => rentBandBreaks(boroughRents), [boroughRents]);
+  // Colour per borough for the choropleth, keyed by ONS boundary name.
+  const rentFillColour = useMemo(
+    () =>
+      [
+        "match",
+        ["get", boroughBoundary?.nameField ?? "name"],
+        ...boroughRents.flatMap((r) => [
+          r.boundaryName,
+          RENT_BAND_COLOURS[rentBandIndex(r.medianGbp, rentBreaks)],
+        ]),
+        "#000000",
+      ] as unknown as ExpressionSpecification,
+    [boroughBoundary?.nameField, boroughRents, rentBreaks],
   );
   const selectedBorough = useMemo(
     () => boroughs.find((b) => b.id === selectedBoroughId) ?? null,
@@ -279,6 +347,13 @@ export default function MapView() {
 
   function onClick(e: MapLayerMouseEvent) {
     const feature = e.features?.[0];
+    if (feature?.layer?.id === "borough-rent-fill") {
+      const match = boroughs.find(
+        (b) => boundaryNameFor(b.name) === feature.properties?.[boroughBoundary?.nameField ?? "name"],
+      );
+      if (match) selectBorough(match);
+      return;
+    }
     const id = feature?.properties?.id;
     if (typeof id === "string") {
       setSelectedBoroughId(null);
@@ -306,6 +381,43 @@ export default function MapView() {
         onSelect={selectBorough}
       />
 
+      {isLondon && (
+        <div className="absolute bottom-4 left-4 z-20 flex w-[300px] max-w-[calc(100%-2rem)] flex-col gap-2 text-[11px] text-slate-200">
+          <div className="flex gap-2">
+            <OverlayToggle
+              label="Tube lines"
+              pressed={showTubeLines}
+              onToggle={() => setShowTubeLines((on) => !on)}
+            />
+            <OverlayToggle
+              label="Rent explorer"
+              pressed={showRentExplorer}
+              onToggle={() => setShowRentExplorer((on) => !on)}
+            />
+          </div>
+          {showRentExplorer && (
+            <div className="rounded-md bg-slate-950/85 px-3 py-2 shadow-lg ring-1 ring-slate-700 backdrop-blur">
+              <div className="font-semibold text-sky-300">
+                Median rent by borough
+              </div>
+              <div className="mt-0.5 text-slate-400">
+                Local-area 1- and 2-bed rents, £ per month
+              </div>
+              <div className="mt-2 flex">
+                {RENT_BAND_COLOURS.map((colour, i) => (
+                  <div key={colour} className="flex-1">
+                    <div className="h-1.5" style={{ background: colour }} />
+                    <div className="mt-0.5 whitespace-nowrap text-[9px] text-slate-400">
+                      {rentBandLabel(i, rentBreaks)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <Map
         ref={ref}
         mapStyle={getMapStyle()}
@@ -320,6 +432,7 @@ export default function MapView() {
         interactiveLayerIds={[
           "neighbourhood-circles",
           "neighbourhood-polygon-fill",
+          ...(showRentExplorer ? ["borough-rent-fill"] : []),
         ]}
         onLoad={() => setIsMapLoaded(true)}
         onClick={onClick}
@@ -333,6 +446,20 @@ export default function MapView() {
             data={boroughBoundary.sourceUrl}
             attribution={boroughBoundary.attribution}
           >
+            <Layer
+              id="borough-rent-fill"
+              type="fill"
+              layout={{ visibility: showRentExplorer ? "visible" : "none" }}
+              filter={[
+                "in",
+                ["get", boroughBoundary?.nameField ?? "name"],
+                ["literal", boroughRents.map((r) => r.boundaryName)],
+              ] as unknown as FilterSpecification}
+              paint={{
+                "fill-color": rentFillColour,
+                "fill-opacity": 0.42,
+              }}
+            />
             <Layer
               id="selected-borough-fill"
               type="fill"
@@ -391,6 +518,52 @@ export default function MapView() {
             />
           </Source>
         )}
+
+        {/* Tube lines — bundled route geometry, drawn beneath the reachable
+            areas and the neighbourhood markers. */}
+        {isLondon && showTubeLines && (
+          <Source id="tube-lines" type="geojson" data="/data/tube-lines.geojson">
+            <Layer
+              id="tube-lines-line"
+              type="line"
+              layout={{ "line-cap": "round", "line-join": "round" }}
+              paint={{
+                "line-color": ["get", "colour"],
+                "line-width": ["interpolate", ["linear"], ["zoom"], 9, 1.5, 13, 3.5],
+                "line-opacity": 0.9,
+              }}
+            />
+          </Source>
+        )}
+
+        {/* Borough rent labels — DOM markers so they can be clicked. */}
+        {isLondon &&
+          showRentExplorer &&
+          boroughRents.map((rent) => {
+            const borough = boroughs.find((b) => b.name === rent.name);
+            if (!borough) return null;
+            return (
+              <Marker
+                key={rent.name}
+                longitude={rent.centroid.lng}
+                latitude={rent.centroid.lat}
+                anchor="center"
+              >
+                <button
+                  type="button"
+                  onClick={() => selectBorough(borough)}
+                  className="flex flex-col items-center rounded-md bg-slate-950/85 px-1.5 py-0.5 text-center leading-tight text-slate-100 shadow-lg ring-1 ring-slate-600 hover:ring-sky-400"
+                >
+                  <span className="max-w-[110px] truncate text-[9px] uppercase tracking-wider text-slate-400">
+                    {rent.name}
+                  </span>
+                  <span className="text-[11px] font-semibold">
+                    £{rent.medianGbp.toLocaleString("en-GB")}
+                  </span>
+                </button>
+              </Marker>
+            );
+          })}
 
         {/* Destination marker — DOM element, renders above the canvas. */}
         {query.destination && (
