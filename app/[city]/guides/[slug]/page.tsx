@@ -7,6 +7,8 @@ import {
   isContentCityId,
   isPathPublished,
 } from "@/lib/city-registry";
+import { SITE_URL } from "@/lib/seo-data";
+import { SITE_NAME } from "@/lib/site-config";
 import GuideDataBlock from "@/components/city/GuideDataBlock";
 import {
   CityBreadcrumbs,
@@ -15,6 +17,8 @@ import {
 } from "@/components/city/Pieces";
 
 type Props = { params: Promise<{ city: string; slug: string }> };
+
+const GUIDE_IMAGE = `${SITE_URL}/opengraph-image`;
 
 export const dynamicParams = false;
 
@@ -45,6 +49,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       publishedTime: guide.published,
       modifiedTime: guide.updated,
+      images: [{ url: GUIDE_IMAGE, width: 1200, height: 630 }],
     },
   };
 }
@@ -70,6 +75,13 @@ export default async function CityGuidePage({ params }: Props) {
     dateModified: guide.updated,
     url: content.url(`/guides/${slug}`),
     articleSection: guide.category,
+    image: GUIDE_IMAGE,
+    author: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+    publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": content.url(`/guides/${slug}`),
+    },
   };
 
   const faqSchema = {

@@ -1,4 +1,5 @@
 import { LONDON_BOROUGHS } from "@/lib/commute-details";
+import { boundaryNameFor } from "@/lib/london-borough-rent";
 
 export const BOROUGH_NAME_FIELD = "LAD24NM";
 
@@ -20,4 +21,5 @@ export const BOROUGH_BOUNDARY_SOURCE_LABEL =
 export const BOROUGH_BOUNDARY_ATTRIBUTION =
   "Contains OS data Crown copyright and database right 2025; ONS licensed under OGL v3.";
 
-export const BOROUGH_FILTER_NAMES = [...LONDON_BOROUGHS];
+// The ONS boundary data spells two boroughs with "and" where the site uses "&".
+export const BOROUGH_FILTER_NAMES = LONDON_BOROUGHS.map(boundaryNameFor);

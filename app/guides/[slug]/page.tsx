@@ -11,6 +11,8 @@ import { SITE_URL } from "@/lib/seo-data";
 import { SITE_NAME } from "@/lib/site-config";
 import GuideDataBlock from "@/components/GuideDataBlock";
 
+const GUIDE_IMAGE = `${SITE_URL}/opengraph-image`;
+
 type Props = { params: Promise<{ slug: string }> };
 
 export const dynamicParams = false;
@@ -35,6 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       publishedTime: guide.published,
       modifiedTime: guide.updated,
+      images: [{ url: GUIDE_IMAGE, width: 1200, height: 630 }],
     },
   };
 }
@@ -94,6 +97,7 @@ export default async function GuidePage({ params }: Props) {
     publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
     articleSection: guide.category,
+    image: GUIDE_IMAGE,
   };
 
   const faqSchema = {
