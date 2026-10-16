@@ -118,9 +118,9 @@ export default function CookieConsent() {
             Cookies on this site
           </h2>
           <p className="text-xs leading-relaxed text-slate-300 sm:text-sm">
-            Optional analytics help improve the finder. Advertising cookies
-            may fund the free site. Nothing optional loads before you choose,
-            and the finder works either way. See the{" "}
+            Optional analytics help us understand usage and improve the finder.
+            Nothing optional loads before you choose, and the finder works either
+            way. See the{" "}
             <Link
               href="/privacy"
               className="text-emerald-400 underline underline-offset-2 hover:text-emerald-300"
